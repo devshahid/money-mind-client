@@ -3,6 +3,7 @@ import "../styles/Dashboard.css";
 import styled from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faBell } from "@fortawesome/free-solid-svg-icons";
+import BalanceCard from "./BalanceCard";
 
 const SectionRow = styled.div`
   display: grid;
@@ -107,26 +108,30 @@ const Dashboard: React.FC<ProfileHeaderProps> = ({
 
       {/* Metrics Section */}
       <div className="metrics">
-        <div className="metric-card">
-          <h3>Total Balance</h3>
-          <p>$15,700.00</p>
-          <span>+12.1% vs last month</span>
-        </div>
-        <div className="metric-card">
-          <h3>Income</h3>
-          <p>$8,500.00</p>
-          <span>+6.3% vs last month</span>
-        </div>
-        <div className="metric-card">
-          <h3>Expense</h3>
-          <p>$6,222.00</p>
-          <span>-2.4% vs last month</span>
-        </div>
-        <div className="metric-card">
-          <h3>Total Savings</h3>
-          <p>$32,913.00</p>
-          <span>+12.1% vs last month</span>
-        </div>
+        <BalanceCard
+          heading="Total balance"
+          amount="₹15,700.00"
+          percentChange="+12%"
+          subheading="vs last month"
+        />
+        <BalanceCard
+          heading="Income"
+          amount="₹8,500.00"
+          percentChange="+6.3%"
+          subheading="vs last month"
+        />
+        <BalanceCard
+          heading="Expense"
+          amount="₹6,222.00"
+          percentChange="-2.4%"
+          subheading="vs last month"
+        />
+        <BalanceCard
+          heading="Total Savings"
+          amount="₹32,913.00"
+          percentChange="+12.1%"
+          subheading="vs last month"
+        />
       </div>
 
       {/*  */}
@@ -159,8 +164,8 @@ const Dashboard: React.FC<ProfileHeaderProps> = ({
           </SectionHeader>
           <DataContent>
             {/* Example content */}
-            Total Income: $50,000 <br />
-            Total Expense: $30,000
+            Total Income: ₹50,000 <br />
+            Total Expense: ₹30,000
           </DataContent>
         </Section>
 
@@ -171,8 +176,8 @@ const Dashboard: React.FC<ProfileHeaderProps> = ({
           </SectionHeader>
           <DataContent>
             {/* Example content */}
-            Monthly Budget: $5,000 <br />
-            Remaining: $2,000
+            Monthly Budget: ₹5,000 <br />
+            Remaining: ₹2,000
           </DataContent>
         </Section>
       </SectionRow>
@@ -186,9 +191,9 @@ const Dashboard: React.FC<ProfileHeaderProps> = ({
           </SectionHeader>
           <DataContent>
             <ul>
-              <li>Grocery: $50</li>
-              <li>Electricity Bill: $120</li>
-              <li>Dining: $40</li>
+              <li>Grocery: ₹50</li>
+              <li>Electricity Bill: ₹120</li>
+              <li>Dining: ₹40</li>
             </ul>
           </DataContent>
         </Section>
@@ -201,8 +206,8 @@ const Dashboard: React.FC<ProfileHeaderProps> = ({
           <DataContent>
             {/* Example content */}
             <ul>
-              <li>Vacation Fund: $3,000 / $5,000</li>
-              <li>Emergency Fund: $8,000 / $10,000</li>
+              <li>Vacation Fund: ₹3,000 / ₹5,000</li>
+              <li>Emergency Fund: ₹8,000 / ₹10,000</li>
             </ul>
           </DataContent>
         </Section>

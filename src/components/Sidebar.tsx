@@ -13,7 +13,10 @@ import {
   FaMoon,
   FaSun,
 } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { logoutUser } from "../services/authService";
+import { useDispatch } from "react-redux";
+import { logout } from "../store/authSlice";
 
 // Light and Dark Theme Definitions
 const lightTheme: DefaultTheme = {
@@ -102,13 +105,25 @@ const Sidebar: React.FC = () => {
 
   const toggleSidebar = () => setIsOpen(!isOpen);
   const toggleTheme = () => setIsLightTheme(!isLightTheme);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
+  const handelLogout = async () => {
+    try {
+      await logoutUser();
+      dispatch(logout());
+      localStorage.removeItem("accessToken");
+      navigate("/login");
+    } catch (error) {
+      console.error("Login failed", error);
+    }
+  };
   return (
     <ThemeProvider theme={isLightTheme ? lightTheme : darkTheme}>
       <SidebarContainer isOpen={isOpen}>
         {/* Section 1: Logo and Toggle */}
         <SidebarHeader>
-          <Logo>{isOpen ? "FinSet" : "FS"}</Logo>
+          <Logo>{isOpen ? "MoneyMind" : "MM"}</Logo>
           <ToggleButton onClick={toggleSidebar}>
             {isOpen ? "←" : "→"}
           </ToggleButton>
@@ -134,7 +149,11 @@ const Sidebar: React.FC = () => {
           </MenuItem>
           <MenuItem>
             <FaWallet />
-            {isOpen && <span>Wallet</span>}
+            {isOpen && (
+              <Link to="/debt">
+                <span>Debts</span>
+              </Link>
+            )}
           </MenuItem>
           <MenuItem>
             <FaBullseye />
@@ -156,7 +175,7 @@ const Sidebar: React.FC = () => {
             <FaQuestionCircle />
             {isOpen && <span>Help</span>}
           </MenuItem>
-          <MenuItem>
+          <MenuItem onClick={handelLogout}>
             <FaSignOutAlt />
             {isOpen && <span>Log out</span>}
           </MenuItem>
