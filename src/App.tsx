@@ -4,6 +4,9 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 
 import Layout from "./routes/layout";
 import DashboardPage from "./routes/dashboard/Page";
+import TransactionLogs from "./pages/TransactionLogs";
+import DebtTable from "./components/Debt";
+import Goals from "./components/Goals";
 
 function App() {
     const router = createBrowserRouter([
@@ -17,15 +20,15 @@ function App() {
                 },
                 {
                     path: "transactions",
-                    element: <h1 className="title">Transaction Logs</h1>,
+                    element: <TransactionLogs />,
                 },
                 {
                     path: "debts",
-                    element: <h1 className="title">Debts</h1>,
+                    element: <DebtTable />,
                 },
                 {
                     path: "goals",
-                    element: <h1 className="title">Goals</h1>,
+                    element: <Goals />,
                 },
                 {
                     path: "budget",

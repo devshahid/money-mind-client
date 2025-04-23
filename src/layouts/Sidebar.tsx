@@ -3,8 +3,7 @@ import { NavLink } from "react-router-dom";
 
 import { navbarLinks } from "../constants/index.ts";
 
-import logoLight from "../assets/logo-light.svg";
-import logoDark from "../assets/logo-dark.svg";
+import Logo from "/money-mind-logo-crop.png";
 
 import { cn } from "../utils/cn";
 
@@ -24,23 +23,28 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(({ collapsed }, ref
                 collapsed ? "max-md:-left-full" : "max-md:left-0",
             )}
         >
-            <div className="flex gap-x-3 p-3">
+            <div
+                className="flex gap-x-3 p-3"
+                style={{ alignItems: "center", borderBottom: "1px solid rgb(51, 65, 85)" }}
+            >
                 <img
-                    src={logoLight}
+                    src={Logo}
                     alt="Logoipsum"
                     className="dark:hidden"
+                    style={{ width: "50px", height: "50px" }}
                 />
                 <img
-                    src={logoDark}
+                    src={Logo}
                     alt="Logoipsum"
                     className="hidden dark:block"
+                    style={{ width: "50px", height: "50px" }}
                 />
-                {!collapsed && <p className="text-lg font-medium text-slate-900 transition-colors dark:text-slate-50">Logoipsum</p>}
+                {!collapsed && <p className="text-lg font-medium text-slate-900 transition-colors dark:text-slate-50">Money Mind</p>}
             </div>
             <div className="flex w-full flex-col gap-y-4 overflow-y-auto overflow-x-hidden p-3 [scrollbar-width:_thin]">
-                {navbarLinks.map((navbarLink) => (
+                {navbarLinks.map((navbarLink, i) => (
                     <nav
-                        key={navbarLink.title}
+                        key={i}
                         className={cn("sidebar-group", collapsed && "md:items-center")}
                     >
                         {navbarLink.links.map((link) => (

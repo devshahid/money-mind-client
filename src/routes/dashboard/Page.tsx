@@ -120,7 +120,7 @@ const DashboardPage = () => {
                                     formatter={(value) => `$${value}`}
                                 />
 
-                                <XAxis
+                                {/* <XAxis
                                     dataKey="name"
                                     strokeWidth={0}
                                     stroke={theme === "light" ? "#475569" : "#94a3b8"}
@@ -132,7 +132,7 @@ const DashboardPage = () => {
                                     stroke={theme === "light" ? "#475569" : "#94a3b8"}
                                     tickFormatter={(value) => `$${value}`}
                                     tickMargin={6}
-                                />
+                                /> */}
 
                                 <Area
                                     type="monotone"
