@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { ThemeProvider, DefaultTheme } from "styled-components";
 import styled from "styled-components";
 import {
   FaTachometerAlt,
@@ -17,24 +16,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { logoutUser } from "../services/authService";
 import { useDispatch } from "react-redux";
 import { logout } from "../store/authSlice";
-
-// Light and Dark Theme Definitions
-const lightTheme: DefaultTheme = {
-  background: "#f9f9f9",
-  text: "#333",
-  headerBg: "#e6e6e6",
-  hoverBg: "#dcdcdc",
-};
-
-const darkTheme: DefaultTheme = {
-  background: "#292b2f",
-  text: "#fff",
-  headerBg: "#1f2023",
-  hoverBg: "#3a3b3f",
-};
+import { useThemeContext } from "./ThemeProvider";
 
 // Styled Components for Sidebar
-const SidebarContainer = styled.div<{ isOpen: boolean }>`
+const SidebarContainer = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "isOpen",
+})<{
+  isOpen: boolean;
+}>`
   width: ${(props) => (props.isOpen ? "250px" : "80px")};
   height: 100vh;
   background-color: ${(props) => props.theme.background};
@@ -100,11 +89,11 @@ const ThemeToggle = styled.div`
 `;
 
 const Sidebar: React.FC = () => {
+  // Inside Sidebar component
+  const { isLight, toggleTheme } = useThemeContext();
   const [isOpen, setIsOpen] = useState(true);
-  const [isLightTheme, setIsLightTheme] = useState(true);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
-  const toggleTheme = () => setIsLightTheme(!isLightTheme);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -119,75 +108,85 @@ const Sidebar: React.FC = () => {
     }
   };
   return (
-    <ThemeProvider theme={isLightTheme ? lightTheme : darkTheme}>
-      <SidebarContainer isOpen={isOpen}>
-        {/* Section 1: Logo and Toggle */}
-        <SidebarHeader>
-          <Logo>{isOpen ? "MoneyMind" : "MM"}</Logo>
-          <ToggleButton onClick={toggleSidebar}>
-            {isOpen ? "←" : "→"}
-          </ToggleButton>
-        </SidebarHeader>
+    <SidebarContainer isOpen={isOpen}>
+      {/* Section 1: Logo and Toggle */}
+      <SidebarHeader>
+        <Logo>{isOpen ? "MoneyMind" : "MM"}</Logo>
+        <ToggleButton onClick={toggleSidebar}>
+          {isOpen ? "←" : "→"}
+        </ToggleButton>
+      </SidebarHeader>
 
-        {/* Section 2: Main Options */}
-        <Menu>
-          <MenuItem>
-            <FaTachometerAlt />
-            {isOpen && (
-              <Link to="/">
-                <span>Dashboard</span>
-              </Link>
-            )}
-          </MenuItem>
-          <MenuItem>
-            <FaExchangeAlt />
-            {isOpen && (
-              <Link to="/table">
-                <span>Transactions</span>
-              </Link>
-            )}
-          </MenuItem>
-          <MenuItem>
-            <FaWallet />
-            {isOpen && (
-              <Link to="/debt">
-                <span>Debts</span>
-              </Link>
-            )}
-          </MenuItem>
-          <MenuItem>
-            <FaBullseye />
-            {isOpen && <span>Goals</span>}
-          </MenuItem>
-          <MenuItem>
-            <FaChartPie />
-            {isOpen && <span>Budget</span>}
-          </MenuItem>
-          <MenuItem>
-            <FaCog />
-            {isOpen && <span>Settings</span>}
-          </MenuItem>
-        </Menu>
+      {/* Section 2: Main Options */}
+      <Menu>
+        <MenuItem>
+          <FaTachometerAlt />
+          {isOpen && (
+            <Link to="/">
+              <span>Dashboard</span>
+            </Link>
+          )}
+        </MenuItem>
+        <MenuItem>
+          <FaExchangeAlt />
+          {isOpen && (
+            <Link to="/logs">
+              <span>Logs</span>
+            </Link>
+          )}
+        </MenuItem>
+        <MenuItem>
+          <FaExchangeAlt />
+          {isOpen && (
+            <Link to="/table">
+              <span>Transactions</span>
+            </Link>
+          )}
+        </MenuItem>
+        <MenuItem>
+          <FaWallet />
+          {isOpen && (
+            <Link to="/debt">
+              <span>Debts</span>
+            </Link>
+          )}
+        </MenuItem>
+        <MenuItem>
+          <FaBullseye />
+          {isOpen && (
+            <Link to="/goals">
+              <span>Goals</span>
+            </Link>
+          )}
+        </MenuItem>
+        <MenuItem>
+          <FaChartPie />
+          {isOpen && <span>Budget</span>}
+        </MenuItem>
+        <MenuItem>
+          <FaCog />
+          {isOpen && <span>Settings</span>}
+        </MenuItem>
+      </Menu>
 
-        {/* Section 3: Other Options */}
-        <OtherOptions>
-          <MenuItem>
-            <FaQuestionCircle />
-            {isOpen && <span>Help</span>}
-          </MenuItem>
-          <MenuItem onClick={handelLogout}>
-            <FaSignOutAlt />
-            {isOpen && <span>Log out</span>}
-          </MenuItem>
-        </OtherOptions>
+      {/* Section 3: Other Options */}
+      <OtherOptions>
+        <MenuItem>
+          <FaQuestionCircle />
+          {isOpen && <span>Help</span>}
+        </MenuItem>
+        <MenuItem onClick={handelLogout}>
+          <FaSignOutAlt />
+          {isOpen && <span>Log out</span>}
+        </MenuItem>
+      </OtherOptions>
 
-        {/* Bottom Section: Theme Toggle */}
-        <ThemeToggle onClick={toggleTheme}>
-          {isLightTheme ? <FaMoon /> : <FaSun />}
-          {isOpen && <span>{isLightTheme ? "Dark Mode" : "Light Mode"}</span>}
-        </ThemeToggle>
-      </SidebarContainer>
-    </ThemeProvider>
+      {/* Bottom Section: Theme Toggle */}
+      <ThemeToggle onClick={toggleTheme}>
+        {isLight ? <FaMoon /> : <FaSun />}
+        {isOpen && <span>{isLight ? "Dark Mode" : "Light Mode"}</span>}
+      </ThemeToggle>
+    </SidebarContainer>
   );
 };
 

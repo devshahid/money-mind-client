@@ -105,7 +105,13 @@ const Dashboard: React.FC<ProfileHeaderProps> = ({
           </div>
         </div>
       </div>
-
+      {/* Upload Section */}
+      <div className="upload-section">
+        <div className="upload-header">
+          <h2>Upload your documents</h2>
+          <p>Upload your documents to get started</p>
+        </div>
+      </div>
       {/* Metrics Section */}
       <div className="metrics">
         <BalanceCard

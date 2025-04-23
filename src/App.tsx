@@ -10,6 +10,9 @@ import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Provider } from "react-redux";
 import { store } from "./store";
+import Logs from "./components/Logs";
+import Goals from "./components/Goals";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 const ProtectedLayout = () => {
   return (
@@ -27,8 +30,10 @@ const ProtectedLayout = () => {
               />
             }
           />
+          <Route path="/logs" element={<Logs />} />
           <Route path="/table" element={<TableComponent />} />
           <Route path="/debt" element={<Debt />} />
+          <Route path="/goals" element={<Goals />} />
         </Routes>
       </div>
     </div>
@@ -37,20 +42,22 @@ const ProtectedLayout = () => {
 
 const App = () => {
   return (
-    <Provider store={store}>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+    <ThemeProvider>
+      <Provider store={store}>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* Protected Routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/*" element={<ProtectedLayout />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </Provider>
+            {/* Protected Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/*" element={<ProtectedLayout />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </Provider>
+    </ThemeProvider>
   );
 };
 
