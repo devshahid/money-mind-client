@@ -1,64 +1,53 @@
-import "./App.css";
-import Sidebar from "./components/Sidebar";
-import Dashboard from "./components/Dashboard";
-import TableComponent from "./components/Table";
-import Debt from "./components/Debt";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ProtectedRoute from "./components/ProtectedRoute";
-import { Provider } from "react-redux";
-import { store } from "./store";
-import Logs from "./components/Logs";
-import Goals from "./components/Goals";
-import { ThemeProvider } from "./components/ThemeProvider";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
-const ProtectedLayout = () => {
-  return (
-    <div className="app">
-      <Sidebar />
-      <div className="main-content">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Dashboard
-                userName="John Doe"
-                profilePicture="https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250"
-                notificationCount={3}
-              />
-            }
-          />
-          <Route path="/logs" element={<Logs />} />
-          <Route path="/table" element={<TableComponent />} />
-          <Route path="/debt" element={<Debt />} />
-          <Route path="/goals" element={<Goals />} />
-        </Routes>
-      </div>
-    </div>
-  );
-};
+import Layout from "./routes/layout";
+import DashboardPage from "./routes/dashboard/Page";
 
-const App = () => {
-  return (
-    <ThemeProvider>
-      <Provider store={store}>
-        <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+function App() {
+    const router = createBrowserRouter([
+        {
+            path: "/",
+            element: <Layout />,
+            children: [
+                {
+                    index: true,
+                    element: <DashboardPage />,
+                },
+                {
+                    path: "transactions",
+                    element: <h1 className="title">Transaction Logs</h1>,
+                },
+                {
+                    path: "debts",
+                    element: <h1 className="title">Debts</h1>,
+                },
+                {
+                    path: "goals",
+                    element: <h1 className="title">Goals</h1>,
+                },
+                {
+                    path: "budget",
+                    element: <h1 className="title">Budget</h1>,
+                },
+                {
+                    path: "analytics",
+                    element: <h1 className="title">Analytics</h1>,
+                },
+                {
+                    path: "settings",
+                    element: <h1 className="title">Settings</h1>,
+                },
+            ],
+        },
+    ]);
 
-            {/* Protected Routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/*" element={<ProtectedLayout />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </Provider>
-    </ThemeProvider>
-  );
-};
+    return (
+        <ThemeProvider storageKey="theme">
+            <RouterProvider router={router} />
+        </ThemeProvider>
+    );
+}
 
 export default App;
