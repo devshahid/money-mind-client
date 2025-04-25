@@ -2,8 +2,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import { ThemeProvider } from "./contexts/ThemeContext";
 
-import Layout from "./routes/layout";
-import DashboardPage from "./routes/dashboard/Page";
+import Layout from "./layouts/main";
+import DashboardPage from "./pages/Dashboard";
 import TransactionLogs from "./pages/TransactionLogs";
 import DebtTable from "./components/Debt";
 import Goals from "./components/Goals";

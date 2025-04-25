@@ -1,10 +1,10 @@
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { useTheme } from "../../hooks/useTheme.ts";
+import { useTheme } from "../hooks/useTheme.ts";
 
-import { overviewData, recentSalesData, topProducts } from "../../constants/index.ts";
+import { overviewData, recentSalesData, topProducts } from "../constants/index.ts";
 
-import { Footer } from "../../layouts/Footer";
+import { Footer } from "../layouts/Footer.tsx";
 
 import { CreditCard, DollarSign, Package, PencilLine, Star, Trash, TrendingUp, Users } from "lucide-react";
 
