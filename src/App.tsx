@@ -7,6 +7,7 @@ import DashboardPage from "./pages/Dashboard";
 import TransactionLogs from "./pages/TransactionLogs";
 import DebtTable from "./components/Debt";
 import Goals from "./components/Goals";
+import Login from "./pages/Login";
 
 function App() {
     const router = createBrowserRouter([
@@ -43,6 +44,14 @@ function App() {
                     element: <h1 className="title">Settings</h1>,
                 },
             ],
+        },
+        {
+            path: "login",
+            element: <Login />,
+        },
+        {
+            path: "register",
+            element: <Login />,
         },
     ]);
 

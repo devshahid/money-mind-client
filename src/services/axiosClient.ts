@@ -1,5 +1,4 @@
 import axios from "axios";
-import { store } from "../store";
 
 const API_BASE_URL = "http://localhost:8000/api/v1"; // Replace with your actual API URL
 
@@ -11,11 +10,8 @@ const axiosClient = axios.create({
 // Request Interceptor
 axiosClient.interceptors.request.use(
     (config) => {
-        const state = store.getState();
-        const accessToken = state.auth.accessToken || localStorage.getItem("accessToken");
-        if (accessToken) {
-            config.headers.accessToken = `${accessToken}`;
-        }
+        const accessToken = localStorage.getItem("accessToken");
+        if (accessToken) config.headers.accessToken = `${accessToken}`;
         return config;
     },
     (error) => Promise.reject(error),
@@ -27,7 +23,7 @@ axiosClient.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             console.error("Unauthorized! Logging out...");
-            store.dispatch({ type: "auth/logout" });
+            localStorage.removeItem("accessToken");
         }
         return Promise.reject(error);
     },
