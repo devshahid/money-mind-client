@@ -4,13 +4,22 @@ import PropTypes from "prop-types";
 
 const initialState = {
     theme: "system",
-    setTheme: () => null,
+    setTheme: (_p0: string) => null,
 };
 
 export const ThemeProviderContext = createContext(initialState);
 
-export function ThemeProvider({ children, defaultTheme = "system", storageKey = "vite-ui-theme", ...props }) {
-    const [theme, setTheme] = useState(() => localStorage.getItem(storageKey) || defaultTheme);
+export function ThemeProvider({
+    children,
+    defaultTheme = "system",
+    storageKey = "vite-ui-theme",
+}: {
+    children: React.ReactNode;
+    defaultTheme?: string;
+    storageKey?: string;
+    [key: string]: any;
+}) {
+    const [theme, setThemeState] = useState(() => localStorage.getItem(storageKey) || defaultTheme);
 
     useEffect(() => {
         const root = window.document.documentElement;
@@ -29,20 +38,13 @@ export function ThemeProvider({ children, defaultTheme = "system", storageKey = 
 
     const value = {
         theme,
-        setTheme: (theme) => {
-            localStorage.setItem(storageKey, theme);
-            setTheme(theme);
+        setTheme: (newTheme: string) => {
+            setThemeState(newTheme);
+            return null;
         },
     };
 
-    return (
-        <ThemeProviderContext.Provider
-            {...props}
-            value={value}
-        >
-            {children}
-        </ThemeProviderContext.Provider>
-    );
+    return <ThemeProviderContext.Provider value={value}>{children}</ThemeProviderContext.Provider>;
 }
 
 ThemeProvider.propTypes = {

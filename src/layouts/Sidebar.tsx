@@ -1,73 +1,115 @@
-import { forwardRef } from "react";
+import React from "react";
+import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Box, Divider, Typography, useMediaQuery, Theme } from "@mui/material";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import FlagIcon from "@mui/icons-material/Flag";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import SavingsIcon from "@mui/icons-material/Savings";
+import AppLogo from "/money-mind-logo.png"; // Adjust the path to your logo
 import { NavLink } from "react-router-dom";
-
-import { navbarLinks } from "../constants/index.ts";
-
-import Logo from "/money-mind-logo-crop.png";
-
-import { cn } from "../utils/cn";
-
-import PropTypes from "prop-types";
-
 interface SidebarProps {
-    collapsed: boolean;
+    isOpen: boolean;
+    toggleSidebar: () => void;
+    drawerWidthClosed: number;
+    drawerWidthOpen: number;
 }
 
-export const Sidebar = forwardRef<HTMLElement, SidebarProps>(({ collapsed }, ref) => {
-    return (
-        <aside
-            ref={ref}
-            className={cn(
-                "fixed z-[100] flex h-full w-[240px] flex-col overflow-x-hidden border-r border-slate-300 bg-white [transition:_width_300ms_cubic-bezier(0.4,_0,_0.2,_1),_left_300ms_cubic-bezier(0.4,_0,_0.2,_1),_background-color_150ms_cubic-bezier(0.4,_0,_0.2,_1),_border_150ms_cubic-bezier(0.4,_0,_0.2,_1)] dark:border-slate-700 dark:bg-slate-900",
-                collapsed ? "md:w-[70px] md:items-center" : "md:w-[240px]",
-                collapsed ? "max-md:-left-full" : "max-md:left-0",
-            )}
-        >
-            <div
-                className="flex gap-x-3 p-3"
-                style={{ alignItems: "center", borderBottom: "1px solid rgb(51, 65, 85)" }}
-            >
-                <img
-                    src={Logo}
-                    alt="Logoipsum"
-                    className="dark:hidden"
-                    style={{ width: "50px", height: "50px" }}
-                />
-                <img
-                    src={Logo}
-                    alt="Logoipsum"
-                    className="hidden dark:block"
-                    style={{ width: "50px", height: "50px" }}
-                />
-                {!collapsed && <p className="text-lg font-medium text-slate-900 transition-colors dark:text-slate-50">Money Mind</p>}
-            </div>
-            <div className="flex w-full flex-col gap-y-4 overflow-y-auto overflow-x-hidden p-3 [scrollbar-width:_thin]">
-                {navbarLinks.map((navbarLink, i) => (
-                    <nav
-                        key={i}
-                        className={cn("sidebar-group", collapsed && "md:items-center")}
-                    >
-                        {navbarLink.links.map((link) => (
-                            <NavLink
-                                key={link.label}
-                                to={link.path}
-                                className={cn("sidebar-item", collapsed && "md:w-[45px]")}
-                            >
-                                <link.icon
-                                    size={22}
-                                    className="flex-shrink-0"
-                                />
-                                {!collapsed && <p className="whitespace-nowrap">{link.label}</p>}
-                            </NavLink>
-                        ))}
-                    </nav>
-                ))}
-            </div>
-        </aside>
-    );
-});
+const menuItems = [
+    { text: "Dashboard", icon: <DashboardIcon />, path: "/" },
+    { text: "Transactions", icon: <AccountBalanceWalletIcon />, path: "/transactions" },
+    { text: "Debts", icon: <CreditCardIcon />, path: "/debts" },
+    { text: "Goals", icon: <FlagIcon />, path: "/goals" },
+    { text: "Budget", icon: <SavingsIcon />, path: "/budget" },
+    { text: "My Account", icon: <AccountCircleIcon />, path: "/account" },
+];
 
-Sidebar.displayName = "Sidebar";
-Sidebar.propTypes = {
-    collapsed: PropTypes.bool.isRequired,
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, drawerWidthOpen, drawerWidthClosed }) => {
+    const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+
+    return (
+        <Drawer
+            variant={isMobile ? "temporary" : "permanent"}
+            open={isOpen}
+            onClose={toggleSidebar}
+            sx={{
+                width: isOpen ? drawerWidthOpen : drawerWidthClosed,
+                flexShrink: 0,
+                whiteSpace: "nowrap",
+                "& .MuiDrawer-paper": {
+                    width: isOpen ? drawerWidthOpen : drawerWidthClosed,
+                    // transition: "width 0.3s",
+                    overflowX: "hidden",
+                    boxSizing: "border-box",
+                },
+            }}
+        >
+            <Box sx={{ p: 2, transition: "all 0.3s" }}>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: isOpen ? "flex-start" : "center" }}>
+                    {/* Logo or Title */}
+                    <Box
+                        component="img"
+                        src={AppLogo}
+                        alt="Logo"
+                        sx={{ height: 70, ml: isOpen ? 0 : 2.5 }}
+                    />
+                    <Typography
+                        variant="h6"
+                        noWrap={isOpen ? false : true}
+                        sx={{
+                            ml: isOpen ? 0 : 2,
+                            opacity: isOpen ? 1 : 0,
+                            // transition: "opacity 0.3s, margin 0.3s",
+                            fontWeight: "bold",
+                            color: "#000",
+                            fontSize: "1.5rem",
+                            lineHeight: "1.5rem",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        Money Mind
+                    </Typography>
+                </Box>
+                <Divider />
+                <List>
+                    {menuItems.map((item, index) => (
+                        <ListItem
+                            key={index}
+                            disablePadding
+                            sx={{ display: "block" }}
+                        >
+                            <NavLink
+                                to={item.path} // <-- your menuItems should have a `path` field
+                                style={({ isActive }) => ({
+                                    textDecoration: "none",
+                                    color: isActive ? "#1976d2" : "inherit", // highlight active link
+                                })}
+                            >
+                                <ListItemButton
+                                    sx={{
+                                        minHeight: 48,
+                                        justifyContent: isOpen ? "initial" : "center",
+                                        px: 2.5,
+                                    }}
+                                >
+                                    <ListItemIcon
+                                        sx={{
+                                            minWidth: 0,
+                                            mr: isOpen ? 3 : "auto",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        {item.icon}
+                                    </ListItemIcon>
+                                    {isOpen && <ListItemText primary={item.text} />}
+                                </ListItemButton>
+                            </NavLink>
+                        </ListItem>
+                    ))}
+                </List>
+            </Box>
+        </Drawer>
+    );
 };
+
+export default Sidebar;

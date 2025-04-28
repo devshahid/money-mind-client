@@ -1,21 +1,28 @@
+import { Box, Typography, Link } from "@mui/material";
+
 export const Footer = () => {
     return (
-        <footer className="flex flex-wrap items-center justify-between gap-4 pt-4">
-            <p className="text-base font-medium text-slate-900 dark:text-slate-50">© 2024 XD Code All Rights Reserved</p>
-            <div className="flex flex-wrap gap-x-2">
-                <a
+        <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", pt: 4, gap: 4 }}>
+            <Typography
+                variant="body2"
+                sx={{ color: "text.primary" }}
+            >
+                © 2024 XD Code All Rights Reserved
+            </Typography>
+            <Box sx={{ display: "flex", gap: 2 }}>
+                <Link
                     href="#"
-                    className="link"
+                    sx={{ textDecoration: "none", color: "primary.main" }}
                 >
                     Privacy Policy
-                </a>
-                <a
+                </Link>
+                <Link
                     href="#"
-                    className="link"
+                    sx={{ textDecoration: "none", color: "primary.main" }}
                 >
                     Terms of Service
-                </a>
-            </div>
-        </footer>
+                </Link>
+            </Box>
+        </Box>
     );
 };

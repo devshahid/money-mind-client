@@ -1,0 +1,185 @@
+/* dashboard.css */
+
+/* General container styles */
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    /* padding: 16px; */
+}
+
+/* Title styles */
+.dashboard-title {
+    font-size: 32px;
+    margin-bottom: 16px;
+}
+
+/* Card styles */
+.dashboard-card {
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    /* padding: 16px; */
+}
+
+/* Card header styles */
+.card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+/* Icon container */
+.icon-container {
+    background-color: rgba(37, 99, 235, 0.2);
+    padding: 8px;
+    border-radius: 8px;
+    margin-right: 8px;
+}
+
+/* Percentage button styles */
+.percentage-button {
+    background-color: #e3f2fd;
+    color: #2196f3;
+    font-weight: bold;
+    border-radius: 16px;
+    padding: 6px 12px;
+}
+
+/* Recent sales styles */
+.recent-sales .sale-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* Product info section */
+.product-info {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Product image styles */
+.product-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+}
+
+/* Table container for scrolling */
+.table-container {
+    overflow-x: auto;
+    margin-top: 16px;
+}
+
+/* Table cell padding */
+.table th,
+.table td {
+    padding: 12px;
+    text-align: left;
+}
+
+/* Media Queries for Responsiveness */
+
+/* For small devices (mobile) */
+@media (max-width: 600px) {
+    .dashboard-title {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+
+    .dashboard-container {
+        padding: 8px;
+    }
+
+    .dashboard-card {
+        padding: 12px;
+    }
+
+    .product-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .product-image {
+        width: 32px;
+        height: 32px;
+    }
+
+    .percentage-button {
+        padding: 4px 8px;
+        font-size: 14px;
+    }
+
+    .table th,
+    .table td {
+        padding: 8px;
+    }
+}
+
+/* For medium devices (tablets) */
+@media (min-width: 600px) and (max-width: 1024px) {
+    .dashboard-title {
+        font-size: 28px;
+    }
+
+    .dashboard-container {
+        padding: 12px;
+    }
+
+    .dashboard-card {
+        padding: 14px;
+    }
+
+    .product-info {
+        flex-direction: row;
+    }
+
+    .product-image {
+        width: 36px;
+        height: 36px;
+    }
+
+    .percentage-button {
+        padding: 5px 10px;
+    }
+
+    .table th,
+    .table td {
+        padding: 10px;
+    }
+}
+
+/* For large devices (desktops) */
+@media (min-width: 1024px) {
+    .dashboard-title {
+        font-size: 32px;
+    }
+
+    .dashboard-container {
+        padding: 16px;
+    }
+
+    .dashboard-card {
+        padding: 16px;
+    }
+
+    .product-info {
+        flex-direction: row;
+    }
+
+    .product-image {
+        width: 40px;
+        height: 40px;
+    }
+
+    .percentage-button {
+        padding: 6px 12px;
+    }
+
+    .table th,
+    .table td {
+        padding: 12px;
+    }
+}

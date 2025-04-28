@@ -1,51 +1,56 @@
+import React, { useState } from "react";
+import { Box } from "@mui/material";
+import Sidebar from "./Sidebar";
+import Header from "./Header";
 import { Outlet } from "react-router-dom";
 
-import { useMediaQuery } from "@uidotdev/usehooks";
+const headerHeight = 64; // You can change it based on your Header
+const drawerWidthOpen = 240;
+const drawerWidthClosed = 70;
 
-import { useEffect, useRef, useState } from "react";
-import { useClickOutside } from "../hooks/useClickOutside";
-import { cn } from "../utils/cn";
-import { Sidebar } from "./Sidebar";
-import { Header } from "./Header";
+const Layout: React.FC = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-const Layout = () => {
-    const isDesktopDevice = useMediaQuery("(min-width: 768px)");
-    const [collapsed, setCollapsed] = useState(!isDesktopDevice);
-
-    const sidebarRef = useRef(null);
-
-    useEffect(() => {
-        setCollapsed(!isDesktopDevice);
-    }, [isDesktopDevice]);
-
-    useClickOutside([sidebarRef], () => {
-        if (!isDesktopDevice && !collapsed) {
-            setCollapsed(true);
-        }
-    });
+    const toggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
 
     return (
-        <div className="min-h-screen bg-slate-100 transition-colors dark:bg-slate-950">
-            <div
-                className={cn(
-                    "pointer-events-none fixed inset-0 -z-10 bg-black opacity-0 transition-opacity",
-                    !collapsed && "max-md:pointer-events-auto max-md:z-50 max-md:opacity-30",
-                )}
-            />
+        <Box sx={{ display: "flex", width: "100%" }}>
+            {/* Sidebar */}
             <Sidebar
-                ref={sidebarRef}
-                collapsed={collapsed}
+                isOpen={isSidebarOpen}
+                toggleSidebar={toggleSidebar}
+                drawerWidthOpen={drawerWidthOpen}
+                drawerWidthClosed={drawerWidthClosed}
             />
-            <div className={cn("transition-[margin] duration-300", collapsed ? "md:ml-[70px]" : "md:ml-[240px]")}>
+
+            {/* Main Content */}
+            <Box
+                component="main"
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    flexGrow: 1,
+                    // ml: isSidebarOpen ? `${drawerWidthOpen}px` : `${drawerWidthClosed}px`,
+                    transition: "all 0.3s ease",
+                    minHeight: "100vh",
+                    backgroundColor: "#f9f9f9", // Optional
+                    paddingTop: `${headerHeight}px`, // Push content below header
+                }}
+            >
+                {/* Header/Navbar */}
                 <Header
-                    collapsed={collapsed}
-                    setCollapsed={setCollapsed}
+                    isOpen={isSidebarOpen}
+                    toggleSidebar={toggleSidebar}
+                    drawerWidthOpen={drawerWidthOpen}
+                    drawerWidthClosed={drawerWidthClosed}
                 />
-                <div className="h-[calc(100vh-60px)] overflow-y-auto overflow-x-hidden p-6">
-                    <Outlet />
-                </div>
-            </div>
-        </div>
+
+                {/* Page Content */}
+                <Outlet />
+            </Box>
+        </Box>
     );
 };
 
