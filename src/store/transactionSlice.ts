@@ -14,12 +14,17 @@ export interface ITransactionLogs {
 }
 
 interface IListTransactionPayload {
+    dateFrom?: string;
+    dateTo?: string;
+    amount?: string;
     page?: string;
     limit?: string;
-    type?: string;
+    type?: string; // credit/debit
     bankType?: string;
     bankName?: string;
     labels?: string[];
+    category?: string[];
+    transactionType?: string; // online/cash
 }
 
 interface IInitialState {
@@ -45,17 +50,9 @@ export const listTransactions = createAsyncThunk<ITransactionLogs[], IListTransa
     "listTransactions",
     async (payload: IListTransactionPayload, { rejectWithValue }) => {
         try {
-            const searchParams = new URLSearchParams();
-            Object.entries(payload).forEach(([key, value]) => {
-                if (value !== undefined && value !== null) {
-                    if (Array.isArray(value)) {
-                        value.forEach((val) => searchParams.append(key, val));
-                    } else {
-                        searchParams.append(key, value);
-                    }
-                }
+            const response = await axiosClient.post(`/transaction-logs/list-transactions`, {
+                ...payload,
             });
-            const response = await axiosClient(`/transaction-logs/list-transactions?${searchParams.toString()}`);
             return response.data.output;
         } catch (error: any) {
             return rejectWithValue(error?.response?.data?.message || "Failed to fetch transactions");
@@ -104,8 +101,7 @@ const transactionsSlice = createSlice({
         });
         builder.addCase(listTransactions.fulfilled, (state, action: PayloadAction<any>) => {
             state.loading = false;
-            state.transactions = [...state.transactions, ...action.payload.result];
-            // state.transactions = [...state.transactions, ...action.payload.result];
+            state.transactions = action.payload.result;
             state.totalCount = action.payload.totalCount;
         });
         builder.addCase(listTransactions.rejected, (state, action) => {

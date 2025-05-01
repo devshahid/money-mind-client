@@ -22,6 +22,7 @@ import {
     Chip,
     Autocomplete,
     Modal,
+    Paper,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { Loader } from "lucide-react";
@@ -34,10 +35,10 @@ const TransactionLogs = () => {
     const [editingTransaction, setEditingTransaction] = useState<any>(null);
 
     const dispatch = useAppDispatch();
-    const { transactions, loading, labels, categories } = useAppSelector((state: RootState) => state.transactions);
+    const { transactions, loading, labels, categories, totalCount } = useAppSelector((state: RootState) => state.transactions);
 
     useEffect(() => {
-        dispatch(listTransactions({ page: currentPage.toString(), limit: "5" }));
+        dispatch(listTransactions({ page: currentPage.toString(), limit: "50" }));
     }, [dispatch, currentPage]);
 
     useEffect(() => {
@@ -55,6 +56,7 @@ const TransactionLogs = () => {
         }
     }, [editingTransaction]);
 
+    console.log("totalCount: ", totalCount);
     const handleLoadMore = () => {
         setIsLoadingMore(true);
         setCurrentPage((prev) => prev + 1); // Update page locally
@@ -88,7 +90,9 @@ const TransactionLogs = () => {
 
     return (
         <div>
-            <Box>
+            <Box style={{ padding: "10px", backgroundColor: "#f5f5f5" }}>
+                <TableControls />
+
                 {!loading && transactions.length === 0 ? (
                     <Box
                         sx={{
@@ -107,10 +111,11 @@ const TransactionLogs = () => {
                     </Box>
                 ) : (
                     <div>
-                        <div style={{ padding: "10px", backgroundColor: "#f5f5f5" }}></div>
-                        <TableControls />
                         <Box sx={{ width: "100%", overflowX: "auto" }}>
-                            <TableContainer sx={{ maxHeight: "100vh" }}>
+                            <TableContainer
+                                sx={{ maxHeight: "100vh" }}
+                                component={Paper}
+                            >
                                 {loading && (
                                     <Typography
                                         variant="h6"
@@ -134,15 +139,40 @@ const TransactionLogs = () => {
                                                     onChange={handleSelectAll}
                                                 />
                                             </TableCell>
-                                            <TableCell>Transaction Date</TableCell>
-                                            <TableCell>Narration</TableCell>
-                                            <TableCell>Notes</TableCell>
-                                            <TableCell>Category</TableCell>
-                                            <TableCell>Labels</TableCell>
-                                            <TableCell>Bank</TableCell>
-                                            <TableCell>Type</TableCell>
-                                            <TableCell>Amount</TableCell>
-                                            <TableCell align="center">Action</TableCell>
+                                            <TableCell
+                                                sx={{
+                                                    width: { xs: "50px", sm: "80px", md: "100px" }, // Responsive widths
+                                                    whiteSpace: "nowrap",
+                                                    textAlign: "center",
+                                                    fontWeight: "bold",
+                                                    fontSize: "1rem",
+                                                }}
+                                            >
+                                                Transaction Date
+                                            </TableCell>
+                                            <TableCell sx={{ fontWeight: "bold", fontSize: "1rem" }}>Narration</TableCell>
+                                            <TableCell sx={{ fontWeight: "bold", fontSize: "1rem" }}>Notes</TableCell>
+                                            <TableCell sx={{ fontWeight: "bold", fontSize: "1rem" }}>Category</TableCell>
+                                            <TableCell sx={{ fontWeight: "bold", fontSize: "1rem" }}>Labels</TableCell>
+                                            <TableCell sx={{ fontWeight: "bold", fontSize: "1rem" }}>Bank</TableCell>
+                                            <TableCell sx={{ fontWeight: "bold", fontSize: "1rem" }}>Type</TableCell>
+                                            <TableCell
+                                                sx={{
+                                                    width: { xs: "70px", sm: "100px", md: "150px" }, // Responsive widths
+                                                    whiteSpace: "nowrap",
+                                                    textAlign: "center",
+                                                    fontWeight: "bold",
+                                                    fontSize: "1rem",
+                                                }}
+                                            >
+                                                Amount
+                                            </TableCell>
+                                            <TableCell
+                                                align="center"
+                                                sx={{ fontWeight: "bold", fontSize: "1rem" }}
+                                            >
+                                                Action
+                                            </TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -159,23 +189,32 @@ const TransactionLogs = () => {
                                                         onChange={() => handleSelectOne(tx._id)}
                                                     />
                                                 </TableCell>
-                                                <TableCell>{tx.transactionDate}</TableCell>
-                                                <TableCell>{tx.narration}</TableCell>
-                                                <TableCell>{tx.notes}</TableCell>
-                                                <TableCell>{tx.category ? tx.category.charAt(0).toUpperCase() + tx.category.slice(1) : ""}</TableCell>
+                                                <TableCell sx={{ textAlign: "center", fontSize: "1rem" }}>{tx.transactionDate}</TableCell>
+                                                <TableCell sx={{ fontSize: "1rem" }}>{tx.narration}</TableCell>
+                                                <TableCell sx={{ fontSize: "1rem" }}>{tx.notes}</TableCell>
+                                                <TableCell sx={{ fontSize: "1rem" }}>
+                                                    {tx.category ? tx.category.charAt(0).toUpperCase() + tx.category.slice(1) : ""}
+                                                </TableCell>
                                                 <TableCell>
                                                     {tx.label.map((label, index) => (
                                                         <Typography
                                                             variant="body2"
                                                             key={index}
+                                                            sx={{ fontSize: "1rem" }}
                                                         >
                                                             {label}
                                                         </Typography>
                                                     ))}
                                                 </TableCell>
-                                                <TableCell>{tx.bankName}</TableCell>
-                                                <TableCell>{tx.isCredit ? "Credit" : "Debit"}</TableCell>
-                                                <TableCell style={{ color: tx.isCredit ? "green" : "red" }}>
+                                                <TableCell sx={{ fontSize: "1rem" }}>{tx.bankName}</TableCell>
+                                                <TableCell sx={{ fontSize: "1rem" }}>{tx.isCredit ? "Credit" : "Debit"}</TableCell>
+                                                <TableCell
+                                                    sx={{
+                                                        fontSize: "1rem",
+                                                        width: { xs: "80px", sm: "100px", md: "150px" }, // Responsive widths
+                                                    }}
+                                                    style={{ color: tx.isCredit ? "#4CAF50" : "#F44336", textAlign: "center", fontWeight: "bold" }}
+                                                >
                                                     ₹ {Number(tx.amount).toFixed(2)}
                                                 </TableCell>
                                                 <TableCell align="center">
@@ -287,25 +326,6 @@ const TransactionLogs = () => {
                                     onChange={(e) => setEditingTransaction({ ...editingTransaction, notes: e.target.value })}
                                     sx={{ mb: 2 }}
                                 />
-
-                                {/* Category dropdown */}
-                                {/* <TextField
-                                    select
-                                    fullWidth
-                                    label="Category"
-                                    value={editingTransaction.category || ""}
-                                    onChange={(e) => setEditingTransaction({ ...editingTransaction, category: e.target.value })}
-                                    sx={{ mb: 2 }}
-                                >
-                                    {["Shopping", "Medical", "Utilities"].map((option) => (
-                                        <MenuItem
-                                            key={option}
-                                            value={option}
-                                        >
-                                            {option}
-                                        </MenuItem>
-                                    ))}
-                                </TextField> */}
 
                                 <Autocomplete
                                     freeSolo
