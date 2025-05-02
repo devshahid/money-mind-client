@@ -23,13 +23,13 @@ const Layout: React.FC = () => {
                 flexGrow: 1,
             }}
         >
+            {/* Sidebar */}
             <Box>
-                {/* Sidebar */}
                 <Sidebar
-                    isOpen={isSidebarOpen}
-                    toggleSidebar={toggleSidebar}
-                    drawerWidthOpen={drawerWidthOpen}
-                    drawerWidthClosed={drawerWidthClosed}
+                // isOpen={isSidebarOpen}
+                // toggleSidebar={toggleSidebar}
+                // drawerWidthOpen={drawerWidthOpen}
+                // drawerWidthClosed={drawerWidthClosed}
                 />
             </Box>
 
@@ -40,20 +40,20 @@ const Layout: React.FC = () => {
                     display: "flex",
                     flexDirection: "column",
                     flexGrow: 1,
-                    // ml: isSidebarOpen ? `${drawerWidthOpen}px` : `${drawerWidthClosed}px`,
                     transition: "all 0.3s ease",
                     minHeight: "100vh",
-                    backgroundColor: "#f9f9f9", // Optional
-                    paddingTop: `${headerHeight}px`, // Push content below header
+                    backgroundColor: "#fff",
                     overflowY: "auto", // Enable vertical scrolling
                 }}
             >
                 {/* Header/Navbar */}
                 <Header
-                    isOpen={isSidebarOpen}
-                    toggleSidebar={toggleSidebar}
-                    drawerWidthOpen={drawerWidthOpen}
-                    drawerWidthClosed={drawerWidthClosed}
+                    heading="Transactions"
+                    subheading="Overview of your activities"
+                    // isOpen={isSidebarOpen}
+                    // toggleSidebar={toggleSidebar}
+                    // drawerWidthOpen={drawerWidthOpen}
+                    // drawerWidthClosed={drawerWidthClosed}
                 />
 
                 {/* Page Content */}

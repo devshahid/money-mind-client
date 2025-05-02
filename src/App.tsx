@@ -9,12 +9,19 @@ import DebtTable from "./components/Debt";
 import Goals from "./components/Goals";
 import Login from "./pages/Login";
 import Account from "./pages/Account";
+import RegisterPage from "./pages/Register";
+import ProtectedRoute from "./components/ProtectedRoute";
+import GuestRoute from "./components/GuestRoute";
 
 function App() {
     const router = createBrowserRouter([
         {
             path: "/",
-            element: <Layout />,
+            element: (
+                <ProtectedRoute>
+                    <Layout />
+                </ProtectedRoute>
+            ),
             children: [
                 {
                     index: true,
@@ -52,11 +59,19 @@ function App() {
         },
         {
             path: "login",
-            element: <Login />,
+            element: (
+                <GuestRoute>
+                    <Login />
+                </GuestRoute>
+            ),
         },
         {
             path: "register",
-            element: <Login />,
+            element: (
+                <GuestRoute>
+                    <RegisterPage />
+                </GuestRoute>
+            ),
         },
     ]);
 

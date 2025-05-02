@@ -115,7 +115,7 @@ const TransactionLogs = () => {
     };
 
     return (
-        <Box style={{ padding: "10px", backgroundColor: "#f5f5f5" }}>
+        <Box style={{ padding: "10px", backgroundColor: "#fff" }}>
             <TableControls />
 
             {!loading && transactions.length === 0 ? (

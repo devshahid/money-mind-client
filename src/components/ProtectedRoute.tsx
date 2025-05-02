@@ -1,14 +1,21 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { RootState } from "../store";
+// components/ProtectedRoute.tsx
+import { Navigate, useLocation } from "react-router-dom";
+import { isAuthenticated } from "../utils/auth";
 
-const ProtectedRoute = () => {
-  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
-  return localStorage.getItem("accessToken") || accessToken ? (
-    <Outlet />
-  ) : (
-    <Navigate to="/login" />
-  );
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+    const location = useLocation();
+
+    if (!isAuthenticated()) {
+        return (
+            <Navigate
+                to="/login"
+                replace
+                state={{ from: location }}
+            />
+        );
+    }
+
+    return children;
 };
 
 export default ProtectedRoute;

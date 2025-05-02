@@ -35,3 +35,14 @@
         scrollbar-width: none;
     } */
 }
+
+@font-face {
+    font-family: "Lufga";
+    src: url("/src/assets/fonts/LufgaRegular.ttf") format("truetype"); /* Adjust path */
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    font-family: "Lufga", sans-serif;
+}
