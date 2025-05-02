@@ -3,29 +3,23 @@ import App from "./App.tsx";
 import "./index.css";
 import { Provider } from "react-redux";
 import { store } from "./store/index.ts";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { LayoutProvider } from "./contexts/LayoutContext.tsx";
 import { SnackbarProvider } from "./contexts/SnackBarContext.tsx";
 import GlobalSnackbar from "./components/GlobalSnackbar.tsx";
 import CssBaseline from "@mui/material/CssBaseline";
-
-const theme = createTheme({
-    typography: {
-        fontFamily: "Lufga, sans-serif",
-    },
-});
+import { ColorContextProvider } from "./contexts/ThemeContext.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     // <React.StrictMode>
     <SnackbarProvider>
         <LayoutProvider>
-            <ThemeProvider theme={theme}>
+            <ColorContextProvider>
                 <Provider store={store}>
                     <CssBaseline />
                     <App />
                     <GlobalSnackbar />
                 </Provider>
-            </ThemeProvider>
+            </ColorContextProvider>
             ,
         </LayoutProvider>
         ,

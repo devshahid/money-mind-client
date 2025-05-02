@@ -1,7 +1,5 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import { ThemeProvider } from "./contexts/ThemeContext";
-
 import Layout from "./layouts/main";
 import DashboardPage from "./pages/Dashboard";
 import TransactionLogs from "./pages/TransactionLogs";
@@ -75,11 +73,7 @@ function App() {
         },
     ]);
 
-    return (
-        <ThemeProvider storageKey="theme">
-            <RouterProvider router={router} />
-        </ThemeProvider>
-    );
+    return <RouterProvider router={router} />;
 }
 
 export default App;

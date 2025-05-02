@@ -53,7 +53,7 @@
 
 // export default Login;
 
-import React from "react";
+import React, { useState } from "react";
 import {
     Box,
     Button,
@@ -72,13 +72,39 @@ import { useTheme } from "@mui/material/styles";
 import InvestmentIllustration from "../assets/illustration/FinanceApp.png";
 import AppLogo from "../assets/images/money-mind-logo.png";
 import { useNavigate } from "react-router-dom";
+import { useAppDispatch } from "../hooks/slice-hooks";
+import { login } from "../store/authSlice";
+import { loginUser } from "../services/authService";
 
 const SignInPage: React.FC = () => {
     const theme = useTheme();
+    const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     const [showPassword, setShowPassword] = React.useState(false);
 
+    const [userData, setUserData] = useState({
+        email: null,
+        password: null,
+    });
+
+    const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setUserData({ ...userData, [e.target.name]: e.target.value });
+    };
+
+    const handlerLoginUser = async () => {
+        try {
+            if (!userData.email || !userData.password) {
+                return;
+            }
+            const data = await loginUser(userData.email, userData.password);
+            dispatch(login(data.output.accessToken));
+            localStorage.setItem("accessToken", data.output.accessToken);
+            navigate("/");
+        } catch (error) {
+            console.error("Login failed", error);
+        }
+    };
     return (
         <>
             <Box
@@ -176,6 +202,8 @@ const SignInPage: React.FC = () => {
                             fullWidth
                             margin="normal"
                             placeholder="Enter your Email address"
+                            name="email"
+                            onChange={handleFieldChange}
                             sx={{
                                 fontSize: {
                                     xs: "0.9rem",
@@ -214,6 +242,8 @@ const SignInPage: React.FC = () => {
                                 id="password"
                                 type={showPassword ? "text" : "password"}
                                 placeholder="Enter your password"
+                                name="password"
+                                onChange={handleFieldChange}
                                 endAdornment={
                                     <InputAdornment position="end">
                                         <IconButton
@@ -268,6 +298,7 @@ const SignInPage: React.FC = () => {
                                 textTransform: "none",
                                 fontWeight: 600,
                             }}
+                            onClick={handlerLoginUser}
                         >
                             Sign in
                         </Button>

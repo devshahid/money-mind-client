@@ -42,7 +42,6 @@ const Layout: React.FC = () => {
                     flexGrow: 1,
                     transition: "all 0.3s ease",
                     minHeight: "100vh",
-                    backgroundColor: "#fff",
                     overflowY: "auto", // Enable vertical scrolling
                 }}
             >

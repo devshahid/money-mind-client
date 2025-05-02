@@ -1,54 +1,30 @@
-import { createContext, useEffect, useState } from "react";
+import { createTheme, PaletteMode, ThemeProvider } from "@mui/material";
+import { createContext, useMemo, useState } from "react";
 
-import PropTypes from "prop-types";
+export const ColorModeContext = createContext({
+    toggleMode: () => {},
+    mode: "light",
+});
 
-const initialState = {
-    theme: "system",
-    setTheme: (_p0: string) => null,
-};
+export const ColorContextProvider = ({ children }: { children: JSX.Element }) => {
+    const [mode, setMode] = useState<PaletteMode>("dark");
 
-export const ThemeProviderContext = createContext(initialState);
+    const colorMode = useMemo(
+        () => ({
+            toggleMode: () => setMode((prevMode) => (prevMode === "light" ? "dark" : "light")),
+            mode,
+        }),
+        [mode],
+    );
 
-export function ThemeProvider({
-    children,
-    defaultTheme = "system",
-    storageKey = "vite-ui-theme",
-}: {
-    children: React.ReactNode;
-    defaultTheme?: string;
-    storageKey?: string;
-    [key: string]: any;
-}) {
-    const [theme, setThemeState] = useState(() => localStorage.getItem(storageKey) || defaultTheme);
+    const theme = createTheme({
+        typography: { fontFamily: "Lufga, sans-serif" },
+        palette: { mode: mode },
+    });
 
-    useEffect(() => {
-        const root = window.document.documentElement;
-
-        root.classList.remove("light", "dark");
-
-        if (theme === "system") {
-            const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-
-            root.classList.add(systemTheme);
-            return;
-        }
-
-        root.classList.add(theme);
-    }, [theme]);
-
-    const value = {
-        theme,
-        setTheme: (newTheme: string) => {
-            setThemeState(newTheme);
-            return null;
-        },
-    };
-
-    return <ThemeProviderContext.Provider value={value}>{children}</ThemeProviderContext.Provider>;
-}
-
-ThemeProvider.propTypes = {
-    children: PropTypes.node,
-    defaultTheme: PropTypes.string,
-    storageKey: PropTypes.string,
+    return (
+        <ColorModeContext.Provider value={colorMode}>
+            <ThemeProvider theme={theme}>{children}</ThemeProvider>
+        </ColorModeContext.Provider>
+    );
 };

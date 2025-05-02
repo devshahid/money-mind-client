@@ -1,4 +1,4 @@
-import { Box, Stack, Card, CardContent, Typography, LinearProgress } from "@mui/material";
+import { Box, Stack, Card, CardContent, Typography } from "@mui/material";
 import { CreditCard, DollarSign, Package, Users } from "lucide-react";
 
 import "./Dashboard.css";

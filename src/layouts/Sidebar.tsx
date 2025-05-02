@@ -1,121 +1,5 @@
-// import React from "react";
-// import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Box, Divider, Typography, useMediaQuery, Theme } from "@mui/material";
-// import DashboardIcon from "@mui/icons-material/Dashboard";
-// import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-// import CreditCardIcon from "@mui/icons-material/CreditCard";
-// import FlagIcon from "@mui/icons-material/Flag";
-// import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-// import SavingsIcon from "@mui/icons-material/Savings";
-// import AppLogo from "/money-mind-logo.png"; // Adjust the path to your logo
-// import { NavLink } from "react-router-dom";
-// interface SidebarProps {
-//     isOpen: boolean;
-//     toggleSidebar: () => void;
-//     drawerWidthClosed: number;
-//     drawerWidthOpen: number;
-// }
-
-// const menuItems = [
-//     { text: "Dashboard", icon: <DashboardIcon />, path: "/" },
-//     { text: "Transactions", icon: <AccountBalanceWalletIcon />, path: "/transactions" },
-//     { text: "Debts", icon: <CreditCardIcon />, path: "/debts" },
-//     { text: "Goals", icon: <FlagIcon />, path: "/goals" },
-//     { text: "Budget", icon: <SavingsIcon />, path: "/budget" },
-//     { text: "My Account", icon: <AccountCircleIcon />, path: "/account" },
-// ];
-
-// const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, drawerWidthOpen, drawerWidthClosed }) => {
-//     const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
-
-//     return (
-//         <Drawer
-//             variant={isMobile ? "temporary" : "permanent"}
-//             open={isOpen}
-//             onClose={toggleSidebar}
-//             sx={{
-//                 width: isOpen ? drawerWidthOpen : drawerWidthClosed,
-//                 flexShrink: 0,
-//                 whiteSpace: "nowrap",
-//                 "& .MuiDrawer-paper": {
-//                     width: isOpen ? drawerWidthOpen : drawerWidthClosed,
-//                     // transition: "width 0.3s",
-//                     overflowX: "hidden",
-//                     boxSizing: "border-box",
-//                 },
-//             }}
-//         >
-//             <Box sx={{ p: 2, transition: "all 0.3s" }}>
-//                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: isOpen ? "flex-start" : "center" }}>
-//                     {/* Logo or Title */}
-//                     <Box
-//                         component="img"
-//                         src={AppLogo}
-//                         alt="Logo"
-//                         sx={{ height: 70, ml: isOpen ? 0 : 2.5 }}
-//                     />
-//                     <Typography
-//                         variant="h6"
-//                         noWrap={isOpen ? false : true}
-//                         sx={{
-//                             ml: isOpen ? 0 : 2,
-//                             opacity: isOpen ? 1 : 0,
-//                             // transition: "opacity 0.3s, margin 0.3s",
-//                             fontWeight: "bold",
-//                             color: "#000",
-//                             fontSize: "1.5rem",
-//                             lineHeight: "1.5rem",
-//                             whiteSpace: "nowrap",
-//                         }}
-//                     >
-//                         Money Mind
-//                     </Typography>
-//                 </Box>
-//                 <Divider />
-//                 <List>
-//                     {menuItems.map((item, index) => (
-//                         <ListItem
-//                             key={index}
-//                             disablePadding
-//                             sx={{ display: "block" }}
-//                         >
-//                             <NavLink
-//                                 to={item.path} // <-- your menuItems should have a `path` field
-//                                 style={({ isActive }) => ({
-//                                     textDecoration: "none",
-//                                     color: isActive ? "#1976d2" : "inherit", // highlight active link
-//                                 })}
-//                             >
-//                                 <ListItemButton
-//                                     sx={{
-//                                         minHeight: 48,
-//                                         justifyContent: isOpen ? "initial" : "center",
-//                                         px: 2.5,
-//                                     }}
-//                                 >
-//                                     <ListItemIcon
-//                                         sx={{
-//                                             minWidth: 0,
-//                                             mr: isOpen ? 3 : "auto",
-//                                             justifyContent: "center",
-//                                         }}
-//                                     >
-//                                         {item.icon}
-//                                     </ListItemIcon>
-//                                     {isOpen && <ListItemText primary={item.text} />}
-//                                 </ListItemButton>
-//                             </NavLink>
-//                         </ListItem>
-//                     ))}
-//                 </List>
-//             </Box>
-//         </Drawer>
-//     );
-// };
-
-// export default Sidebar;
-
-import React, { useState } from "react";
-import { Box, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Tooltip, Typography, Avatar, useTheme } from "@mui/material";
+import React, { useContext, useState } from "react";
+import { Box, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Tooltip, Typography, Avatar, ListItemButton } from "@mui/material";
 import {
     Dashboard,
     AccountBalanceWallet,
@@ -126,26 +10,31 @@ import {
     ArrowForwardIos,
     AccountBalance,
     AccountTree,
+    AccountCircle,
+    DarkMode,
+    WbSunny,
 } from "@mui/icons-material";
+
 import AppLogo from "/money-mind-logo.png"; // Adjust the path to your logo
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { ColorModeContext } from "../contexts/ThemeContext";
 
 const drawerWidth = 240;
 
 const navItems = [
-    { label: "Dashboard", icon: <Dashboard /> },
-    { label: "Transactions", icon: <AccountTree /> },
-    { label: "Wallet", icon: <AccountBalanceWallet /> },
-    { label: "Goals", icon: <TrendingUp /> },
-    { label: "Budget", icon: <AccountBalance /> },
-    { label: "Analytics", icon: <PieChart /> },
-    { label: "Settings", icon: <Settings /> },
+    { label: "Dashboard", icon: <Dashboard />, path: "/" },
+    { label: "Transactions", icon: <AccountTree />, path: "/transactions" },
+    { label: "Debts", icon: <AccountBalanceWallet />, path: "/debts" },
+    { label: "Goals", icon: <TrendingUp />, path: "/goals" },
+    { label: "Budget", icon: <AccountBalance />, path: "/budget" },
+    { label: "Analytics", icon: <PieChart />, path: "/analytics" },
+    { label: "Settings", icon: <Settings />, path: "/settings" },
+    { label: "Account", icon: <AccountCircle />, path: "/account" },
 ];
 
 const Sidebar: React.FC = () => {
     const [collapsed, setCollapsed] = useState(false);
-    const theme = useTheme();
-
+    const { mode, toggleMode } = useContext(ColorModeContext);
     const navigate = useNavigate();
     const toggleSidebar = () => setCollapsed(!collapsed);
 
@@ -153,13 +42,16 @@ const Sidebar: React.FC = () => {
         <Drawer
             variant="permanent"
             sx={{
-                width: collapsed ? 80 : drawerWidth,
+                width: collapsed ? 100 : drawerWidth,
                 flexShrink: 0,
+                overflowX: "hidden", // Prevent horizontal scrollbar when collapsed
                 "& .MuiDrawer-paper": {
-                    width: collapsed ? 80 : drawerWidth,
+                    width: collapsed ? 100 : drawerWidth,
                     boxSizing: "border-box",
-                    background: "#f3f1fb",
-                    overflowX: "hidden",
+                    background: mode === "light" ? "#f3f1fb" : "#222126",
+                    display: "flex",
+                    flexDirection: "column", // Ensure items stack vertically
+                    alignItems: "center", // Center items horizontally
                 },
             }}
         >
@@ -172,7 +64,8 @@ const Sidebar: React.FC = () => {
                     px: 2,
                     py: 2,
                     borderBottom: "1px solid #ddd",
-                    cursor: "default",
+                    cursor: "pointer", // Changed to pointer for better UX
+                    width: "100%", // Ensure the box takes full width
                 }}
             >
                 <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
@@ -183,14 +76,7 @@ const Sidebar: React.FC = () => {
                             width: 40,
                             height: 40,
                         }}
-                    >
-                        <Typography
-                            fontWeight="bold"
-                            color="#9c7dff"
-                        >
-                            MM
-                        </Typography>
-                    </Avatar>
+                    />
                     {!collapsed && (
                         <Typography
                             variant="h6"
@@ -201,15 +87,14 @@ const Sidebar: React.FC = () => {
                         </Typography>
                     )}
                 </Box>
-
                 <Box>
                     <IconButton
                         onClick={toggleSidebar}
                         sx={{
                             ml: collapsed ? 0 : 1,
                             border: "1px solid #ddd",
-                            backgroundColor: "#fff",
-                            color: "#000",
+                            background: mode === "light" ? "#f3f1fb" : "#222126",
+                            color: mode === "light" ? "#000" : "#fff",
                             "&:hover": {
                                 backgroundColor: "#f0f0f0",
                             },
@@ -229,33 +114,148 @@ const Sidebar: React.FC = () => {
                     </IconButton>
                 </Box>
             </Box>
-
-            <List sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: 1 }}>
+            <List
+                sx={{
+                    width: "100%", // Make the list take full width of the drawer
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center", // Center items horizontally
+                    padding: 1,
+                }}
+            >
                 {navItems.map((item, index) => (
                     <Tooltip
                         key={index}
                         title={collapsed ? item.label : ""}
                         placement="right"
                     >
+                        {/*#453f64 */}
                         <ListItem
-                            button
+                            key={index}
+                            disablePadding
                             sx={{
                                 mx: 1,
-                                my: 1,
-                                borderRadius: 3,
-                                backgroundColor: index === 0 ? "#a78bfa" : "transparent",
-                                color: index === 0 ? "white" : "black",
-                                "&:hover": {
-                                    backgroundColor: "#dcd6ff",
-                                },
+                                my: 0.5,
+                                borderRadius: "30px",
+                                width: "100%", // Make each list item take full width
+                                justifyContent: "center", // Center content within the ListItem
+                                "&:hover": { backgroundColor: mode === "light" ? "#dcd6ff" : "#453f64" },
                             }}
                         >
-                            <ListItemIcon sx={{ color: "inherit" }}>{item.icon}</ListItemIcon>
-                            {!collapsed && <ListItemText primary={item.label} />}
+                            <NavLink
+                                to={item.path}
+                                style={({ isActive }) => ({
+                                    textDecoration: "none",
+                                    color: mode === "light" ? "#000" : "#fff",
+                                    width: collapsed ? 0 : "100%", // Make the NavLink take full width
+                                    display: "flex",
+                                    justifyContent: "center", // Center the ListItemButton inside
+                                    backgroundColor: isActive ? "#8470FF" : "transparent",
+                                    borderRadius: "30px",
+                                })}
+                            >
+                                <ListItemButton
+                                    sx={{
+                                        minHeight: 48,
+                                        justifyContent: "center", // Center content horizontally
+                                        px: 2.5,
+                                        gap: collapsed ? 0 : 1, // Adjust gap based on collapse state
+                                        width: "100%", // Make the button take full width
+                                    }}
+                                >
+                                    <ListItemIcon
+                                        sx={{
+                                            minWidth: 0,
+                                            mr: collapsed ? "auto" : 3, // Adjust margin based on collapse state
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        {item.icon}
+                                    </ListItemIcon>
+                                    {!collapsed && <ListItemText primary={item.label} />}
+                                </ListItemButton>
+                            </NavLink>
                         </ListItem>
                     </Tooltip>
                 ))}
             </List>
+            <Box
+                sx={{
+                    my: 2,
+                    py: 1,
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                }}
+            >
+                <Box
+                    sx={{
+                        border: "1px solid grey",
+                        borderRadius: "50px",
+                        padding: collapsed ? "4px" : "4px 8px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: collapsed ? 0 : 1,
+                        transition: "all 0.3s ease-in-out",
+                    }}
+                >
+                    {collapsed ? (
+                        <IconButton
+                            size="large"
+                            disableRipple
+                            disableFocusRipple
+                            onClick={toggleMode}
+                            sx={{
+                                backgroundColor: "#8470FF",
+                                color: "#fff",
+                                transition: "all 0.3s ease-in-out",
+                                "&:hover": {
+                                    backgroundColor: "#8470FF",
+                                },
+                            }}
+                        >
+                            {mode === "light" ? <WbSunny /> : <DarkMode />}
+                        </IconButton>
+                    ) : (
+                        <>
+                            <IconButton
+                                size="large"
+                                disableRipple
+                                disableFocusRipple
+                                onClick={() => mode !== "light" && toggleMode()}
+                                sx={{
+                                    backgroundColor: mode === "light" ? "#8470FF" : "transparent",
+                                    color: mode === "light" ? "#fff" : "#8470FF",
+                                    transition: "all 0.3s ease-in-out",
+                                    "&:hover": {
+                                        backgroundColor: mode === "light" ? "#8470FF" : "transparent",
+                                    },
+                                    transform: mode === "light" ? "rotate(0deg)" : "rotate(-20deg)",
+                                }}
+                            >
+                                <WbSunny />
+                            </IconButton>
+                            <IconButton
+                                size="large"
+                                disableRipple
+                                disableFocusRipple
+                                onClick={() => mode !== "dark" && toggleMode()}
+                                sx={{
+                                    backgroundColor: mode === "dark" ? "#8470FF" : "transparent",
+                                    color: mode === "dark" ? "#fff" : "#8470FF",
+                                    transition: "all 0.3s ease-in-out",
+                                    "&:hover": {
+                                        backgroundColor: mode === "dark" ? "#8470FF" : "transparent",
+                                    },
+                                    transform: mode === "dark" ? "rotate(0deg)" : "rotate(20deg)",
+                                }}
+                            >
+                                <DarkMode />
+                            </IconButton>
+                        </>
+                    )}
+                </Box>
+            </Box>
         </Drawer>
     );
 };
