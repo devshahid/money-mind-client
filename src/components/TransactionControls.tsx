@@ -40,6 +40,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import axiosClient from "../services/axiosClient";
 import { useLayout } from "../contexts/LayoutContext";
 import { getExpenseCategories } from "../constants";
+import { useSnackbar } from "../contexts/SnackBarContext";
 
 const labelOptions = ["Repair", "Purchase", "Personal"];
 
@@ -48,6 +49,7 @@ const REQUIRED_HEADERS = ["date", "narration", "refNumber", "withdrawlAmount", "
 
 const TableControls = () => {
     const { headerHeight } = useLayout();
+    const { showErrorSnackbar } = useSnackbar();
 
     const [filterOpen, setFilterOpen] = useState(false);
     const [activeFiltersCount, setActiveFiltersCount] = useState(0);
@@ -57,6 +59,7 @@ const TableControls = () => {
     const [bankName, setBankName] = useState<string | null>(null);
     const [headers, setHeaders] = useState<string[]>(() => (data.length > 0 ? Object.keys(data[0]) : []));
     const [previewUploadedContent, setPreviewUploadedContent] = useState<boolean>(false);
+    const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -70,6 +73,8 @@ const TableControls = () => {
 
     useEffect(() => {
         if (data.length > 0) {
+            setUploadModal(false);
+            setPreviewUploadedContent(true);
             setHeaders(Object.keys(data[0]));
         }
     }, [data]);
@@ -171,12 +176,6 @@ const TableControls = () => {
         dispatch(listTransactions({ ...clearFilters(), keyword: searchTerm }));
     };
 
-    // const handleHeaderChange = (index: number, newValue: string) => {
-    //     const updated = [...headers];
-    //     updated[index] = newValue;
-    //     setHeaders(updated);
-    // };
-
     const validateHeaders = (headers: string[]): { valid: boolean; missing: string[] } => {
         const lowerCaseHeaders = headers.map((h) => h.trim().toLowerCase());
         const missing = REQUIRED_HEADERS.filter((req) => !lowerCaseHeaders.includes(req.toLowerCase()));
@@ -220,6 +219,7 @@ const TableControls = () => {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        setSelectedFileName(file ? file.name : null);
         const reader = new FileReader();
         setReadLoading(true);
         let parsedRows: RowData[] = [];
@@ -238,6 +238,7 @@ const TableControls = () => {
 
                 if (!valid) {
                     console.error(`Missing required headers: ${missing.join(", ")}`);
+                    showErrorSnackbar(`Missing required headers: ${missing.join(", ")}`);
                     setReadLoading(false);
                     return;
                 }
@@ -250,12 +251,17 @@ const TableControls = () => {
             }
         };
 
+        reader.onerror = (error) => {
+            console.error("Error reading file:", error);
+            showErrorSnackbar("Error reading file");
+            setReadLoading(false);
+            setPreviewUploadedContent(false);
+        };
+
         reader.onloadend = () => {
             console.log("Read complete", parsedRows);
             setReadLoading(false);
             setData(parsedRows);
-            setPreviewUploadedContent(true);
-            setUploadModal(false);
         };
 
         reader.readAsArrayBuffer(file);
@@ -610,6 +616,7 @@ const TableControls = () => {
                     if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
                         setUploadModal(false);
                         setData([]);
+                        setSelectedFileName(null);
                     }
                 }}
                 disableEscapeKeyDown
@@ -634,6 +641,7 @@ const TableControls = () => {
                         onClick={() => {
                             setUploadModal(false);
                             setData([]);
+                            setSelectedFileName(null);
                         }}
                         sx={{
                             position: "absolute",
@@ -669,6 +677,15 @@ const TableControls = () => {
                                     onChange={handleFileUpload}
                                 />
                             </Button>
+                            {selectedFileName && (
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    mt={1}
+                                >
+                                    Selected File: {selectedFileName}
+                                </Typography>
+                            )}
                         </Box>
                     </div>
                 </Box>
@@ -691,6 +708,7 @@ const TableControls = () => {
                             onClose={() => {
                                 setPreviewUploadedContent(false);
                                 setData([]);
+                                setSelectedFileName(null);
                             }}
                         >
                             <AppBar sx={{ position: "relative" }}>
@@ -708,6 +726,7 @@ const TableControls = () => {
                                         onClick={() => {
                                             setPreviewUploadedContent(false);
                                             setData([]);
+                                            setSelectedFileName(null);
                                         }}
                                         aria-label="close"
                                     >
