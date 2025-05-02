@@ -8,6 +8,7 @@ import TransactionLogs from "./pages/TransactionLogs";
 import DebtTable from "./components/Debt";
 import Goals from "./components/Goals";
 import Login from "./pages/Login";
+import Account from "./pages/Account";
 
 function App() {
     const router = createBrowserRouter([
@@ -42,6 +43,10 @@ function App() {
                 {
                     path: "settings",
                     element: <h1 className="title">Settings</h1>,
+                },
+                {
+                    path: "account",
+                    element: <Account />,
                 },
             ],
         },

@@ -16,14 +16,22 @@ const Layout: React.FC = () => {
     };
 
     return (
-        <Box sx={{ display: "flex", width: "100%" }}>
-            {/* Sidebar */}
-            <Sidebar
-                isOpen={isSidebarOpen}
-                toggleSidebar={toggleSidebar}
-                drawerWidthOpen={drawerWidthOpen}
-                drawerWidthClosed={drawerWidthClosed}
-            />
+        <Box
+            sx={{
+                display: "flex",
+                flexDirection: "row",
+                flexGrow: 1,
+            }}
+        >
+            <Box>
+                {/* Sidebar */}
+                <Sidebar
+                    isOpen={isSidebarOpen}
+                    toggleSidebar={toggleSidebar}
+                    drawerWidthOpen={drawerWidthOpen}
+                    drawerWidthClosed={drawerWidthClosed}
+                />
+            </Box>
 
             {/* Main Content */}
             <Box
@@ -37,6 +45,7 @@ const Layout: React.FC = () => {
                     minHeight: "100vh",
                     backgroundColor: "#f9f9f9", // Optional
                     paddingTop: `${headerHeight}px`, // Push content below header
+                    overflowY: "auto", // Enable vertical scrolling
                 }}
             >
                 {/* Header/Navbar */}

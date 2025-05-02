@@ -1,11 +1,9 @@
-import UploadPreview from "./UploadPreview";
-
 function Goals() {
-  return (
-    <div>
-      <UploadPreview />
-    </div>
-  );
+    return (
+        <div>
+            <h1>Goals</h1>
+        </div>
+    );
 }
 
 export default Goals;

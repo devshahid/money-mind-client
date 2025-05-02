@@ -38,13 +38,17 @@ import { listTransactions } from "../store/transactionSlice";
 import { useAppDispatch } from "../hooks/slice-hooks";
 import CancelIcon from "@mui/icons-material/Cancel";
 import axiosClient from "../services/axiosClient";
+import { useLayout } from "../contexts/LayoutContext";
+import { getExpenseCategories } from "../constants";
 
 const labelOptions = ["Repair", "Purchase", "Personal"];
-const categoryOptions = ["Shopping", "Food", "Grocery"];
+
 type RowData = Record<string, string>;
 const REQUIRED_HEADERS = ["date", "narration", "refNumber", "withdrawlAmount", "depositAmount", "closingBalance"];
 
 const TableControls = () => {
+    const { headerHeight } = useLayout();
+
     const [filterOpen, setFilterOpen] = useState(false);
     const [activeFiltersCount, setActiveFiltersCount] = useState(0);
     const [uploadModal, setUploadModal] = useState(false);
@@ -250,6 +254,8 @@ const TableControls = () => {
             console.log("Read complete", parsedRows);
             setReadLoading(false);
             setData(parsedRows);
+            setPreviewUploadedContent(true);
+            setUploadModal(false);
         };
 
         reader.readAsArrayBuffer(file);
@@ -324,7 +330,6 @@ const TableControls = () => {
                     </Select>
                 </FormControl>
 
-                {/* Category Dropdown */}
                 <FormControl
                     size="small"
                     sx={{ flex: "1 1 160px", minWidth: "140px" }}
@@ -332,11 +337,39 @@ const TableControls = () => {
                     <InputLabel>Category</InputLabel>
                     <Select
                         label="Category"
-                        defaultValue=""
+                        multiple
+                        value={filters.category}
+                        onChange={(e) => handleMultiChange(e, "category")}
+                        input={<OutlinedInput label="Category" />}
+                        renderValue={(selected) => (selected as string[]).join(", ")}
+                        MenuProps={{
+                            // Pass props to the Menu component
+                            PaperProps: {
+                                style: {
+                                    maxHeight: 200, // Set the maximum height here
+                                    width: "auto",
+                                },
+                            },
+                            anchorOrigin: {
+                                //add these two props
+                                vertical: "bottom",
+                                horizontal: "left",
+                            },
+                            transformOrigin: {
+                                vertical: "top",
+                                horizontal: "left",
+                            },
+                        }}
                     >
-                        <MenuItem value="">Shopping</MenuItem>
-                        <MenuItem value="money_in">Food</MenuItem>
-                        <MenuItem value="money_out">Personal</MenuItem>
+                        {getExpenseCategories().map((category, i) => (
+                            <MenuItem
+                                key={i}
+                                value={category.name}
+                            >
+                                <Checkbox checked={filters.category.indexOf(category.name) > -1} />
+                                <ListItemText primary={category.name} />
+                            </MenuItem>
+                        ))}
                     </Select>
                 </FormControl>
 
@@ -393,9 +426,17 @@ const TableControls = () => {
                 anchor="right"
                 open={filterOpen}
                 onClose={toggleFilterDrawer}
-                PaperProps={{ sx: { width: { xs: "100%", sm: 350 } } }}
+                slotProps={{
+                    paper: {
+                        sx: {
+                            mt: `${headerHeight}px`,
+                            height: `calc(100vh - ${headerHeight}px)`,
+                            width: { xs: "100%", sm: 350 },
+                        },
+                    },
+                }}
             >
-                <Box sx={{ p: 3 }}>
+                <Box sx={{ p: 3, height: "100vh", overflowY: "auto" }}>
                     <Typography
                         variant="h6"
                         gutterBottom
@@ -503,13 +544,13 @@ const TableControls = () => {
                             input={<OutlinedInput label="Category" />}
                             renderValue={(selected) => (selected as string[]).join(", ")}
                         >
-                            {categoryOptions.map((category) => (
+                            {getExpenseCategories().map((category, i) => (
                                 <MenuItem
-                                    key={category}
-                                    value={category}
+                                    key={i}
+                                    value={category.name}
                                 >
-                                    <Checkbox checked={filters.category.indexOf(category) > -1} />
-                                    <ListItemText primary={category} />
+                                    <Checkbox checked={filters.category.indexOf(category.name) > -1} />
+                                    <ListItemText primary={category.name} />
                                 </MenuItem>
                             ))}
                         </Select>
@@ -539,10 +580,11 @@ const TableControls = () => {
                             ))}
                         </Select>
                     </FormControl>
-
+                </Box>
+                <Box sx={{ py: 2, px: 3, gap: 1, display: "flex", flexDirection: "column" }}>
                     {/* Clear All Button */}
                     <Button
-                        variant="text"
+                        variant="outlined"
                         color="error"
                         onClick={handleResetFilters}
                         fullWidth
@@ -627,26 +669,6 @@ const TableControls = () => {
                                     onChange={handleFileUpload}
                                 />
                             </Button>
-                            {data.length > 0 && (
-                                <Box sx={{ display: "flex", gap: 4, mt: 2, justifyContent: "center", width: "100%" }}>
-                                    <Button
-                                        variant="contained"
-                                        fullWidth
-                                    >
-                                        Save To DB
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        fullWidth
-                                        onClick={() => {
-                                            setPreviewUploadedContent(true);
-                                            setUploadModal(false);
-                                        }}
-                                    >
-                                        Preview & Save
-                                    </Button>
-                                </Box>
-                            )}
                         </Box>
                     </div>
                 </Box>

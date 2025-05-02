@@ -32,8 +32,7 @@ interface IInitialState {
     totalCount: number;
     loading: boolean;
     error: string | null;
-    labels: string[];
-    categories: string[];
+    labels: { labelName: string; labelColor: string }[];
 }
 
 const initialState: IInitialState = {
@@ -42,7 +41,6 @@ const initialState: IInitialState = {
     loading: false,
     error: null as string | null,
     labels: [],
-    categories: [],
 };
 
 // Mocking a function to fetch transactions
@@ -83,14 +81,6 @@ export const listLabels = createAsyncThunk<string[], void, { rejectValue: string
     }
 });
 
-export const listCategories = createAsyncThunk<string[], void, { rejectValue: string }>("listCategories", async (_, { rejectWithValue }) => {
-    try {
-        const response = await axiosClient.get("/transaction-logs/list-categories");
-        return response.data.output;
-    } catch (error: any) {
-        return rejectWithValue(error?.response?.data?.message || "Failed to fetch categories");
-    }
-});
 const transactionsSlice = createSlice({
     name: "transactionSlice",
     initialState,
@@ -133,19 +123,6 @@ const transactionsSlice = createSlice({
         builder.addCase(listLabels.rejected, (state, action) => {
             state.loading = false;
             state.error = action.error.message || "failed to fetch labels";
-        });
-
-        // List Categories
-        builder.addCase(listCategories.pending, (state) => {
-            state.loading = true;
-        });
-        builder.addCase(listCategories.fulfilled, (state, action: PayloadAction<any>) => {
-            state.loading = false;
-            state.categories = action.payload;
-        });
-        builder.addCase(listCategories.rejected, (state, action) => {
-            state.loading = false;
-            state.error = action.error.message || "failed to fetch categories";
         });
     },
 });

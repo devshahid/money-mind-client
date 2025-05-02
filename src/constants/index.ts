@@ -1,258 +1,232 @@
-import { Home, LogOut, BadgeHelp, Settings, ArrowRightLeft, HandHelping, Goal, BadgeIndianRupee, ChartNoAxesCombined } from "lucide-react";
+type ExpenseCategory = {
+    name: string;
+    color: string;
+    backgroundColor: string;
+    icon: OverridableComponent<SvgIconTypeMap<{}, "svg">> & {
+        muiName: string;
+    }; // Emoji, icon string, or React component
+};
+import { SvgIconTypeMap } from "@mui/material";
+import { OverridableComponent } from "@mui/material/OverridableComponent";
 
-// Remove image imports since they're causing errors and not being used in the selection
-import ProfileImage from "../assets/profile-image.jpg";
-import ProductImage from "../assets/product-image.jpg";
+import FastfoodIcon from "@mui/icons-material/Fastfood";
+import LocalGroceryStoreIcon from "@mui/icons-material/LocalGroceryStore";
+import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
+import AirportShuttleIcon from "@mui/icons-material/AirportShuttle";
+import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
+import MovieIcon from "@mui/icons-material/Movie";
+import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import CarRepairIcon from "@mui/icons-material/CarRepair";
+import HandymanIcon from "@mui/icons-material/Handyman";
+import SchoolIcon from "@mui/icons-material/School";
+import HomeWorkIcon from "@mui/icons-material/HomeWork"; // Replacing with a similar icon
+import ImportantDevicesIcon from "@mui/icons-material/ImportantDevices";
+import SubscriptionsIcon from "@mui/icons-material/Subscriptions";
+import CardMembershipIcon from "@mui/icons-material/CardMembership";
+import ContentCutIcon from "@mui/icons-material/ContentCut";
+import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
+import LocalLaundryServiceIcon from "@mui/icons-material/LocalLaundryService";
+import PetsIcon from "@mui/icons-material/Pets";
+import PaymentsIcon from "@mui/icons-material/Payments";
+import ReceiptIcon from "@mui/icons-material/Receipt";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import MoneyIcon from "@mui/icons-material/Money";
+import CallReceivedIcon from "@mui/icons-material/CallReceived";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import StorefrontIcon from "@mui/icons-material/Storefront";
+import GppGoodIcon from "@mui/icons-material/GppGood";
+import CasesIcon from "@mui/icons-material/Cases";
+import Face3Icon from "@mui/icons-material/Face3";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 
-export const navbarLinks = [
-    {
-        links: [
-            {
-                label: "Dashboard",
-                icon: Home,
-                path: "/",
-            },
-            {
-                label: "Transactions",
-                icon: ArrowRightLeft,
-                path: "/transactions",
-            },
-            {
-                label: "Debts",
-                icon: HandHelping,
-                path: "/debts",
-            },
-            {
-                label: "Goals",
-                icon: Goal,
-                path: "/goals",
-            },
-            {
-                label: "Budget",
-                icon: BadgeIndianRupee,
-                path: "/budget",
-            },
-            {
-                label: "Analytics",
-                icon: ChartNoAxesCombined,
-                path: "/analytics",
-            },
-            {
-                label: "Settings",
-                icon: Settings,
-                path: "/settings",
-            },
-        ],
-    },
-
-    {
-        links: [
-            {
-                label: "Help",
-                icon: BadgeHelp,
-                path: "/help",
-            },
-            {
-                label: "Logout",
-                icon: LogOut,
-                path: "/logout",
-            },
-        ],
-    },
-];
-
-export const overviewData = [
-    {
-        name: "Jan",
-        total: 1500,
-    },
-    {
-        name: "Feb",
-        total: 2000,
-    },
-    {
-        name: "Mar",
-        total: 1000,
-    },
-    {
-        name: "Apr",
-        total: 5000,
-    },
-    {
-        name: "May",
-        total: 2000,
-    },
-    {
-        name: "Jun",
-        total: 5900,
-    },
-    {
-        name: "Jul",
-        total: 2000,
-    },
-    {
-        name: "Aug",
-        total: 5500,
-    },
-    {
-        name: "Sep",
-        total: 2000,
-    },
-    {
-        name: "Oct",
-        total: 4000,
-    },
-    {
-        name: "Nov",
-        total: 1500,
-    },
-    {
-        name: "Dec",
-        total: 2500,
-    },
-];
-
-export const recentSalesData = [
-    {
-        id: 1,
-        name: "Olivia Martin",
-        email: "olivia.martin@email.com",
-        image: ProfileImage,
-        total: 1500,
-    },
-    {
-        id: 2,
-        name: "James Smith",
-        email: "james.smith@email.com",
-        image: ProfileImage,
-        total: 2000,
-    },
-    {
-        id: 3,
-        name: "Sophia Brown",
-        email: "sophia.brown@email.com",
-        image: ProfileImage,
-        total: 4000,
-    },
-    {
-        id: 4,
-        name: "Noah Wilson",
-        email: "noah.wilson@email.com",
-        image: ProfileImage,
-        total: 3000,
-    },
-    {
-        id: 5,
-        name: "Emma Jones",
-        email: "emma.jones@email.com",
-        image: ProfileImage,
-        total: 2500,
-    },
-    {
-        id: 6,
-        name: "William Taylor",
-        email: "william.taylor@email.com",
-        image: ProfileImage,
-        total: 4500,
-    },
-    {
-        id: 7,
-        name: "Isabella Johnson",
-        email: "isabella.johnson@email.com",
-        image: ProfileImage,
-        total: 5300,
-    },
-];
-
-export const topProducts = [
-    {
-        number: 1,
-        name: "Wireless Headphones",
-        image: ProductImage,
-        description: "High-quality noise-canceling wireless headphones.",
-        price: 99.99,
-        status: "In Stock",
-        rating: 4.5,
-    },
-    {
-        number: 2,
-        name: "Smartphone",
-        image: ProductImage,
-        description: "Latest 5G smartphone with excellent camera features.",
-        price: 799.99,
-        status: "In Stock",
-        rating: 4.7,
-    },
-    {
-        number: 3,
-        name: "Gaming Laptop",
-        image: ProductImage,
-        description: "Powerful gaming laptop with high-end graphics.",
-        price: 1299.99,
-        status: "In Stock",
-        rating: 4.8,
-    },
-    {
-        number: 4,
-        name: "Smartwatch",
-        image: ProductImage,
-        description: "Stylish smartwatch with fitness tracking features.",
-        price: 199.99,
-        status: "Out of Stock",
-        rating: 4.4,
-    },
-    {
-        number: 5,
-        name: "Bluetooth Speaker",
-        image: ProductImage,
-        description: "Portable Bluetooth speaker with deep bass sound.",
-        price: 59.99,
-        status: "In Stock",
-        rating: 4.3,
-    },
-    {
-        number: 6,
-        name: "4K Monitor",
-        image: ProductImage,
-        description: "Ultra HD 4K monitor with stunning color accuracy.",
-        price: 399.99,
-        status: "In Stock",
-        rating: 4.6,
-    },
-    {
-        number: 7,
-        name: "Mechanical Keyboard",
-        image: ProductImage,
-        description: "Mechanical keyboard with customizable RGB lighting.",
-        price: 89.99,
-        status: "In Stock",
-        rating: 4.7,
-    },
-    {
-        number: 8,
-        name: "Wireless Mouse",
-        image: ProductImage,
-        description: "Ergonomic wireless mouse with precision tracking.",
-        price: 49.99,
-        status: "In Stock",
-        rating: 4.5,
-    },
-    {
-        number: 9,
-        name: "Action Camera",
-        image: ProductImage,
-        description: "Waterproof action camera with 4K video recording.",
-        price: 249.99,
-        status: "In Stock",
-        rating: 4.8,
-    },
-    {
-        number: 10,
-        name: "External Hard Drive",
-        image: ProductImage,
-        description: "Portable 2TB external hard drive for data storage.",
-        price: 79.99,
-        status: "Out of Stock",
-        rating: 4.5,
-    },
-];
+export function getExpenseCategories(): ExpenseCategory[] {
+    return [
+        {
+            name: "Food",
+            icon: FastfoodIcon,
+            color: "#F44336", // Red
+            backgroundColor: "#FFE0B2", // Light orange
+        },
+        {
+            name: "Fruits",
+            icon: StorefrontIcon,
+            color: "#FF5722", // Orange
+            backgroundColor: "#FFF3E0",
+        },
+        {
+            name: "Vegetables",
+            icon: StorefrontIcon,
+            color: "#4CAF50", // Green
+            backgroundColor: "#E8F5E9",
+        },
+        {
+            name: "Groceries",
+            icon: LocalGroceryStoreIcon,
+            color: "#2196F3", // Blue
+            backgroundColor: "#E3F2FD",
+        },
+        {
+            name: "Fuel",
+            icon: LocalGasStationIcon,
+            color: "#FFC107", // Amber
+            backgroundColor: "#FFF8E1",
+        },
+        {
+            name: "Travel",
+            icon: AirportShuttleIcon,
+            color: "#9C27B0", // Purple
+            backgroundColor: "#F3E5F5",
+        },
+        {
+            name: "Medical",
+            icon: LocalHospitalIcon,
+            color: "#E91E63", // Pink
+            backgroundColor: "#FCE4EC",
+        },
+        {
+            name: "Entertainment",
+            icon: MovieIcon,
+            color: "#795548", // Brown
+            backgroundColor: "#F5F5F5",
+        },
+        {
+            name: "Shopping",
+            icon: AddShoppingCartIcon,
+            color: "#FF7043", //Orange-Red
+            backgroundColor: "#FBE9E7",
+        },
+        {
+            name: "Bills & Utilities",
+            icon: ReceiptIcon,
+            color: "#607D8B", // Blue Grey
+            backgroundColor: "#ECEFF1",
+        },
+        {
+            name: "Vehical Servicing",
+            icon: CarRepairIcon,
+            color: "#00897B", //Teal
+            backgroundColor: "#E0F2F1",
+        },
+        {
+            name: "Maintenance & Repairs",
+            icon: HandymanIcon,
+            color: "#424242", // Dark Grey
+            backgroundColor: "#FAFAFA",
+        },
+        {
+            name: "Education",
+            icon: SchoolIcon,
+            color: "#3F51B5", // Indigo
+            backgroundColor: "#E8EAF6",
+        },
+        {
+            name: "EMI",
+            icon: CreditCardIcon,
+            color: "#546E7A", //Grey
+            backgroundColor: "#F0F4C3",
+        },
+        {
+            name: "Rent",
+            icon: HomeWorkIcon,
+            color: "#009688", // Teal
+            backgroundColor: "#E0F7FA",
+        },
+        {
+            name: "Recharge (Mobile, Fibre, TV..)",
+            icon: ImportantDevicesIcon,
+            color: "#8E24AA", //Dark Violet
+            backgroundColor: "#F0F4C3",
+        },
+        {
+            name: "Subscriptions",
+            icon: SubscriptionsIcon,
+            color: "#D84315", //Dark Orange
+            backgroundColor: "#FBE9E7",
+        },
+        {
+            name: "Memberships (Gym, Club..)",
+            icon: CardMembershipIcon,
+            color: "#26A69A", // Cyan
+            backgroundColor: "#E0F7FA",
+        },
+        {
+            name: "Income",
+            icon: AccountBalanceWalletIcon,
+            color: "#4CAF50", // Green
+            backgroundColor: "#E8F5E9",
+        },
+        {
+            name: "Lending",
+            icon: MoneyIcon,
+            color: "#03A9F4", // Light Blue
+            backgroundColor: "#E1F5FE",
+        },
+        {
+            name: "Borrowed",
+            icon: CallReceivedIcon,
+            color: "#F9A8D4", // Pink 100
+            backgroundColor: "#FCE4EC",
+        },
+        {
+            name: "Insurance",
+            icon: GppGoodIcon,
+            color: "#388E3C", // Dark Green
+            backgroundColor: "#E8F5E9",
+        },
+        {
+            name: "Taxes",
+            icon: CasesIcon,
+            color: "#795548", // Brown
+            backgroundColor: "#F5F5F5",
+        },
+        {
+            name: "Salon & Spa Services",
+            icon: ContentCutIcon,
+            color: "#9C27B0", // Purple
+            backgroundColor: "#F3E5F5",
+        },
+        {
+            name: "Gifts & Donations",
+            icon: CardGiftcardIcon,
+            color: "#FF4081", //Dark Pink
+            backgroundColor: "#FCE4EC",
+        },
+        {
+            name: "Laundry & Dry Cleaning",
+            icon: LocalLaundryServiceIcon,
+            color: "#303F9F", // Indigo Dark
+            backgroundColor: "#E8EAF6",
+        },
+        {
+            name: "Cosmetics & Makeup",
+            icon: Face3Icon,
+            color: "#FFAB91", //Light Orange
+            backgroundColor: "#FBE9E7",
+        },
+        {
+            name: "Pet Care",
+            icon: PetsIcon,
+            color: "#A1887F", //Brown
+            backgroundColor: "#F5F5F5",
+        },
+        {
+            name: "Purchase",
+            icon: ShoppingBagIcon,
+            color: "#8E24AA", //Dark Violet
+            backgroundColor: "#F3E5F5",
+        },
+        {
+            name: "Payments",
+            icon: PaymentsIcon,
+            color: "#1A237E", //Very Dark Blue
+            backgroundColor: "#E0E0E0",
+        },
+        {
+            name: "Other",
+            icon: MoreHorizIcon,
+            color: "#757575", // Grey
+            backgroundColor: "#EEEEEE",
+        },
+    ];
+}
