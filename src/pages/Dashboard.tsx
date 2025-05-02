@@ -2,8 +2,17 @@ import { Box, Stack, Card, CardContent, Typography } from "@mui/material";
 import { CreditCard, DollarSign, Package, Users } from "lucide-react";
 
 import "./Dashboard.css";
+import { useOutletContext } from "react-router-dom";
+import { LayoutContextType } from "../layouts/main";
+import { useEffect } from "react";
 
 const DashboardPage = () => {
+    const { setHeader } = useOutletContext<LayoutContextType>();
+
+    useEffect(() => {
+        setHeader("Welcome Back, Shahid", "It is the best time to manage your finances");
+    }, [setHeader]);
+
     return (
         <Box>
             <Stack

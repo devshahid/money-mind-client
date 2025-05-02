@@ -4,17 +4,18 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { Outlet } from "react-router-dom";
 
-const headerHeight = 64; // You can change it based on your Header
-const drawerWidthOpen = 240;
-const drawerWidthClosed = 70;
+export interface LayoutContextType {
+    setHeader: (heading: string, subheading: string) => void;
+}
 
 const Layout: React.FC = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [heading, setHeading] = useState("Transactions");
+    const [subheading, setSubheading] = useState("Overview of your activities");
 
-    const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
+    const setHeader = (h: string, s: string) => {
+        setHeading(h);
+        setSubheading(s);
     };
-
     return (
         <Box
             sx={{
@@ -25,12 +26,7 @@ const Layout: React.FC = () => {
         >
             {/* Sidebar */}
             <Box>
-                <Sidebar
-                // isOpen={isSidebarOpen}
-                // toggleSidebar={toggleSidebar}
-                // drawerWidthOpen={drawerWidthOpen}
-                // drawerWidthClosed={drawerWidthClosed}
-                />
+                <Sidebar />
             </Box>
 
             {/* Main Content */}
@@ -47,16 +43,12 @@ const Layout: React.FC = () => {
             >
                 {/* Header/Navbar */}
                 <Header
-                    heading="Transactions"
-                    subheading="Overview of your activities"
-                    // isOpen={isSidebarOpen}
-                    // toggleSidebar={toggleSidebar}
-                    // drawerWidthOpen={drawerWidthOpen}
-                    // drawerWidthClosed={drawerWidthClosed}
+                    heading={heading}
+                    subheading={subheading}
                 />
 
                 {/* Page Content */}
-                <Outlet />
+                <Outlet context={{ setHeader }} />
             </Box>
         </Box>
     );

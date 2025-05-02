@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { listLabels, listTransactions, updateTransaction } from "../store/transactionSlice";
 import { useAppDispatch, useAppSelector } from "../hooks/slice-hooks";
 import { RootState } from "../store";
@@ -27,15 +27,25 @@ import EditIcon from "@mui/icons-material/Edit";
 import { Loader } from "lucide-react";
 import TableControls from "../components/TransactionControls";
 import { getExpenseCategories } from "../constants";
+import { ColorModeContext } from "../contexts/ThemeContext";
+import { useOutletContext } from "react-router-dom";
+import { LayoutContextType } from "../layouts/main";
 
 const TransactionLogs = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState<any>(null);
+    const { mode } = useContext(ColorModeContext);
 
     const dispatch = useAppDispatch();
     const { transactions, loading, labels, totalCount } = useAppSelector((state: RootState) => state.transactions);
+
+    const { setHeader } = useOutletContext<LayoutContextType>();
+
+    useEffect(() => {
+        setHeader("Transactions", "Overview of your activities");
+    }, [setHeader]);
 
     useEffect(() => {
         dispatch(listTransactions({ page: currentPage.toString(), limit: "50" }));
@@ -101,6 +111,7 @@ const TransactionLogs = () => {
                             backgroundColor: categoryData.backgroundColor,
                             padding: "4px 8px",
                             borderRadius: "12px",
+                            color: "#000",
                         }}
                     >
                         <React.Fragment>
@@ -115,7 +126,7 @@ const TransactionLogs = () => {
     };
 
     return (
-        <Box style={{ padding: "10px", backgroundColor: "#fff" }}>
+        <Box style={{ padding: "10px", backgroundColor: mode === "dark" ? "#000" : "#fff" }}>
             <TableControls />
 
             {!loading && transactions.length === 0 ? (
@@ -156,11 +167,7 @@ const TransactionLogs = () => {
                             >
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell
-                                            sx={{
-                                                backgroundColor: "#F6F5FF",
-                                            }}
-                                        >
+                                        <TableCell sx={{ backgroundColor: mode === "dark" ? "#222126" : "#F6F5FF" }}>
                                             <Checkbox
                                                 color="primary"
                                                 indeterminate={selectedIds.length > 0 && selectedIds.length < transactions.length}
@@ -187,28 +194,70 @@ const TransactionLogs = () => {
                                                 textAlign: "center",
                                                 fontWeight: "bold",
                                                 fontSize: "1rem",
-                                                backgroundColor: "#F6F5FF",
+                                                backgroundColor: mode === "dark" ? "#222126" : "#F6F5FF",
                                                 color: "#8578e5",
                                             }}
                                         >
                                             Transaction Date
                                         </TableCell>
-                                        <TableCell sx={{ fontWeight: "bold", fontSize: "1rem", backgroundColor: "#F6F5FF", color: "#8578e5" }}>
+                                        <TableCell
+                                            sx={{
+                                                fontWeight: "bold",
+                                                fontSize: "1rem",
+                                                backgroundColor: mode === "dark" ? "#222126" : "#F6F5FF",
+                                                color: "#8578e5",
+                                            }}
+                                        >
                                             Narration
                                         </TableCell>
-                                        <TableCell sx={{ fontWeight: "bold", fontSize: "1rem", backgroundColor: "#F6F5FF", color: "#8578e5" }}>
+                                        <TableCell
+                                            sx={{
+                                                fontWeight: "bold",
+                                                fontSize: "1rem",
+                                                backgroundColor: mode === "dark" ? "#222126" : "#F6F5FF",
+                                                color: "#8578e5",
+                                            }}
+                                        >
                                             Notes
                                         </TableCell>
-                                        <TableCell sx={{ fontWeight: "bold", fontSize: "1rem", backgroundColor: "#F6F5FF", color: "#8578e5" }}>
+                                        <TableCell
+                                            sx={{
+                                                fontWeight: "bold",
+                                                fontSize: "1rem",
+                                                backgroundColor: mode === "dark" ? "#222126" : "#F6F5FF",
+                                                color: "#8578e5",
+                                            }}
+                                        >
                                             Category
                                         </TableCell>
-                                        <TableCell sx={{ fontWeight: "bold", fontSize: "1rem", backgroundColor: "#F6F5FF", color: "#8578e5" }}>
+                                        <TableCell
+                                            sx={{
+                                                fontWeight: "bold",
+                                                fontSize: "1rem",
+                                                backgroundColor: mode === "dark" ? "#222126" : "#F6F5FF",
+                                                color: "#8578e5",
+                                            }}
+                                        >
                                             Labels
                                         </TableCell>
-                                        <TableCell sx={{ fontWeight: "bold", fontSize: "1rem", backgroundColor: "#F6F5FF", color: "#8578e5" }}>
+                                        <TableCell
+                                            sx={{
+                                                fontWeight: "bold",
+                                                fontSize: "1rem",
+                                                backgroundColor: mode === "dark" ? "#222126" : "#F6F5FF",
+                                                color: "#8578e5",
+                                            }}
+                                        >
                                             Bank
                                         </TableCell>
-                                        <TableCell sx={{ fontWeight: "bold", fontSize: "1rem", backgroundColor: "#F6F5FF", color: "#8578e5" }}>
+                                        <TableCell
+                                            sx={{
+                                                fontWeight: "bold",
+                                                fontSize: "1rem",
+                                                backgroundColor: mode === "dark" ? "#222126" : "#F6F5FF",
+                                                color: "#8578e5",
+                                            }}
+                                        >
                                             Type
                                         </TableCell>
                                         <TableCell
@@ -218,7 +267,9 @@ const TransactionLogs = () => {
                                                 textAlign: "center",
                                                 fontWeight: "bold",
                                                 fontSize: "1rem",
-                                                backgroundColor: "#F6F5FF",
+
+                                                backgroundColor: mode === "dark" ? "#222126" : "#F6F5FF",
+
                                                 color: "#8578e5",
                                             }}
                                         >
@@ -226,7 +277,12 @@ const TransactionLogs = () => {
                                         </TableCell>
                                         <TableCell
                                             align="center"
-                                            sx={{ fontWeight: "bold", fontSize: "1rem", backgroundColor: "#F6F5FF", color: "#8578e5" }}
+                                            sx={{
+                                                fontWeight: "bold",
+                                                fontSize: "1rem",
+                                                backgroundColor: mode === "dark" ? "#222126" : "#F6F5FF",
+                                                color: "#8578e5",
+                                            }}
                                         >
                                             Action
                                         </TableCell>

@@ -1,5 +1,21 @@
 import React, { useContext, useState } from "react";
-import { Box, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Tooltip, Typography, Avatar, ListItemButton } from "@mui/material";
+import {
+    Box,
+    Drawer,
+    IconButton,
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
+    Tooltip,
+    Typography,
+    Avatar,
+    ListItemButton,
+    Dialog,
+    DialogTitle,
+    DialogActions,
+    Button,
+} from "@mui/material";
 import {
     Dashboard,
     AccountBalanceWallet,
@@ -13,8 +29,8 @@ import {
     AccountCircle,
     DarkMode,
     WbSunny,
+    Logout,
 } from "@mui/icons-material";
-
 import AppLogo from "/money-mind-logo.png"; // Adjust the path to your logo
 import { NavLink, useNavigate } from "react-router-dom";
 import { ColorModeContext } from "../contexts/ThemeContext";
@@ -37,6 +53,14 @@ const Sidebar: React.FC = () => {
     const { mode, toggleMode } = useContext(ColorModeContext);
     const navigate = useNavigate();
     const toggleSidebar = () => setCollapsed(!collapsed);
+    const [openLogout, setOpenLogout] = useState(false);
+
+    const handleLogout = () => {
+        // clear auth tokens/session
+        localStorage.clear(); // or your logout logic
+        setOpenLogout(false);
+        navigate("/login");
+    };
 
     return (
         <Drawer
@@ -129,17 +153,14 @@ const Sidebar: React.FC = () => {
                         title={collapsed ? item.label : ""}
                         placement="right"
                     >
-                        {/*#453f64 */}
                         <ListItem
-                            key={index}
                             disablePadding
                             sx={{
                                 mx: 1,
                                 my: 0.5,
                                 borderRadius: "30px",
-                                width: "100%", // Make each list item take full width
-                                justifyContent: "center", // Center content within the ListItem
-                                "&:hover": { backgroundColor: mode === "light" ? "#dcd6ff" : "#453f64" },
+                                width: "100%",
+                                justifyContent: "center",
                             }}
                         >
                             <NavLink
@@ -149,25 +170,33 @@ const Sidebar: React.FC = () => {
                                     color: mode === "light" ? "#000" : "#fff",
                                     width: collapsed ? 0 : "100%", // Make the NavLink take full width
                                     display: "flex",
-                                    justifyContent: "center", // Center the ListItemButton inside
-                                    backgroundColor: isActive ? "#8470FF" : "transparent",
+                                    justifyContent: "center",
                                     borderRadius: "30px",
+                                    backgroundColor: isActive ? "#8470FF" : "transparent",
+                                    transition: "background-color 0.3s ease",
                                 })}
                             >
                                 <ListItemButton
                                     sx={{
                                         minHeight: 48,
-                                        justifyContent: "center", // Center content horizontally
+                                        justifyContent: "center",
                                         px: 2.5,
-                                        gap: collapsed ? 0 : 1, // Adjust gap based on collapse state
-                                        width: "100%", // Make the button take full width
+                                        gap: collapsed ? 0 : 1,
+                                        width: "100%",
+                                        borderRadius: "30px",
+                                        "&:hover": {
+                                            backgroundColor: mode === "light" ? "#dcd6ff" : "#453f64",
+                                        },
                                     }}
                                 >
                                     <ListItemIcon
                                         sx={{
                                             minWidth: 0,
-                                            mr: collapsed ? "auto" : 3, // Adjust margin based on collapse state
+                                            mr: collapsed ? "auto" : 3,
                                             justifyContent: "center",
+                                            "&:hover": {
+                                                backgroundColor: "transparent", // Disable icon hover effect
+                                            },
                                         }}
                                     >
                                         {item.icon}
@@ -178,7 +207,23 @@ const Sidebar: React.FC = () => {
                         </ListItem>
                     </Tooltip>
                 ))}
+                <IconButton
+                    onClick={() => setOpenLogout(true)}
+                    sx={{
+                        width: collapsed ? 48 : "calc(100% - 16px)",
+                        // mx: 1,
+                        transition: "all 0.3s ease",
+                        borderRadius: "30px",
+                        color: mode === "light" ? "#000" : "#fff",
+                        minWidth: 0,
+                        backgroundColor: "#da377c",
+                    }}
+                >
+                    <Logout />
+                    {!collapsed && <span style={{ marginLeft: 8 }}>Logout</span>}
+                </IconButton>
             </List>
+
             <Box
                 sx={{
                     my: 2,
@@ -256,6 +301,23 @@ const Sidebar: React.FC = () => {
                     )}
                 </Box>
             </Box>
+            {/* Logout Dialog */}
+            <Dialog
+                open={openLogout}
+                onClose={() => setOpenLogout(false)}
+            >
+                <DialogTitle>Are you sure you want to logout?</DialogTitle>
+                <DialogActions>
+                    <Button onClick={() => setOpenLogout(false)}>Cancel</Button>
+                    <Button
+                        onClick={handleLogout}
+                        color="error"
+                        variant="contained"
+                    >
+                        Logout
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Drawer>
     );
 };
