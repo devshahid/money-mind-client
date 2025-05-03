@@ -68,10 +68,10 @@ export default function DebtTable(): React.ReactElement {
     const { register, handleSubmit, reset } = useForm<DebtDetails>();
 
     React.useEffect(() => {
-        fetchDebts();
+        void fetchDebts();
     }, []);
 
-    const fetchDebts = async () => {
+    const fetchDebts = async (): Promise<void> => {
         setLoading(true);
         try {
             // // Sample debt data (You can replace this with an API call)
@@ -92,15 +92,22 @@ export default function DebtTable(): React.ReactElement {
             //   },
             //   // More sample data entries can be added here
             // ];
-            const response = await axiosClient.get("debt/list-debts");
-            const debtData = response.data.output.map((item) => {
-                return {
-                    ...item.debtDetails,
-                    _id: item._id,
-                    createdAt: item.createdAt,
-                    updatedAt: item.updatedAt,
-                };
-            });
+            interface ApiResponse {
+                output: Array<{
+                    debtDetails: DebtDetails;
+                    _id: string;
+                    createdAt: string;
+                    updatedAt: string;
+                }>;
+            }
+
+            const response = await axiosClient.get<ApiResponse>("debt/list-debts");
+            const debtData = response.data.output.map((item) => ({
+                ...item.debtDetails,
+                _id: item._id,
+                createdAt: item.createdAt,
+                updatedAt: item.updatedAt,
+            }));
             setDebts(debtData);
         } catch (error) {
             console.error("Error fetching debts:", error);
@@ -109,26 +116,26 @@ export default function DebtTable(): React.ReactElement {
         }
     };
 
-    const handleCreateDebt = () => {
+    const handleCreateDebt = (): void => {
         setOpenModal(true);
     };
 
-    const handleCloseModal = () => {
+    const handleCloseModal = (): void => {
         setOpenModal(false);
         reset();
     };
 
-    const onSubmit = (data: DebtDetails) => {
+    const onSubmit = (data: DebtDetails): void => {
         console.log("Debt Created:", data);
         setDebts([...debts, data]);
         handleCloseModal();
     };
 
-    const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+    const handleChangePage = (_: React.MouseEvent<HTMLButtonElement> | null, newPage: number): void => {
         setPage(newPage);
     };
 
-    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
@@ -225,7 +232,7 @@ export default function DebtTable(): React.ReactElement {
                     >
                         Create Debt
                     </Typography>
-                    <form onSubmit={handleSubmit(onSubmit)}>
+                    <form onSubmit={() => handleSubmit(onSubmit)}>
                         <TextField
                             label="Debt Name"
                             fullWidth

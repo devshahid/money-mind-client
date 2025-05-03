@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosClient from "../services/axiosClient";
+import { AxiosError } from "axios";
 
 export interface ITransactionLogs {
     _id: string;
@@ -11,6 +12,11 @@ export interface ITransactionLogs {
     amount: string;
     bankName: string;
     isCredit: boolean;
+}
+
+export interface ITransactionLogsApiResponse {
+    result: ITransactionLogs[];
+    totalCount: number;
 }
 
 interface IListTransactionPayload {
@@ -25,6 +31,7 @@ interface IListTransactionPayload {
     labels?: string[];
     category?: string[];
     transactionType?: string; // online/cash
+    keyword?: string;
 }
 
 interface IInitialState {
@@ -44,16 +51,18 @@ const initialState: IInitialState = {
 };
 
 // Mocking a function to fetch transactions
-export const listTransactions = createAsyncThunk<ITransactionLogs[], IListTransactionPayload, { rejectValue: string }>(
+export const listTransactions = createAsyncThunk<ITransactionLogsApiResponse, IListTransactionPayload, { rejectValue: string }>(
     "listTransactions",
     async (payload: IListTransactionPayload, { rejectWithValue }) => {
         try {
-            const response = await axiosClient.post(`/transaction-logs/list-transactions`, {
-                ...payload,
-            });
+            const response = await axiosClient.post<{ output: ITransactionLogsApiResponse }>(`/transaction-logs/list-transactions`, payload);
             return response.data.output;
-        } catch (error: any) {
-            return rejectWithValue(error?.response?.data?.message || "Failed to fetch transactions");
+        } catch (error: unknown) {
+            if (error instanceof AxiosError && error.response?.data) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                return rejectWithValue(error.response?.data || "Failed to fetch transactions");
+            }
+            return rejectWithValue("An unknown error occurred while fetching transactions");
         }
     },
 );
@@ -63,21 +72,29 @@ export const updateTransaction = createAsyncThunk<ITransactionLogs, ITransaction
     "updateTransaction",
     async (payload: ITransactionLogs, { rejectWithValue }) => {
         try {
-            const response = await axiosClient.put(`/transaction-logs/update/${payload._id}`, payload);
+            const response = await axiosClient.put<{ output: ITransactionLogs }>(`/transaction-logs/update/${payload._id}`, payload);
             const data = response.data.output;
             return data;
-        } catch (error: any) {
-            return rejectWithValue(error?.response?.data?.message || "Failed to fetch transactions");
+        } catch (error: unknown) {
+            if (error instanceof AxiosError && error.response?.data) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                return rejectWithValue(error.response?.data || "Failed to fetch transactions");
+            }
+            return rejectWithValue("An unknown error occurred while fetching transactions");
         }
     },
 );
 
 export const listLabels = createAsyncThunk<string[], void, { rejectValue: string }>("listLabels", async (_, { rejectWithValue }) => {
     try {
-        const response = await axiosClient.get("/transaction-logs/list-labels");
+        const response = await axiosClient.get<{ output: string[] }>("/transaction-logs/list-labels");
         return response.data.output;
-    } catch (error: any) {
-        return rejectWithValue(error?.response?.data?.message || "Failed to fetch labels");
+    } catch (error: unknown) {
+        if (error instanceof AxiosError && error.response?.data) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+            return rejectWithValue(error.response?.data || "Failed to fetch transactions");
+        }
+        return rejectWithValue("An unknown error occurred while fetching transactions");
     }
 });
 
@@ -89,7 +106,7 @@ const transactionsSlice = createSlice({
         builder.addCase(listTransactions.pending, (state) => {
             state.loading = true;
         });
-        builder.addCase(listTransactions.fulfilled, (state, action: PayloadAction<any>) => {
+        builder.addCase(listTransactions.fulfilled, (state, action: PayloadAction<ITransactionLogsApiResponse>) => {
             state.loading = false;
             state.transactions = action.payload.result;
             state.totalCount = action.payload.totalCount;
@@ -103,7 +120,7 @@ const transactionsSlice = createSlice({
         builder.addCase(updateTransaction.pending, (state) => {
             state.loading = true;
         });
-        builder.addCase(updateTransaction.fulfilled, (state, action: PayloadAction<any>) => {
+        builder.addCase(updateTransaction.fulfilled, (state, action: PayloadAction<ITransactionLogs>) => {
             state.loading = false;
             state.transactions = state.transactions.map((tx) => (tx._id === action.payload._id ? { ...tx, ...action.payload } : tx));
         });
@@ -116,9 +133,9 @@ const transactionsSlice = createSlice({
         builder.addCase(listLabels.pending, (state) => {
             state.loading = true;
         });
-        builder.addCase(listLabels.fulfilled, (state, action: PayloadAction<any>) => {
+        builder.addCase(listLabels.fulfilled, (state, action: PayloadAction<string[]>) => {
             state.loading = false;
-            state.labels = action.payload;
+            state.labels = action.payload.map((label) => ({ labelName: label, labelColor: "#000000" }));
         });
         builder.addCase(listLabels.rejected, (state, action) => {
             state.loading = false;

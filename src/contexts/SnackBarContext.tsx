@@ -19,7 +19,8 @@ interface SnackbarContextValue {
 
 const SnackbarContext = createContext<SnackbarContextValue | undefined>(undefined);
 
-export const useSnackbar = () => {
+// eslint-disable-next-line react-refresh/only-export-components
+export const useSnackbar = (): SnackbarContextValue => {
     const context = useContext(SnackbarContext);
     if (!context) {
         throw new Error("useSnackbar must be used within a SnackbarProvider");
@@ -38,23 +39,23 @@ export const SnackbarProvider: React.FC<SnackbarProviderProps> = ({ children }) 
         severity: undefined,
     });
 
-    const showSnackbar = (message: string, severity: AlertColor = "success") => {
+    const showSnackbar = (message: string, severity: AlertColor = "success"): void => {
         setSnackbar({ open: true, message, severity });
     };
 
-    const hideSnackbar = () => {
+    const hideSnackbar = (): void => {
         setSnackbar({ ...snackbar, open: false });
     };
 
-    const showSuccessSnackbar = (message: string) => {
+    const showSuccessSnackbar = (message: string): void => {
         showSnackbar(message, "success");
     };
 
-    const showWarningSnackbar = (message: string) => {
+    const showWarningSnackbar = (message: string): void => {
         showSnackbar(message, "warning");
     };
 
-    const showErrorSnackbar = (message: string) => {
+    const showErrorSnackbar = (message: string): void => {
         showSnackbar(message, "error");
     };
 

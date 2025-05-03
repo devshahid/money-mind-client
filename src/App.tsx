@@ -10,8 +10,9 @@ import Account from "./pages/Account";
 import RegisterPage from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import GuestRoute from "./components/GuestRoute";
+import { JSX } from "react";
 
-function App() {
+function App(): JSX.Element {
     const router = createBrowserRouter([
         {
             path: "/",

@@ -1,4 +1,4 @@
-export function generateRandomColor() {
+export function generateRandomColor(): string {
     // Generate a random color in hex format
     const letters = "0123456789ABCDEF";
     let color = "#";
@@ -9,7 +9,7 @@ export function generateRandomColor() {
 }
 
 // Function to calculate contrast and determine text color (white or black)
-export function getTextColor(backgroundColor: string) {
+export function getTextColor(backgroundColor: string): string {
     const color = backgroundColor.substring(1); // Remove the '#' symbol
     const rgb = parseInt(color, 16); // Convert to RGB
     const r = (rgb >> 16) & 0xff;

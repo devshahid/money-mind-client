@@ -1,17 +1,17 @@
 import { createTheme, PaletteMode, ThemeProvider } from "@mui/material";
-import { createContext, useMemo, useState } from "react";
+import { JSX, createContext, useMemo, useState } from "react";
 
 export const ColorModeContext = createContext({
     toggleMode: () => {},
     mode: "light",
 });
 
-export const ColorContextProvider = ({ children }: { children: JSX.Element }) => {
+export const ColorContextProvider = ({ children }: { children: JSX.Element }): JSX.Element => {
     const [mode, setMode] = useState<PaletteMode>("dark");
 
     const colorMode = useMemo(
         () => ({
-            toggleMode: () => setMode((prevMode) => (prevMode === "light" ? "dark" : "light")),
+            toggleMode: (): void => setMode((prevMode) => (prevMode === "light" ? "dark" : "light")),
             mode,
         }),
         [mode],

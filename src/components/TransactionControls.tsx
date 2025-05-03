@@ -27,8 +27,9 @@ import {
     TableCell,
     TableBody,
     TablePagination,
+    SelectChangeEvent,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import React, { JSX, useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -43,11 +44,21 @@ import { getExpenseCategories } from "../constants";
 import { useSnackbar } from "../contexts/SnackBarContext";
 
 const labelOptions = ["Repair", "Purchase", "Personal"];
+interface ITransactionFilters {
+    dateFrom: string;
+    dateTo: string;
+    amount: string;
+    bankName: string;
+    transactionType: string;
+    category: string[];
+    labels: string[];
+    type: string;
+}
 
 type RowData = Record<string, string>;
 const REQUIRED_HEADERS = ["date", "narration", "refNumber", "withdrawlAmount", "depositAmount", "closingBalance"];
 
-const TableControls = () => {
+const TableControls = (): JSX.Element => {
     const { headerHeight } = useLayout();
     const { showErrorSnackbar } = useSnackbar();
 
@@ -64,9 +75,9 @@ const TableControls = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    const handlePageChange = (newPage: number) => setPage(newPage);
+    const handlePageChange = (newPage: number): void => setPage(newPage);
 
-    const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
@@ -79,7 +90,7 @@ const TableControls = () => {
         }
     }, [data]);
 
-    const [filters, setFilters] = useState({
+    const [filters, setFilters] = useState<ITransactionFilters>({
         dateFrom: "",
         dateTo: "",
         amount: "",
@@ -92,23 +103,23 @@ const TableControls = () => {
 
     const dispatch = useAppDispatch();
 
-    const toggleFilterDrawer = () => setFilterOpen(!filterOpen);
+    const toggleFilterDrawer = (): void => setFilterOpen(!filterOpen);
 
-    const clearFilters = () => {
+    const clearFilters = React.useCallback((): ITransactionFilters => {
         // Only send non-empty filters
         const updatedFilters = Object.entries(filters).reduce((acc, [key, value]) => {
-            if (key === "category" || key === "labels") {
-                if (value.length > 0) acc[key] = value;
+            if ((key === "category" || key === "labels") && Array.isArray(value) && value.length > 0) {
+                acc[key] = value as string[];
             } else if (value !== "") {
-                acc[key] = value;
+                acc[key] = value as string;
             }
             return acc;
-        }, {} as any);
+        }, {} as ITransactionFilters);
         return updatedFilters;
-    };
+    }, [filters]);
 
-    const handleApplyFilter = () => {
-        dispatch(listTransactions({ ...clearFilters() }));
+    const handleApplyFilter = (): void => {
+        void dispatch(listTransactions({ ...clearFilters() }));
         setFilterOpen(false);
     };
 
@@ -121,16 +132,16 @@ const TableControls = () => {
             }).length;
             setActiveFiltersCount(activeFiltersCount);
         }
-    }, [filterOpen]);
+    }, [filterOpen, filters]);
 
-    const handleMultiChange = (event: any, type: "category" | "labels") => {
+    const handleMultiChange = (event: SelectChangeEvent<string[]>, type: "category" | "labels"): void => {
         const {
             target: { value },
         } = event;
         setFilters({ ...filters, [type]: typeof value === "string" ? value.split(",") : value });
     };
 
-    const handleResetFilters = () => {
+    const handleResetFilters = (): void => {
         setFilters({
             dateFrom: "",
             dateTo: "",
@@ -148,21 +159,24 @@ const TableControls = () => {
 
     // call list api when filter update
     useEffect(() => {
-        const fetchTransactions = async () => {
+        const fetchTransactions = async (): Promise<void> => {
             try {
                 await dispatch(listTransactions(clearFilters()));
             } catch (error) {
                 console.error("Error fetching transactions:", error);
             }
         };
-        if (!filterOpen) fetchTransactions();
-    }, [filters, dispatch]);
+
+        if (!filterOpen) {
+            void fetchTransactions();
+        }
+    }, [filters, dispatch, filterOpen, clearFilters]);
 
     // Debounce function: delays execution until user stops typing for 1s
-    const debounce = (callback: Function) => {
+    const debounce = (callback: (value: string) => void): ((event: React.ChangeEvent<HTMLInputElement>) => void) => {
         let timeoutId: number;
-        return (event: { target: { value: any } }) => {
-            const value = event.target.value;
+        return (event: React.ChangeEvent<HTMLInputElement>) => {
+            const value: string = event.target.value;
             clearTimeout(timeoutId); // clear any previous timer
             timeoutId = setTimeout(() => {
                 callback(value);
@@ -171,9 +185,9 @@ const TableControls = () => {
     };
 
     // Actual search logic
-    const handleSearch = async (searchTerm: string) => {
+    const handleSearch = (searchTerm: string): void => {
         console.log("Searching for:", searchTerm);
-        dispatch(listTransactions({ ...clearFilters(), keyword: searchTerm }));
+        void dispatch(listTransactions({ ...clearFilters(), keyword: searchTerm }));
     };
 
     const validateHeaders = (headers: string[]): { valid: boolean; missing: string[] } => {
@@ -182,10 +196,10 @@ const TableControls = () => {
         return { valid: missing.length === 0, missing };
     };
 
-    const mergeRows = (rows: any[][], headers: string[], keyField: string): RowData[] => {
+    const mergeRows = (rows: (string | number | null)[][], headers: string[], keyField: string): RowData[] => {
         const keyIdx = headers.indexOf(keyField);
-        const merged: any[][] = [];
-        let currentRow: any[] | null = null;
+        const merged: (string | number | null)[][] = [];
+        let currentRow: (string | number | null)[] | null = null;
 
         rows.forEach((row) => {
             if (row[keyIdx]) {
@@ -199,23 +213,23 @@ const TableControls = () => {
         if (currentRow) merged.push(currentRow);
         return merged.map((row) =>
             headers.reduce((obj: RowData, key: string, i: number) => {
-                obj[key] = row[i] || "";
+                obj[key] = row[i] !== null && row[i] !== undefined ? String(row[i]) : "";
                 return obj;
             }, {}),
         );
     };
 
-    const handleDelete = (index: number) => {
+    const handleDelete = (index: number): void => {
         setData(data.filter((_, i) => i !== index));
     };
 
-    const handleChange = (index: number, field: string, value: string) => {
+    const handleChange = (index: number, field: string, value: string): void => {
         const updated = [...data];
         updated[index][field] = value;
         setData(updated);
     };
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>): void => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -224,17 +238,18 @@ const TableControls = () => {
         setReadLoading(true);
         let parsedRows: RowData[] = [];
 
-        reader.onload = (evt) => {
+        reader.onload = (evt: ProgressEvent<FileReader>): void => {
             try {
                 const arrayBuffer = evt.target?.result as ArrayBuffer;
                 const wb = XLSX.read(arrayBuffer, { type: "array" });
                 const wsname = wb.SheetNames[0];
                 const ws = wb.Sheets[wsname];
-                const rawData: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+                const rawData: (string | number | null)[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
 
                 const header = rawData[0];
                 const body = rawData.slice(1);
-                const { valid, missing } = validateHeaders(header);
+                const sanitizedHeader = header.filter((h): h is string => typeof h === "string");
+                const { valid, missing } = validateHeaders(sanitizedHeader);
 
                 if (!valid) {
                     console.error(`Missing required headers: ${missing.join(", ")}`);
@@ -243,7 +258,7 @@ const TableControls = () => {
                     return;
                 }
 
-                parsedRows = mergeRows(body, header, header[0]);
+                parsedRows = mergeRows(body, sanitizedHeader, sanitizedHeader[0]);
             } catch (error) {
                 console.error("Error parsing file:", error);
             } finally {
@@ -251,14 +266,14 @@ const TableControls = () => {
             }
         };
 
-        reader.onerror = (error) => {
+        reader.onerror = (error): void => {
             console.error("Error reading file:", error);
             showErrorSnackbar("Error reading file");
             setReadLoading(false);
             setPreviewUploadedContent(false);
         };
 
-        reader.onloadend = () => {
+        reader.onloadend = (): void => {
             console.log("Read complete", parsedRows);
             setReadLoading(false);
             setData(parsedRows);
@@ -267,7 +282,7 @@ const TableControls = () => {
         reader.readAsArrayBuffer(file);
     };
 
-    const handleSave = async () => {
+    const handleSave = async (): Promise<void> => {
         try {
             if (!bankName || (bankName && bankName.length === 0)) {
                 alert("Bank Name required");
@@ -347,7 +362,7 @@ const TableControls = () => {
                         value={filters.category}
                         onChange={(e) => handleMultiChange(e, "category")}
                         input={<OutlinedInput label="Category" />}
-                        renderValue={(selected) => (selected as string[]).join(", ")}
+                        renderValue={(selected) => selected.join(", ")}
                         MenuProps={{
                             // Pass props to the Menu component
                             PaperProps: {
@@ -548,7 +563,7 @@ const TableControls = () => {
                             value={filters.category}
                             onChange={(e) => handleMultiChange(e, "category")}
                             input={<OutlinedInput label="Category" />}
-                            renderValue={(selected) => (selected as string[]).join(", ")}
+                            renderValue={(selected) => selected.join(", ")}
                         >
                             {getExpenseCategories().map((category, i) => (
                                 <MenuItem
@@ -573,7 +588,7 @@ const TableControls = () => {
                             value={filters.labels}
                             onChange={(e) => handleMultiChange(e, "labels")}
                             input={<OutlinedInput label="Labels" />}
-                            renderValue={(selected) => (selected as string[]).join(", ")}
+                            renderValue={(selected) => selected.join(", ")}
                         >
                             {labelOptions.map((label) => (
                                 <MenuItem
@@ -747,7 +762,9 @@ const TableControls = () => {
                                 >
                                     <Button
                                         variant="contained"
-                                        onClick={handleSave}
+                                        onClick={() => {
+                                            void handleSave();
+                                        }}
                                     >
                                         Save to DB
                                     </Button>

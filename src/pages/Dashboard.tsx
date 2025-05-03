@@ -4,9 +4,9 @@ import { CreditCard, DollarSign, Package, Users } from "lucide-react";
 import "./Dashboard.css";
 import { useOutletContext } from "react-router-dom";
 import { LayoutContextType } from "../layouts/main";
-import { useEffect } from "react";
+import { JSX, useEffect } from "react";
 
-const DashboardPage = () => {
+const DashboardPage = (): JSX.Element => {
     const { setHeader } = useOutletContext<LayoutContextType>();
 
     useEffect(() => {

@@ -81,12 +81,12 @@ const RegisterPage: React.FC = () => {
         confirmPassword: "",
     });
 
-    const validatePassword = (password: string) => {
+    const validatePassword = (password: string): boolean => {
         const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
         return pattern.test(password);
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = (): void => {
         let newErrors = {
             name: "",
             email: "",

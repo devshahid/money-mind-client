@@ -16,13 +16,13 @@ axiosClient.interceptors.request.use(
         if (accessToken) config.headers.accessToken = `${accessToken}`;
         return config;
     },
-    (error) => Promise.reject(error),
+    (error) => Promise.reject(error instanceof Error ? error : new Error(String(error))),
 );
 
 // Response Interceptor (Handles Unauthorized Errors)
 axiosClient.interceptors.response.use(
     (response) => response,
-    (error) => {
+    (error: import("axios").AxiosError) => {
         if (error.response?.status === 401) {
             console.error("Unauthorized! Logging out...");
             localStorage.removeItem("accessToken");

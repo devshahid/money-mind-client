@@ -52,10 +52,10 @@ const Sidebar: React.FC = () => {
     const [collapsed, setCollapsed] = useState(false);
     const { mode, toggleMode } = useContext(ColorModeContext);
     const navigate = useNavigate();
-    const toggleSidebar = () => setCollapsed(!collapsed);
+    const toggleSidebar = (): void => setCollapsed(!collapsed);
     const [openLogout, setOpenLogout] = useState(false);
 
-    const handleLogout = () => {
+    const handleLogout = (): void => {
         // clear auth tokens/session
         localStorage.clear(); // or your logout logic
         setOpenLogout(false);

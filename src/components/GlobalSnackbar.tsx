@@ -19,7 +19,7 @@ const GlobalSnackbar: React.FC = () => {
     const { snackbar, hideSnackbar } = useSnackbar();
     const { open, message, severity } = snackbar;
 
-    const handleClose = (_: React.SyntheticEvent | Event, reason?: string) => {
+    const handleClose = (_: React.SyntheticEvent | Event, reason?: string): void => {
         if (reason === "clickaway") {
             return;
         }

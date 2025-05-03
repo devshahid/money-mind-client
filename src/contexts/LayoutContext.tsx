@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 const LayoutContext = createContext<{
     headerHeight: number;
@@ -14,4 +14,8 @@ export const LayoutProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return <LayoutContext.Provider value={{ headerHeight, setHeaderHeight }}>{children}</LayoutContext.Provider>;
 };
 
-export const useLayout = () => useContext(LayoutContext);
+// eslint-disable-next-line react-refresh/only-export-components
+export const useLayout = (): {
+    headerHeight: number;
+    setHeaderHeight: (height: number) => void;
+} => useContext(LayoutContext);

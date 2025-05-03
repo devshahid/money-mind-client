@@ -2,7 +2,7 @@ type ExpenseCategory = {
     name: string;
     color: string;
     backgroundColor: string;
-    icon: OverridableComponent<SvgIconTypeMap<{}, "svg">> & {
+    icon: OverridableComponent<SvgIconTypeMap<object, "svg">> & {
         muiName: string;
     }; // Emoji, icon string, or React component
 };

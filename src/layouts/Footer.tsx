@@ -1,6 +1,7 @@
 import { Box, Typography, Link } from "@mui/material";
+import { JSX } from "react";
 
-export const Footer = () => {
+export const Footer = (): JSX.Element => {
     return (
         <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", pt: 4, gap: 4 }}>
             <Typography

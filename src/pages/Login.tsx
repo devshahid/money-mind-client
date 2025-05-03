@@ -1,59 +1,4 @@
-// import { useState } from "react";
-// import { Container, Typography } from "@mui/material";
-// import InputField from "../components/InputField";
-// import CustomButton from "../components/Button";
-// import { useDispatch } from "react-redux";
-// import { login } from "../store/authSlice";
-// import { useNavigate } from "react-router-dom";
-// import { loginUser } from "../services/authService";
-
-// const Login = () => {
-//     const [email, setEmail] = useState("");
-//     const [password, setPassword] = useState("");
-//     const dispatch = useDispatch();
-//     const navigate = useNavigate();
-
-//     const handleLogin = async () => {
-//         try {
-//             const data = await loginUser(email, password);
-//             dispatch(login(data.output.accessToken));
-//             localStorage.setItem("accessToken", data.output.accessToken);
-//             navigate("/");
-//         } catch (error) {
-//             console.error("Login failed", error);
-//         }
-//     };
-
-//     return (
-//         <Container maxWidth="sm">
-//             <Typography
-//                 variant="h4"
-//                 gutterBottom
-//             >
-//                 Login
-//             </Typography>
-//             <InputField
-//                 label="Email"
-//                 value={email}
-//                 onChange={(e) => setEmail(e.target.value)}
-//             />
-//             <InputField
-//                 label="Password"
-//                 type="password"
-//                 value={password}
-//                 onChange={(e) => setPassword(e.target.value)}
-//             />
-//             <CustomButton
-//                 text="Login"
-//                 onClick={handleLogin}
-//             />
-//         </Container>
-//     );
-// };
-
-// export default Login;
-
-import React, { useState } from "react";
+import React, { JSX, useState } from "react";
 import {
     Box,
     Button,
@@ -76,7 +21,7 @@ import { useAppDispatch } from "../hooks/slice-hooks";
 import { login } from "../store/authSlice";
 import { loginUser } from "../services/authService";
 
-const SignInPage: React.FC = () => {
+const SignInPage: React.FC = (): JSX.Element => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
@@ -88,17 +33,17 @@ const SignInPage: React.FC = () => {
         password: null,
     });
 
-    const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
         setUserData({ ...userData, [e.target.name]: e.target.value });
     };
 
-    const handlerLoginUser = async () => {
+    const handlerLoginUser = async (): Promise<void> => {
         try {
             if (!userData.email || !userData.password) {
                 return;
             }
             const data = await loginUser(userData.email, userData.password);
-            dispatch(login(data.output.accessToken));
+            void dispatch(login(data.output.accessToken));
             localStorage.setItem("accessToken", data.output.accessToken);
             navigate("/");
         } catch (error) {
@@ -298,7 +243,7 @@ const SignInPage: React.FC = () => {
                                 textTransform: "none",
                                 fontWeight: 600,
                             }}
-                            onClick={handlerLoginUser}
+                            onClick={() => void handlerLoginUser()}
                         >
                             Sign in
                         </Button>

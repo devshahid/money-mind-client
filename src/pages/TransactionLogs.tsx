@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
-import { listLabels, listTransactions, updateTransaction } from "../store/transactionSlice";
+import React, { JSX, useContext, useEffect, useState } from "react";
+import { ITransactionLogs, listLabels, listTransactions, updateTransaction } from "../store/transactionSlice";
 import { useAppDispatch, useAppSelector } from "../hooks/slice-hooks";
 import { RootState } from "../store";
 
@@ -31,11 +31,11 @@ import { ColorModeContext } from "../contexts/ThemeContext";
 import { useOutletContext } from "react-router-dom";
 import { LayoutContextType } from "../layouts/main";
 
-const TransactionLogs = () => {
+const TransactionLogs = (): JSX.Element => {
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
-    const [editingTransaction, setEditingTransaction] = useState<any>(null);
+    const [editingTransaction, setEditingTransaction] = useState<ITransactionLogs | null>(null);
     const { mode } = useContext(ColorModeContext);
 
     const dispatch = useAppDispatch();
@@ -48,7 +48,7 @@ const TransactionLogs = () => {
     }, [setHeader]);
 
     useEffect(() => {
-        dispatch(listTransactions({ page: currentPage.toString(), limit: "50" }));
+        void dispatch(listTransactions({ page: currentPage.toString(), limit: "50" }));
     }, [dispatch, currentPage]);
 
     useEffect(() => {
@@ -56,8 +56,8 @@ const TransactionLogs = () => {
     }, [loading]);
 
     useEffect(() => {
-        dispatch(listLabels());
-    }, []);
+        void dispatch(listLabels());
+    }, [dispatch]);
 
     useEffect(() => {
         if (editingTransaction) {
@@ -66,19 +66,19 @@ const TransactionLogs = () => {
     }, [editingTransaction]);
 
     console.log("totalCount: ", totalCount);
-    const handleLoadMore = () => {
+    const handleLoadMore = (): void => {
         setIsLoadingMore(true);
         setCurrentPage((prev) => prev + 1); // Update page locally
     };
 
-    const handleUpdateTransaction = (transaction: any) => {
-        dispatch(updateTransaction(transaction)); // Refresh the transaction list
+    const handleUpdateTransaction = (transaction: ITransactionLogs): void => {
+        void dispatch(updateTransaction(transaction)); // Refresh the transaction list
         setEditModalOpen(false);
     };
 
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-    const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>): void => {
         if (event.target.checked) {
             const allIds = transactions.map((tx) => tx._id);
             setSelectedIds(allIds);
@@ -87,7 +87,7 @@ const TransactionLogs = () => {
         }
     };
 
-    const handleSelectOne = (id: string) => {
+    const handleSelectOne = (id: string): void => {
         if (selectedIds.includes(id)) {
             setSelectedIds(selectedIds.filter((selectedId) => selectedId !== id));
         } else {
@@ -95,9 +95,9 @@ const TransactionLogs = () => {
         }
     };
 
-    const isSelected = (id: string) => selectedIds.includes(id);
+    const isSelected = (id: string): boolean => selectedIds.includes(id);
 
-    const CategoryTransactionRow = ({ tx }: { tx: { category: string } }) => {
+    const CategoryTransactionRow = ({ tx }: { tx: { category: string } }): JSX.Element => {
         const categoryData = getExpenseCategories().find((cat) => cat.name === tx.category);
         const displayCategory = tx.category ? tx.category.charAt(0).toUpperCase() + tx.category.slice(1) : "";
         return (
@@ -475,6 +475,7 @@ const TransactionLogs = () => {
                                 onChange={(_, newValue) => setEditingTransaction({ ...editingTransaction, label: newValue })}
                                 renderTags={(value: string[], getTagProps) =>
                                     value.map((option, index) => (
+                                        // eslint-disable-next-line react/jsx-key
                                         <Chip
                                             variant="outlined"
                                             label={option}

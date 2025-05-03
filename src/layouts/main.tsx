@@ -12,7 +12,7 @@ const Layout: React.FC = () => {
     const [heading, setHeading] = useState("Transactions");
     const [subheading, setSubheading] = useState("Overview of your activities");
 
-    const setHeader = (h: string, s: string) => {
+    const setHeader = (h: string, s: string): void => {
         setHeading(h);
         setSubheading(s);
     };

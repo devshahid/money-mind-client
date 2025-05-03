@@ -1,11 +1,9 @@
 import { Box, Button } from "@mui/material";
 import axiosClient from "../services/axiosClient";
-import { useState } from "react";
+import { JSX } from "react";
 
-type Props = {};
-
-function Account({}: Props) {
-    const handleDeleteAll = async () => {
+function Account(): JSX.Element {
+    const handleDeleteAll = async (): Promise<void> => {
         try {
             const response = await axiosClient.delete("transaction-logs/delete-all-transactions");
             console.log(response.data);
@@ -19,7 +17,7 @@ function Account({}: Props) {
             <Box>
                 <Button
                     variant="outlined"
-                    onClick={handleDeleteAll}
+                    onClick={() => void handleDeleteAll()}
                 >
                     Delete All Transactions
                 </Button>
