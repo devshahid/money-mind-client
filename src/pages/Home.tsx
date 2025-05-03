@@ -5,22 +5,28 @@ import { logout } from "../store/authSlice";
 import { useNavigate } from "react-router-dom";
 
 const Home = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/login");
-  };
+    const handleLogout = () => {
+        dispatch(logout());
+        navigate("/login");
+    };
 
-  return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" gutterBottom>
-        Welcome to MoneyMind
-      </Typography>
-      <CustomButton text="Logout" onClick={handleLogout} />
-    </Container>
-  );
+    return (
+        <Container maxWidth="sm">
+            <Typography
+                variant="h4"
+                gutterBottom
+            >
+                Welcome to MoneyMind
+            </Typography>
+            <CustomButton
+                text="Logout"
+                onClick={handleLogout}
+            />
+        </Container>
+    );
 };
 
 export default Home;
