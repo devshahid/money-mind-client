@@ -472,8 +472,13 @@ const TransactionLogs = (): JSX.Element => {
                                 freeSolo
                                 options={labels.map((l) => l.labelName)}
                                 value={editingTransaction.label || []}
-                                onChange={(_, newValue) => setEditingTransaction({ ...editingTransaction, label: newValue })}
-                                renderTags={(value: string[], getTagProps) =>
+                                onChange={(_, newValue) =>
+                                    setEditingTransaction({
+                                        ...editingTransaction,
+                                        label: newValue.filter((value): value is string => value !== null),
+                                    })
+                                }
+                                renderTags={(value, getTagProps) =>
                                     value.map((option, index) => (
                                         // eslint-disable-next-line react/jsx-key
                                         <Chip

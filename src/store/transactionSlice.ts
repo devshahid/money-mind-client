@@ -19,6 +19,12 @@ export interface ITransactionLogsApiResponse {
     totalCount: number;
 }
 
+export interface ILabelsApiResponse {
+    _id: string | null;
+    labelName: string | null;
+    labelColor: string | null;
+}
+
 interface IListTransactionPayload {
     dateFrom?: string;
     dateTo?: string;
@@ -39,7 +45,7 @@ interface IInitialState {
     totalCount: number;
     loading: boolean;
     error: string | null;
-    labels: { labelName: string; labelColor: string }[];
+    labels: { _id: string | null; labelName: string | null; labelColor: string | null }[];
 }
 
 const initialState: IInitialState = {
@@ -47,7 +53,7 @@ const initialState: IInitialState = {
     totalCount: 0,
     loading: false,
     error: null as string | null,
-    labels: [],
+    labels: [{ _id: null, labelName: null, labelColor: null }],
 };
 
 // Mocking a function to fetch transactions
@@ -85,16 +91,16 @@ export const updateTransaction = createAsyncThunk<ITransactionLogs, ITransaction
     },
 );
 
-export const listLabels = createAsyncThunk<string[], void, { rejectValue: string }>("listLabels", async (_, { rejectWithValue }) => {
+export const listLabels = createAsyncThunk<ILabelsApiResponse[], void, { rejectValue: string }>("listLabels", async (_, { rejectWithValue }) => {
     try {
-        const response = await axiosClient.get<{ output: string[] }>("/transaction-logs/list-labels");
+        const response = await axiosClient.get<{ output: ILabelsApiResponse[] }>("/transaction-logs/list-labels");
         return response.data.output;
     } catch (error: unknown) {
         if (error instanceof AxiosError && error.response?.data) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            return rejectWithValue(error.response?.data || "Failed to fetch transactions");
+            return rejectWithValue(error.response?.data || "Failed to fetch labels");
         }
-        return rejectWithValue("An unknown error occurred while fetching transactions");
+        return rejectWithValue("An unknown error occurred while fetching labels");
     }
 });
 
@@ -133,9 +139,13 @@ const transactionsSlice = createSlice({
         builder.addCase(listLabels.pending, (state) => {
             state.loading = true;
         });
-        builder.addCase(listLabels.fulfilled, (state, action: PayloadAction<string[]>) => {
+        builder.addCase(listLabels.fulfilled, (state, action: PayloadAction<ILabelsApiResponse[]>) => {
             state.loading = false;
-            state.labels = action.payload.map((label) => ({ labelName: label, labelColor: "#000000" }));
+            state.labels = action.payload.map((label) => ({
+                _id: label._id,
+                labelName: label.labelName,
+                labelColor: label.labelColor || "#000000",
+            }));
         });
         builder.addCase(listLabels.rejected, (state, action) => {
             state.loading = false;
