@@ -5,9 +5,13 @@ import "./Dashboard.css";
 import { useOutletContext } from "react-router-dom";
 import { LayoutContextType } from "../layouts/main";
 import { JSX, useEffect } from "react";
+import CustomTable from "../components/Table";
+import { useAppSelector } from "../hooks/slice-hooks";
+import { RootState } from "../store";
 
 const DashboardPage = (): JSX.Element => {
     const { setHeader } = useOutletContext<LayoutContextType>();
+    const { transactions } = useAppSelector((state: RootState) => state.transactions);
 
     useEffect(() => {
         setHeader("Welcome Back, Shahid", "It is the best time to manage your finances");
@@ -113,10 +117,11 @@ const DashboardPage = (): JSX.Element => {
                         }}
                     >
                         {/* Replace with your chart */}
-                        <Card>
-                            <CardContent>
-                                <Typography variant="h6">Recent Transactions</Typography>
-                            </CardContent>
+                        <Card sx={{ overflow: "auto", height: "80vh", borderRadius: 6, border: "1px solid #ccc" }}>
+                            <CustomTable
+                                transactions={transactions.slice(0, 10)}
+                                type="mini"
+                            />
                         </Card>
                     </Box>
 

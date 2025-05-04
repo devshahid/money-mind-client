@@ -3,15 +3,16 @@ import axiosClient from "../services/axiosClient";
 import { AxiosError } from "axios";
 
 export interface ITransactionLogs {
-    _id: string;
-    transactionDate: string;
-    narration: string;
-    notes: string;
-    category: string;
-    label: string[];
-    amount: string;
-    bankName: string;
-    isCredit: boolean;
+    _id?: string;
+    transactionDate?: string;
+    narration?: string;
+    notes?: string;
+    category?: string;
+    label?: string[];
+    amount?: string;
+    bankName?: string;
+    isCredit?: boolean;
+    isCash?: boolean;
 }
 
 export interface ITransactionLogsApiResponse {
@@ -103,6 +104,24 @@ export const listLabels = createAsyncThunk<ILabelsApiResponse[], void, { rejectV
         return rejectWithValue("An unknown error occurred while fetching labels");
     }
 });
+
+// Mocking a function to update a transactions
+export const addCashTransaction = createAsyncThunk<ITransactionLogs, ITransactionLogs, { rejectValue: string }>(
+    "addCashTransaction",
+    async (payload: ITransactionLogs, { rejectWithValue }) => {
+        try {
+            const response = await axiosClient.post<{ output: ITransactionLogs }>(`/transaction-logs/update/${payload._id}`, payload);
+            const data = response.data.output;
+            return data;
+        } catch (error: unknown) {
+            if (error instanceof AxiosError && error.response?.data) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                return rejectWithValue(error.response?.data || "Failed to fetch transactions");
+            }
+            return rejectWithValue("An unknown error occurred while fetching transactions");
+        }
+    },
+);
 
 const transactionsSlice = createSlice({
     name: "transactionSlice",

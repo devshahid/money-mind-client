@@ -1,3 +1,4 @@
+import React, { JSX, useEffect, useState } from "react";
 import {
     Box,
     Button,
@@ -14,7 +15,6 @@ import {
     ListItemText,
     Tooltip,
     IconButton,
-    Modal,
     CircularProgress,
     Dialog,
     AppBar,
@@ -29,19 +29,22 @@ import {
     TablePagination,
     SelectChangeEvent,
 } from "@mui/material";
-import React, { JSX, useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import CancelIcon from "@mui/icons-material/Cancel";
+
+import axiosClient from "../services/axiosClient";
+import { getExpenseCategories } from "../constants";
+
 import { listTransactions } from "../store/transactionSlice";
 import { useAppDispatch } from "../hooks/slice-hooks";
-import CancelIcon from "@mui/icons-material/Cancel";
-import axiosClient from "../services/axiosClient";
 import { useLayout } from "../contexts/LayoutContext";
-import { getExpenseCategories } from "../constants";
 import { useSnackbar } from "../contexts/SnackBarContext";
+
+import CustomModal from "./CustomModal";
 
 const labelOptions = ["Repair", "Purchase", "Personal"];
 interface ITransactionFilters {
@@ -58,7 +61,9 @@ interface ITransactionFilters {
 type RowData = Record<string, string>;
 const REQUIRED_HEADERS = ["date", "narration", "refNumber", "withdrawlAmount", "depositAmount", "closingBalance"];
 
-const TableControls = (): JSX.Element => {
+type Props = { setActionType: (x: "add") => void; setEditModalOpen: (x: boolean) => void };
+
+const TableControls = ({ setActionType, setEditModalOpen }: Props): JSX.Element => {
     const { headerHeight } = useLayout();
     const { showErrorSnackbar } = useSnackbar();
 
@@ -105,7 +110,7 @@ const TableControls = (): JSX.Element => {
 
     const toggleFilterDrawer = (): void => setFilterOpen(!filterOpen);
 
-    const clearFilters = React.useCallback((): ITransactionFilters => {
+    const cleanUpFilters = React.useCallback((): ITransactionFilters => {
         // Only send non-empty filters
         const updatedFilters = Object.entries(filters).reduce((acc, [key, value]) => {
             if ((key === "category" || key === "labels") && Array.isArray(value) && value.length > 0) {
@@ -119,7 +124,7 @@ const TableControls = (): JSX.Element => {
     }, [filters]);
 
     const handleApplyFilter = (): void => {
-        void dispatch(listTransactions({ ...clearFilters() }));
+        void dispatch(listTransactions({ ...cleanUpFilters() }));
         setFilterOpen(false);
     };
 
@@ -161,7 +166,7 @@ const TableControls = (): JSX.Element => {
     useEffect(() => {
         const fetchTransactions = async (): Promise<void> => {
             try {
-                await dispatch(listTransactions(clearFilters()));
+                await dispatch(listTransactions(cleanUpFilters()));
             } catch (error) {
                 console.error("Error fetching transactions:", error);
             }
@@ -170,7 +175,7 @@ const TableControls = (): JSX.Element => {
         if (!filterOpen) {
             void fetchTransactions();
         }
-    }, [filters, dispatch, filterOpen, clearFilters]);
+    }, [filters, dispatch, filterOpen, cleanUpFilters]);
 
     // Debounce function: delays execution until user stops typing for 1s
     const debounce = (callback: (value: string) => void): ((event: React.ChangeEvent<HTMLInputElement>) => void) => {
@@ -187,7 +192,7 @@ const TableControls = (): JSX.Element => {
     // Actual search logic
     const handleSearch = (searchTerm: string): void => {
         console.log("Searching for:", searchTerm);
-        void dispatch(listTransactions({ ...clearFilters(), keyword: searchTerm }));
+        void dispatch(listTransactions({ ...cleanUpFilters(), keyword: searchTerm }));
     };
 
     const validateHeaders = (headers: string[]): { valid: boolean; missing: string[] } => {
@@ -298,6 +303,15 @@ const TableControls = (): JSX.Element => {
         }
     };
 
+    // (_, reason) => {
+    const handleCloseModal = (reason: string): void => {
+        if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
+            setUploadModal(false);
+            setData([]);
+            setSelectedFileName(null);
+        }
+    };
+    // }
     return (
         <>
             {/* Top Controls Container */}
@@ -428,7 +442,10 @@ const TableControls = (): JSX.Element => {
                     </Tooltip>
                 </Box>
                 <Box
-                    onClick={() => setUploadModal(true)}
+                    onClick={() => {
+                        setActionType("add");
+                        setEditModalOpen(true);
+                    }}
                     sx={{ cursor: "pointer" }}
                 >
                     <Tooltip
@@ -625,86 +642,47 @@ const TableControls = (): JSX.Element => {
             </Drawer>
 
             {/* Upload Statement Modal */}
-            <Modal
-                open={uploadModal}
-                onClose={(_, reason) => {
-                    if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
-                        setUploadModal(false);
-                        setData([]);
-                        setSelectedFileName(null);
-                    }
-                }}
-                disableEscapeKeyDown
+            <CustomModal
+                modalOpen={uploadModal}
+                onClose={(reason?: string) => handleCloseModal(reason || "")}
             >
-                <Box
-                    sx={{
-                        position: "absolute",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        bgcolor: "background.paper",
-                        boxShadow: 24,
-                        p: 3,
-                        width: { xs: "90%", sm: "80%", md: 500 }, // responsive width
-                        maxHeight: "90vh",
-                        overflowY: "auto",
-                        borderRadius: 2,
-                    }}
-                >
-                    {/* Close Button */}
-                    <IconButton
-                        onClick={() => {
-                            setUploadModal(false);
-                            setData([]);
-                            setSelectedFileName(null);
-                        }}
-                        sx={{
-                            position: "absolute",
-                            top: 8,
-                            right: 8,
-                            color: (theme) => theme.palette.grey[500],
-                        }}
+                {/* Modal Content */}
+                <div>
+                    <Typography
+                        variant="h6"
+                        mb={2}
                     >
-                        <CancelIcon />
-                    </IconButton>
-                    {/* Modal Content */}
-                    <div>
-                        <Typography
-                            variant="h6"
-                            mb={2}
+                        Upload Bank Statement
+                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
+                        <Button
+                            variant="contained"
+                            component="label"
+                            startIcon={!readLoading && <CloudUploadIcon />}
+                            fullWidth
+                            sx={{ mt: 2 }}
+                            disabled={readLoading}
                         >
-                            Upload Bank Statement
-                        </Typography>
-                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
-                            <Button
-                                variant="contained"
-                                component="label"
-                                startIcon={!readLoading && <CloudUploadIcon />}
-                                fullWidth
-                                sx={{ mt: 2 }}
-                                disabled={readLoading}
+                            {!readLoading ? "Choose File" : <CircularProgress />}
+                            <input
+                                type="file"
+                                accept=".xls,.xlsx"
+                                hidden
+                                onChange={handleFileUpload}
+                            />
+                        </Button>
+                        {selectedFileName && (
+                            <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                mt={1}
                             >
-                                {!readLoading ? "Choose File" : <CircularProgress />}
-                                <input
-                                    type="file"
-                                    accept=".xls,.xlsx"
-                                    hidden
-                                    onChange={handleFileUpload}
-                                />
-                            </Button>
-                            {selectedFileName && (
-                                <Typography
-                                    variant="body2"
-                                    color="text.secondary"
-                                    mt={1}
-                                >
-                                    Selected File: {selectedFileName}
-                                </Typography>
-                            )}
-                        </Box>
-                    </div>
-                </Box>
-            </Modal>
+                                Selected File: {selectedFileName}
+                            </Typography>
+                        )}
+                    </Box>
+                </div>
+            </CustomModal>
 
             {/* Upload Preview */}
             {previewUploadedContent && (
