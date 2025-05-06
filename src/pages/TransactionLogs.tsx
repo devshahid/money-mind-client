@@ -1,5 +1,13 @@
 import React, { JSX, useContext, useEffect, useState } from "react";
-import { ITransactionLogs, listLabels, listTransactions, updateTransaction } from "../store/transactionSlice";
+import {
+    addCashTransaction,
+    ITransactionLogs,
+    listLabels,
+    listTransactions,
+    updateLimit,
+    updatePage,
+    updateTransaction,
+} from "../store/transactionSlice";
 import { useAppDispatch, useAppSelector } from "../hooks/slice-hooks";
 import { RootState } from "../store";
 
@@ -18,8 +26,8 @@ import {
     RadioGroup,
     FormControlLabel,
     Radio,
+    TablePagination,
 } from "@mui/material";
-import { Loader } from "lucide-react";
 import TableControls from "../components/TransactionControls";
 import { getExpenseCategories } from "../constants";
 import { ColorModeContext } from "../contexts/ThemeContext";
@@ -34,14 +42,23 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // ✅ Correct 
 import dayjs from "dayjs";
 import { useSnackbar } from "../contexts/SnackBarContext";
 
+export interface ITransactionFilters {
+    dateFrom: string;
+    dateTo: string;
+    amount: string;
+    bankName: string;
+    transactionType: string;
+    category: string[];
+    labels: string[];
+    type: string;
+}
+
 const TransactionLogs = (): JSX.Element => {
     // Fetching theme value from context API
     const { mode } = useContext(ColorModeContext);
     const { setHeader } = useOutletContext<LayoutContextType>();
 
     // Local State Declaration
-    const [currentPage, setCurrentPage] = useState(1);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState<ITransactionLogs | null>(null);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -53,23 +70,31 @@ const TransactionLogs = (): JSX.Element => {
         transactionDate: "",
         isCredit: "",
     });
+    const [rowsPerPage, setRowsPerPage] = useState(50);
+
+    const [filters, setFilters] = useState<ITransactionFilters>({
+        dateFrom: "",
+        dateTo: "",
+        amount: "",
+        bankName: "",
+        transactionType: "",
+        category: [] as string[],
+        labels: [] as string[],
+        type: "",
+    });
 
     const { showErrorSnackbar } = useSnackbar();
 
     const dispatch = useAppDispatch();
-    const { transactions, loading, labels } = useAppSelector((state: RootState) => state.transactions);
+    const { transactions, loading, labels, page, limit, totalCount } = useAppSelector((state: RootState) => state.transactions);
 
     useEffect(() => {
         setHeader("Transactions", "Overview of your activities");
     }, [setHeader]);
 
     useEffect(() => {
-        void dispatch(listTransactions({ page: currentPage.toString(), limit: "50" }));
-    }, [dispatch, currentPage]);
-
-    useEffect(() => {
-        if (!loading) setIsLoadingMore(false);
-    }, [loading]);
+        void dispatch(listTransactions({ ...filters, page: (parseInt(page) + 1).toString(), limit }));
+    }, [dispatch, page, filters]);
 
     useEffect(() => {
         void dispatch(listLabels());
@@ -85,11 +110,6 @@ const TransactionLogs = (): JSX.Element => {
             });
         }
     }, [dispatch, actionType]);
-
-    const handleLoadMore = (): void => {
-        setIsLoadingMore(true);
-        setCurrentPage((prev) => prev + 1);
-    };
 
     const validateFields = (): boolean => {
         let newErrors = { ...errors };
@@ -117,13 +137,13 @@ const TransactionLogs = (): JSX.Element => {
             editingTransaction.transactionDate = dayjs().format("MM/DD/YYYY");
         }
         if (actionType === "add") {
-            setEditingTransaction({ ...editingTransaction, isCash: true });
-            // void dispatch(updateTransaction(editingTransaction)); // Refresh the transaction list
+            const formattedDate = dayjs(editingTransaction.transactionDate, "MM/DD/YYYY").format("DD/MM/YYYY");
+            void dispatch(addCashTransaction({ ...editingTransaction, isCash: true, transactionDate: formattedDate, bankName: "Cash" }));
         } else {
             void dispatch(updateTransaction(editingTransaction)); // Refresh the transaction list
         }
 
-        // setEditModalOpen(false);
+        setEditModalOpen(false);
         console.log("transaction: ", editingTransaction);
     };
 
@@ -131,7 +151,7 @@ const TransactionLogs = (): JSX.Element => {
         const allIds = transactions.map((tx) => tx._id);
         if (selectedIds.length === transactions.length) {
             setSelectedIds([]);
-        } else setSelectedIds(allIds);
+        } else setSelectedIds(allIds.filter((id): id is string => id !== undefined));
     };
 
     const handleSelectOne = (id: string): void => {
@@ -159,45 +179,57 @@ const TransactionLogs = (): JSX.Element => {
         }
     };
 
+    const handlePageChange = (newPage: string): void => {
+        void dispatch(updatePage(newPage));
+    };
+
+    const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        void dispatch(updateLimit(event.target.value));
+    };
+
     return (
         <Box style={{ padding: "10px", backgroundColor: mode === "dark" ? "#000" : "#fff" }}>
             <TableControls
                 setActionType={setActionType}
                 setEditModalOpen={setEditModalOpen}
+                filters={filters}
+                setFilters={setFilters}
             />
 
             {!loading && transactions.length === 0 ? (
                 <EmptyTransactionContainer />
             ) : (
-                <div>
-                    <Box sx={{ width: "100%", overflowX: "auto", borderRadius: 6, border: "1px solid #ccc" }}>
-                        <TableContainer
-                            sx={{ maxHeight: "100vh" }}
+                <div style={{ width: "100%", borderRadius: 6, border: "1px solid #ccc" }}>
+                    <Box sx={{ overflowX: "auto" }}>
+                        <CustomTable
+                            type="full"
+                            editButtonClickEvents={editButtonClickEvents}
+                            selectedIds={selectedIds}
+                            isSelected={isSelected}
+                            handleSelectOne={handleSelectOne}
+                            handleSelectAll={handleSelectAll}
+                            sx={{
+                                maxHeight: "100vh",
+                                "&::-webkit-scrollbar": {
+                                    display: "none", // Chrome, Safari, Edge
+                                },
+                            }}
                             component={Paper}
-                        >
-                            <CustomTable
-                                transactions={transactions}
-                                type="full"
-                                editButtonClickEvents={editButtonClickEvents}
-                                selectedIds={selectedIds}
-                                isSelected={isSelected}
-                                handleSelectOne={handleSelectOne}
-                                handleSelectAll={handleSelectAll}
-                            />
-                        </TableContainer>
+                        />
                     </Box>
+                    <TablePagination
+                        component="div"
+                        count={totalCount}
+                        page={parseInt(page, 0)}
+                        onPageChange={(_, newPage) => handlePageChange(newPage.toString())}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={handleRowsPerPageChange}
+                        rowsPerPageOptions={[25, 50, 100]}
+                    />
 
                     {/* Loading Overlay */}
                     {loading && <LoadingBackDrop />}
-
-                    {/* add load more button */}
-                    {!loading && (
-                        <LoadMoreButton
-                            loading={loading}
-                            handleLoadMore={handleLoadMore}
-                            isLoadingMore={isLoadingMore}
-                        />
-                    )}
                 </div>
             )}
 
@@ -226,7 +258,7 @@ const TransactionLogs = (): JSX.Element => {
                             disabled={actionType === "add" ? false : true}
                             value={editingTransaction?.narration || ""}
                             onChange={handleAddEditModalState}
-                            sx={{ mb: 2, overflow: "auto" }}
+                            sx={{ mb: 2 }}
                             name="narration"
                             error={!!errors.narration}
                             helperText={errors.narration}
@@ -297,7 +329,15 @@ const TransactionLogs = (): JSX.Element => {
                         />
 
                         {actionType === "add" && (
-                            <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap", mb: 2, justifyContent: "center", alignItems: "center" }}>
+                            <Box sx={{ display: "flex", gap: 4, flexWrap: "nowrap", mb: 2, justifyContent: "center", alignItems: "center" }}>
+                                {/* Notes field */}
+                                <TextField
+                                    label="Amount"
+                                    value={editingTransaction?.amount || ""}
+                                    onChange={handleAddEditModalState}
+                                    sx={{ mb: 2 }}
+                                    name="amount"
+                                />
                                 {/* Transaction Type */}
                                 <FormControl component="fieldset">
                                     <RadioGroup
@@ -336,7 +376,6 @@ const TransactionLogs = (): JSX.Element => {
                                         maxDate={dayjs()}
                                         onChange={(newValue) => {
                                             const formattedValue = newValue ? newValue.format("MM/DD/YYYY") : "";
-                                            console.log("formattedValue", formattedValue);
                                             handleAddEditModalState({
                                                 target: { name: "transactionDate", value: formattedValue },
                                             });
@@ -366,39 +405,6 @@ const TransactionLogs = (): JSX.Element => {
                 </CustomModel>
             )}
         </Box>
-    );
-};
-
-const LoadMoreButton = ({
-    loading,
-    handleLoadMore,
-    isLoadingMore,
-}: {
-    loading: boolean;
-    handleLoadMore: () => void;
-    isLoadingMore: boolean;
-}): JSX.Element => {
-    return (
-        <div style={{ textAlign: "center", margin: "20px 0" }}>
-            {!loading ? (
-                <button
-                    onClick={handleLoadMore}
-                    disabled={isLoadingMore}
-                    style={{
-                        padding: "10px 20px",
-                        backgroundColor: "#1976d2",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: isLoadingMore ? "not-allowed" : "pointer",
-                    }}
-                >
-                    {isLoadingMore ? "Loading..." : "Load More"}
-                </button>
-            ) : (
-                <Loader />
-            )}
-        </div>
     );
 };
 

@@ -6,16 +6,21 @@ import { useOutletContext } from "react-router-dom";
 import { LayoutContextType } from "../layouts/main";
 import { JSX, useEffect } from "react";
 import CustomTable from "../components/Table";
-import { useAppSelector } from "../hooks/slice-hooks";
-import { RootState } from "../store";
+import { useAppDispatch } from "../hooks/slice-hooks";
+import { listTransactions } from "../store/transactionSlice";
 
 const DashboardPage = (): JSX.Element => {
+    const dispatch = useAppDispatch();
+
     const { setHeader } = useOutletContext<LayoutContextType>();
-    const { transactions } = useAppSelector((state: RootState) => state.transactions);
 
     useEffect(() => {
         setHeader("Welcome Back, Shahid", "It is the best time to manage your finances");
     }, [setHeader]);
+
+    useEffect(() => {
+        void dispatch(listTransactions({ page: "1", limit: "50" }));
+    }, [dispatch]);
 
     return (
         <Box>
@@ -112,17 +117,23 @@ const DashboardPage = (): JSX.Element => {
                     {/* Chart Section - 60% on medium and up, full width on small */}
                     <Box
                         sx={{
-                            flex: { xs: "100%", md: "50%" },
+                            flex: { xs: "100%", md: "50%", borderRadius: 6, border: "1px solid #ccc" },
                             minWidth: 0, // prevent overflow
                         }}
                     >
+                        <Typography variant="h4">Recent Transactions</Typography>
                         {/* Replace with your chart */}
-                        <Card sx={{ overflow: "auto", height: "80vh", borderRadius: 6, border: "1px solid #ccc" }}>
-                            <CustomTable
-                                transactions={transactions.slice(0, 10)}
-                                type="mini"
-                            />
-                        </Card>
+
+                        <CustomTable
+                            type="mini"
+                            sx={{
+                                overflow: "auto",
+                                height: "80vh",
+                                "&::-webkit-scrollbar": {
+                                    display: "none", // Chrome, Safari, Edge
+                                },
+                            }}
+                        />
                     </Box>
 
                     {/* Content Section - 40% on medium and up, full width on small */}

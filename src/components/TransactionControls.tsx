@@ -40,30 +40,25 @@ import axiosClient from "../services/axiosClient";
 import { getExpenseCategories } from "../constants";
 
 import { listTransactions } from "../store/transactionSlice";
-import { useAppDispatch } from "../hooks/slice-hooks";
+import { useAppDispatch, useAppSelector } from "../hooks/slice-hooks";
 import { useLayout } from "../contexts/LayoutContext";
 import { useSnackbar } from "../contexts/SnackBarContext";
 
 import CustomModal from "./CustomModal";
-
-const labelOptions = ["Repair", "Purchase", "Personal"];
-interface ITransactionFilters {
-    dateFrom: string;
-    dateTo: string;
-    amount: string;
-    bankName: string;
-    transactionType: string;
-    category: string[];
-    labels: string[];
-    type: string;
-}
+import { ITransactionFilters } from "../pages/TransactionLogs";
+import { RootState } from "../store";
 
 type RowData = Record<string, string>;
 const REQUIRED_HEADERS = ["date", "narration", "refNumber", "withdrawlAmount", "depositAmount", "closingBalance"];
 
-type Props = { setActionType: (x: "add") => void; setEditModalOpen: (x: boolean) => void };
+type Props = {
+    setActionType: (x: "add") => void;
+    setEditModalOpen: (x: boolean) => void;
+    filters: ITransactionFilters;
+    setFilters: (x: ITransactionFilters) => void;
+};
 
-const TableControls = ({ setActionType, setEditModalOpen }: Props): JSX.Element => {
+const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }: Props): JSX.Element => {
     const { headerHeight } = useLayout();
     const { showErrorSnackbar } = useSnackbar();
 
@@ -95,18 +90,8 @@ const TableControls = ({ setActionType, setEditModalOpen }: Props): JSX.Element 
         }
     }, [data]);
 
-    const [filters, setFilters] = useState<ITransactionFilters>({
-        dateFrom: "",
-        dateTo: "",
-        amount: "",
-        bankName: "",
-        transactionType: "",
-        category: [] as string[],
-        labels: [] as string[],
-        type: "",
-    });
-
     const dispatch = useAppDispatch();
+    const { labels } = useAppSelector((state: RootState) => state.transactions);
 
     const toggleFilterDrawer = (): void => setFilterOpen(!filterOpen);
 
@@ -130,7 +115,6 @@ const TableControls = ({ setActionType, setEditModalOpen }: Props): JSX.Element 
 
     useEffect(() => {
         if (!filterOpen && Object.keys(filters).length > 0) {
-            console.log("Filters applied:", filters);
             const activeFiltersCount = Object.values(filters).filter((value) => {
                 if (Array.isArray(value)) return value.length > 0;
                 return value !== "" && value !== null;
@@ -161,21 +145,6 @@ const TableControls = ({ setActionType, setEditModalOpen }: Props): JSX.Element 
         setActiveFiltersCount(0);
         setFilterOpen(false);
     };
-
-    // call list api when filter update
-    useEffect(() => {
-        const fetchTransactions = async (): Promise<void> => {
-            try {
-                await dispatch(listTransactions(cleanUpFilters()));
-            } catch (error) {
-                console.error("Error fetching transactions:", error);
-            }
-        };
-
-        if (!filterOpen) {
-            void fetchTransactions();
-        }
-    }, [filters, dispatch, filterOpen, cleanUpFilters]);
 
     // Debounce function: delays execution until user stops typing for 1s
     const debounce = (callback: (value: string) => void): ((event: React.ChangeEvent<HTMLInputElement>) => void) => {
@@ -607,13 +576,13 @@ const TableControls = ({ setActionType, setEditModalOpen }: Props): JSX.Element 
                             input={<OutlinedInput label="Labels" />}
                             renderValue={(selected) => selected.join(", ")}
                         >
-                            {labelOptions.map((label) => (
+                            {labels.map((label, i) => (
                                 <MenuItem
-                                    key={label}
-                                    value={label}
+                                    key={i}
+                                    value={label.labelName}
                                 >
-                                    <Checkbox checked={filters.labels.indexOf(label) > -1} />
-                                    <ListItemText primary={label} />
+                                    <Checkbox checked={filters.labels.indexOf(label.labelName) > -1} />
+                                    <ListItemText primary={label.labelName} />
                                 </MenuItem>
                             ))}
                         </Select>

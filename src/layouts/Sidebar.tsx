@@ -76,11 +76,15 @@ const Sidebar: React.FC = () => {
                     display: "flex",
                     flexDirection: "column", // Ensure items stack vertically
                     alignItems: "center", // Center items horizontally
+                    overflowY: "auto", // Allow vertical scroll
+                    scrollbarWidth: "none", // Firefox
+                    "&::-webkit-scrollbar": {
+                        display: "none", // Chrome, Safari, Edge
+                    },
                 },
             }}
         >
             <Box
-                onClick={() => navigate("/")}
                 sx={{
                     display: "flex",
                     alignItems: "center",
@@ -92,7 +96,10 @@ const Sidebar: React.FC = () => {
                     width: "100%", // Ensure the box takes full width
                 }}
             >
-                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                <Box
+                    onClick={() => navigate("/")}
+                    sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                >
                     <Avatar
                         src={AppLogo}
                         sx={{
