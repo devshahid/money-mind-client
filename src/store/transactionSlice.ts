@@ -80,9 +80,9 @@ export const listTransactions = createAsyncThunk<ITransactionLogsApiResponse, IL
 );
 
 // Mocking a function to update a transactions
-export const updateTransaction = createAsyncThunk<ITransactionLogs, ITransactionLogs, { rejectValue: string }>(
+export const updateTransaction = createAsyncThunk<ITransactionLogs, Partial<ITransactionLogs>, { rejectValue: string }>(
     "updateTransaction",
-    async (payload: ITransactionLogs, { rejectWithValue }) => {
+    async (payload: Partial<ITransactionLogs>, { rejectWithValue }) => {
         try {
             const response = await axiosClient.put<{ output: ITransactionLogs }>(`/transaction-logs/update/${payload._id}`, payload);
             const data = response.data.output;
@@ -111,9 +111,9 @@ export const listLabels = createAsyncThunk<ILabelsApiResponse[], void, { rejectV
 });
 
 // Mocking a function to update a transactions
-export const addCashTransaction = createAsyncThunk<ITransactionLogs, ITransactionLogs, { rejectValue: string }>(
+export const addCashTransaction = createAsyncThunk<ITransactionLogs, Partial<ITransactionLogs>, { rejectValue: string }>(
     "addCashTransaction",
-    async (payload: ITransactionLogs, { rejectWithValue }) => {
+    async (payload: Partial<ITransactionLogs>, { rejectWithValue }) => {
         try {
             const response = await axiosClient.post<{ output: ITransactionLogs }>("/transaction-logs/add-cashmemo", payload);
             const data = response.data.output;

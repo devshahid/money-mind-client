@@ -60,7 +60,7 @@ const TransactionLogs = (): JSX.Element => {
 
     // Local State Declaration
     const [editModalOpen, setEditModalOpen] = useState(false);
-    const [editingTransaction, setEditingTransaction] = useState<ITransactionLogs | null>(null);
+    const [editingTransaction, setEditingTransaction] = useState<Partial<ITransactionLogs> | null>(null);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [actionType, setActionType] = useState<"add" | "edit" | null>(null);
     const [errors, setErrors] = useState({
@@ -97,15 +97,9 @@ const TransactionLogs = (): JSX.Element => {
     }, [dispatch, page, filters]);
 
     useEffect(() => {
-        void dispatch(listLabels());
-    }, [dispatch]);
-
-    useEffect(() => {
         if (actionType === "add") {
-            console.log("Triggering Tr");
             setEditingTransaction({
                 ...editingTransaction,
-                // transactionDate: dayjs(),
                 isCredit: false,
             });
         }

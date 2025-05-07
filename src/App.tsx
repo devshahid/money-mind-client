@@ -13,13 +13,14 @@ import GuestRoute from "./components/GuestRoute";
 import { JSX, useEffect } from "react";
 import { setUserData } from "./store/authSlice";
 import { useAppDispatch } from "./hooks/slice-hooks";
+import { listLabels } from "./store/transactionSlice";
 
 function App(): JSX.Element {
     const dispatch = useAppDispatch();
 
     useEffect(() => {
         const userData = localStorage.getItem("userData");
-
+        void dispatch(listLabels());
         if (userData && userData.length > 0) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const parsedObj: { fullName: string; email: string; role: string } = JSON.parse(userData);
