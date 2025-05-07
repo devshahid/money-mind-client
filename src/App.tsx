@@ -10,9 +10,29 @@ import Account from "./pages/Account";
 import RegisterPage from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import GuestRoute from "./components/GuestRoute";
-import { JSX } from "react";
+import { JSX, useEffect } from "react";
+import { setUserData } from "./store/authSlice";
+import { useAppDispatch } from "./hooks/slice-hooks";
 
 function App(): JSX.Element {
+    const dispatch = useAppDispatch();
+
+    useEffect(() => {
+        const userData = localStorage.getItem("userData");
+
+        if (userData && userData.length > 0) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const parsedObj: { fullName: string; email: string; role: string } = JSON.parse(userData);
+            dispatch(
+                setUserData({
+                    fullName: parsedObj.fullName,
+                    email: parsedObj.email,
+                    role: parsedObj.role,
+                }),
+            );
+        }
+    }, [dispatch]);
+
     const router = createBrowserRouter([
         {
             path: "/",

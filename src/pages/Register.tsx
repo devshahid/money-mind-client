@@ -61,10 +61,17 @@ import { useTheme } from "@mui/material/styles";
 import InvestmentIllustration from "../assets/illustration/FinanceApp.png";
 import AppLogo from "../assets/images/money-mind-logo.png";
 import { useNavigate } from "react-router-dom";
+import { registerUser } from "../services/authService";
+import { IAuthenticationApiResponse, login } from "../store/authSlice";
+import { useAppDispatch } from "../hooks/slice-hooks";
+import { AxiosError } from "axios";
+import { useSnackbar } from "../contexts/SnackBarContext";
 
 const RegisterPage: React.FC = () => {
     const theme = useTheme();
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
+    const { showErrorSnackbar, showSuccessSnackbar } = useSnackbar();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
     const [showPassword, setShowPassword] = useState(false);
@@ -105,9 +112,29 @@ const RegisterPage: React.FC = () => {
         setErrors(newErrors);
 
         const hasError = Object.values(newErrors).some(Boolean);
-        if (!hasError) {
-            // Submit the data (API call or further logic)
-            console.log("Signup Success:", { name, email, password });
+        if (hasError) return;
+    };
+
+    const registerUserHandler = async (): Promise<void> => {
+        handleSubmit();
+        try {
+            const data = await registerUser(email, password, name);
+            void dispatch(login(data.output as IAuthenticationApiResponse));
+            showSuccessSnackbar("Registration Successful");
+            setTimeout(() => navigate("/login"), 2000);
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                console.error("Registration failed", error);
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                if (typeof error.response?.data?.message === "string") {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+                    showErrorSnackbar(error.response.data.message);
+                } else {
+                    showErrorSnackbar("An unexpected error occurred");
+                }
+            } else {
+                console.error("An unexpected error occurred", error);
+            }
         }
     };
 
@@ -301,7 +328,7 @@ const RegisterPage: React.FC = () => {
                                 textTransform: "none",
                                 fontWeight: 600,
                             }}
-                            onClick={handleSubmit}
+                            onClick={() => void registerUserHandler()}
                         >
                             Sign up
                         </Button>

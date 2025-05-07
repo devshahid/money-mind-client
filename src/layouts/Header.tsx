@@ -2,30 +2,20 @@ import React from "react";
 import { Box, Typography, IconButton, Badge, Avatar, useMediaQuery, useTheme, Stack, Paper } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
+import { useAppSelector } from "../hooks/slice-hooks";
+import { RootState } from "../store";
+import { stringAvatar } from "../utils/common";
 
 interface HeaderProps {
     heading: string;
     subheading: string;
     notifications?: number;
-    user?: {
-        name: string;
-        email: string;
-        avatarUrl: string;
-    };
 }
 
-const Header: React.FC<HeaderProps> = ({
-    heading,
-    subheading,
-    notifications = 0,
-    user = {
-        name: "Adaline Lively",
-        email: "adalineal@email.com",
-        avatarUrl: "https://i.pravatar.cc/150?img=5",
-    },
-}) => {
+const Header: React.FC<HeaderProps> = ({ heading, subheading, notifications = 0 }) => {
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+    const { userData } = useAppSelector((state: RootState) => state.auth);
 
     return (
         <Paper
@@ -75,7 +65,7 @@ const Header: React.FC<HeaderProps> = ({
                     }}
                 >
                     <Avatar
-                        src={user.avatarUrl}
+                        {...stringAvatar(userData.fullName || "Test User")}
                         sx={{ width: 32, height: 32, mr: 1 }}
                     />
                     {!isSmallScreen && (
@@ -84,13 +74,13 @@ const Header: React.FC<HeaderProps> = ({
                                 variant="body2"
                                 fontWeight={500}
                             >
-                                {user.name}
+                                {userData.fullName || "Test User"}
                             </Typography>
                             <Typography
                                 variant="caption"
                                 color="text.secondary"
                             >
-                                {user.email}
+                                {userData.email}
                             </Typography>
                         </Box>
                     )}

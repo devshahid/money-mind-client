@@ -9,8 +9,8 @@ export interface LayoutContextType {
 }
 
 const Layout: React.FC = () => {
-    const [heading, setHeading] = useState("Transactions");
-    const [subheading, setSubheading] = useState("Overview of your activities");
+    const [heading, setHeading] = useState("Welcome Back");
+    const [subheading, setSubheading] = useState("It is the best time to manage your finances");
 
     const setHeader = (h: string, s: string): void => {
         setHeading(h);

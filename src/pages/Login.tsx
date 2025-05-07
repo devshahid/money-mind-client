@@ -11,27 +11,33 @@ import {
     TextField,
     Typography,
     useMediaQuery,
+    CircularProgress,
 } from "@mui/material";
+
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import InvestmentIllustration from "../assets/illustration/FinanceApp.png";
 import AppLogo from "../assets/images/money-mind-logo.png";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../hooks/slice-hooks";
-import { login } from "../store/authSlice";
+import { IAuthenticationApiResponse, login } from "../store/authSlice";
 import { loginUser } from "../services/authService";
+import { AxiosError } from "axios";
+import { useSnackbar } from "../contexts/SnackBarContext";
 
 const SignInPage: React.FC = (): JSX.Element => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+    const { showErrorSnackbar } = useSnackbar();
     const [showPassword, setShowPassword] = React.useState(false);
 
     const [userData, setUserData] = useState({
         email: null,
         password: null,
     });
+    const [loading, setLoading] = React.useState(false);
 
     const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
         setUserData({ ...userData, [e.target.name]: e.target.value });
@@ -42,12 +48,29 @@ const SignInPage: React.FC = (): JSX.Element => {
             if (!userData.email || !userData.password) {
                 return;
             }
+            setLoading(true);
             const data = await loginUser(userData.email, userData.password);
-            void dispatch(login(data.output.accessToken));
+            void dispatch(login(data.output as IAuthenticationApiResponse));
+
             localStorage.setItem("accessToken", data.output.accessToken);
+            // remove accessToken and set userData to localstorage without accessToken:
+            localStorage.setItem("userData", JSON.stringify({ email: data.output.email, role: data.output.role, fullName: data.output.fullName }));
             navigate("/");
         } catch (error) {
-            console.error("Login failed", error);
+            if (error instanceof AxiosError) {
+                console.error("Login failed", error);
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                if (typeof error.response?.data?.message === "string") {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+                    showErrorSnackbar(error.response.data.message);
+                } else {
+                    showErrorSnackbar("An unexpected error occurred");
+                }
+            } else {
+                console.error("An unexpected error occurred", error);
+            }
+        } finally {
+            setLoading(false);
         }
     };
     return (
@@ -231,6 +254,8 @@ const SignInPage: React.FC = (): JSX.Element => {
                         <Button
                             fullWidth
                             variant="contained"
+                            // disabled={loading}
+                            loading={loading}
                             sx={{
                                 mt: 3,
                                 py: { xs: 1, md: 1.5 },
@@ -245,7 +270,14 @@ const SignInPage: React.FC = (): JSX.Element => {
                             }}
                             onClick={() => void handlerLoginUser()}
                         >
-                            Sign in
+                            {loading ? (
+                                <CircularProgress
+                                    size={24}
+                                    color="inherit"
+                                />
+                            ) : (
+                                "Sign In"
+                            )}
                         </Button>
 
                         <Typography
@@ -253,7 +285,7 @@ const SignInPage: React.FC = (): JSX.Element => {
                             textAlign="center"
                             variant="body2"
                         >
-                            Don’t have an account?{" "}
+                            Don’t have an account?
                             <Typography
                                 component="span"
                                 color="primary"

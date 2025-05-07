@@ -6,17 +6,20 @@ import { useOutletContext } from "react-router-dom";
 import { LayoutContextType } from "../layouts/main";
 import { JSX, useEffect } from "react";
 import CustomTable from "../components/Table";
-import { useAppDispatch } from "../hooks/slice-hooks";
+import { useAppDispatch, useAppSelector } from "../hooks/slice-hooks";
 import { listTransactions } from "../store/transactionSlice";
+import { RootState } from "../store";
 
 const DashboardPage = (): JSX.Element => {
     const dispatch = useAppDispatch();
+    const { transactions } = useAppSelector((state: RootState) => state.transactions);
+    const { userData } = useAppSelector((state: RootState) => state.auth);
 
     const { setHeader } = useOutletContext<LayoutContextType>();
 
     useEffect(() => {
-        setHeader("Welcome Back, Shahid", "It is the best time to manage your finances");
-    }, [setHeader]);
+        setHeader(`Welcome Back, ${userData.fullName?.split(" ")[0] || "User"}`, "It is the best time to manage your finances");
+    }, [setHeader, userData]);
 
     useEffect(() => {
         void dispatch(listTransactions({ page: "1", limit: "50" }));
@@ -123,17 +126,25 @@ const DashboardPage = (): JSX.Element => {
                     >
                         <Typography variant="h4">Recent Transactions</Typography>
                         {/* Replace with your chart */}
-
-                        <CustomTable
-                            type="mini"
-                            sx={{
-                                overflow: "auto",
-                                height: "80vh",
-                                "&::-webkit-scrollbar": {
-                                    display: "none", // Chrome, Safari, Edge
-                                },
-                            }}
-                        />
+                        {transactions.length > 0 ? (
+                            <CustomTable
+                                type="mini"
+                                sx={{
+                                    overflow: "auto",
+                                    height: "80vh",
+                                    "&::-webkit-scrollbar": {
+                                        display: "none", // Chrome, Safari, Edge
+                                    },
+                                }}
+                            />
+                        ) : (
+                            <Typography
+                                variant="h6"
+                                textAlign="center"
+                            >
+                                No Transactions Found
+                            </Typography>
+                        )}
                     </Box>
 
                     {/* Content Section - 40% on medium and up, full width on small */}

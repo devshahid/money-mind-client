@@ -1,8 +1,8 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8000/api/v1"; // Replace with your actual API URL
+// const API_BASE_URL = "http://localhost:8000/api/v1"; // Replace with your actual API URL
 
-// const API_BASE_URL = "https://tl72h2gk-8000.inc1.devtunnels.ms/api/v1";
+const API_BASE_URL = "https://2kq02frr2g.execute-api.ap-south-1.amazonaws.com/prod/api/v1";
 
 const axiosClient = axios.create({
     baseURL: API_BASE_URL,
@@ -26,6 +26,9 @@ axiosClient.interceptors.response.use(
         if (error.response?.status === 401) {
             console.error("Unauthorized! Logging out...");
             localStorage.removeItem("accessToken");
+            localStorage.removeItem("userData");
+            // after 3 seconds:
+            setTimeout(() => (window.location.href = "/login"), 3000);
         }
         return Promise.reject(error);
     },

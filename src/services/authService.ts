@@ -5,6 +5,7 @@ interface LoginResponse {
         accessToken: string;
         role: string;
         email: string;
+        fullName: string;
     };
 }
 
@@ -13,10 +14,11 @@ export const loginUser = async (email: string, password: string): Promise<LoginR
     return response.data;
 };
 
-export const registerUser = async (email: string, password: string): Promise<LoginResponse> => {
+export const registerUser = async (email: string, password: string, fullName: string): Promise<LoginResponse> => {
     const response = await axiosClient.post<LoginResponse>("/user/register", {
         email,
         password,
+        fullName,
     });
     return response.data;
 };
