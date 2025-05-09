@@ -261,9 +261,8 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
                 alert("Bank Name required");
                 return;
             }
-            const response = await axiosClient.post("transaction-logs/upload-data-from-file", { rows: data });
+            const response = await axiosClient.post("transaction-logs/upload-data-from-file", { bankName, rows: data });
             console.log("response", response.data);
-            //   await axios.post("http://localhost:3001/save-statement", { rows: data });
             alert("Saved to DB!");
         } catch (err) {
             console.error(err);
