@@ -1,5 +1,6 @@
 {
     "name": "dashboard-ui-design",
+    "homepage": "https://github.com/devshahid/money-mind/client",
     "private": true,
     "version": "0.0.0",
     "type": "module",
@@ -11,7 +12,9 @@
         "check-prettier": "prettier src/**/* --check",
         "check-eslint": "eslint \"src/**/*.{js,ts,tsx,jsx}\" --ext .js,.ts,.tsx,.jsx",
         "prepare": "husky",
-        "fix-prettier": "npx prettier . --write"
+        "fix-prettier": "npx prettier . --write",
+        "predeploy": "npm run build",
+        "deploy": "gh-pages -d dist"
     },
     "lint-staged": {
         "*.{js,jsx,ts,tsx}": [
@@ -41,6 +44,7 @@
         "dayjs": "^1.11.13",
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
+        "gh-pages": "^6.3.0",
         "localtunnel": "^2.0.2",
         "lucide-react": "^0.441.0",
         "react": "^18.3.1",
