@@ -27,8 +27,6 @@ axiosClient.interceptors.response.use(
             console.error("Unauthorized! Logging out...");
             localStorage.removeItem("accessToken");
             localStorage.removeItem("userData");
-            // after 3 seconds:
-            setTimeout(() => (window.location.href = "/login"), 3000);
         }
         return Promise.reject(error);
     },
