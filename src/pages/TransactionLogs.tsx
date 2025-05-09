@@ -1,18 +1,9 @@
 import React, { JSX, useContext, useEffect, useState } from "react";
-import {
-    addCashTransaction,
-    ITransactionLogs,
-    listLabels,
-    listTransactions,
-    updateLimit,
-    updatePage,
-    updateTransaction,
-} from "../store/transactionSlice";
+import { addCashTransaction, ITransactionLogs, listTransactions, updateLimit, updatePage, updateTransaction } from "../store/transactionSlice";
 import { useAppDispatch, useAppSelector } from "../hooks/slice-hooks";
 import { RootState } from "../store";
 
 import {
-    TableContainer,
     Typography,
     Box,
     Backdrop,
@@ -372,16 +363,15 @@ const TransactionLogs = (): JSX.Element => {
                                             const formattedValue = newValue ? newValue.format("MM/DD/YYYY") : "";
                                             handleAddEditModalState({
                                                 target: { name: "transactionDate", value: formattedValue },
-                                            });
+                                            } as unknown as React.ChangeEvent<HTMLInputElement>);
                                         }}
                                         name="transactionDate"
-                                        renderInput={(params) => (
-                                            <TextField
-                                                {...params}
-                                                error={!!errors.transactionDate}
-                                                helperText={errors.transactionDate}
-                                            />
-                                        )}
+                                        slotProps={{
+                                            textField: {
+                                                error: !!errors.transactionDate,
+                                                helperText: errors.transactionDate,
+                                            },
+                                        }}
                                     />
                                 </LocalizationProvider>
                             </Box>

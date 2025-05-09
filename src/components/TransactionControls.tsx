@@ -95,16 +95,15 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
 
     const toggleFilterDrawer = (): void => setFilterOpen(!filterOpen);
 
-    const cleanUpFilters = React.useCallback((): ITransactionFilters => {
+    const cleanUpFilters = React.useCallback(() => {
         // Only send non-empty filters
-        const updatedFilters = Object.entries(filters).reduce((acc, [key, value]) => {
-            if ((key === "category" || key === "labels") && Array.isArray(value) && value.length > 0) {
-                acc[key] = value as string[];
-            } else if (value !== "") {
-                acc[key] = value as string;
-            }
-            return acc;
-        }, {} as ITransactionFilters);
+        const updatedFilters = Object.entries(filters).reduce(
+            (acc, [key, value]: [string, string | string[]]) => {
+                if (value.length > 0) acc[key] = value;
+                return acc;
+            },
+            {} as Record<string, string | string[]>,
+        );
         return updatedFilters;
     }, [filters]);
 
