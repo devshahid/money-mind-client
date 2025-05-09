@@ -147,7 +147,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
 
     // Debounce function: delays execution until user stops typing for 1s
     const debounce = (callback: (value: string) => void): ((event: React.ChangeEvent<HTMLInputElement>) => void) => {
-        let timeoutId: number;
+        let timeoutId: ReturnType<typeof setTimeout>;
         return (event: React.ChangeEvent<HTMLInputElement>) => {
             const value: string = event.target.value;
             clearTimeout(timeoutId); // clear any previous timer
