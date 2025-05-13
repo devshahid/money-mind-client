@@ -20,15 +20,18 @@ function App(): JSX.Element {
 
     useEffect(() => {
         const userData = localStorage.getItem("userData");
+        const accessToken = localStorage.getItem("accessToken");
         void dispatch(listLabels());
-        if (userData && userData.length > 0) {
+        if (userData && Object.values(userData).length > 0) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const parsedObj: { fullName: string; email: string; role: string } = JSON.parse(userData);
+            const parsedObj: { fullName: string; email: string; role: string; _id: string } = JSON.parse(userData);
             dispatch(
                 setUserData({
                     fullName: parsedObj.fullName,
                     email: parsedObj.email,
                     role: parsedObj.role,
+                    _id: parsedObj._id,
+                    accessToken: accessToken as string,
                 }),
             );
         }

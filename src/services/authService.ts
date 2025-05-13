@@ -2,6 +2,7 @@ import axiosClient from "./axiosClient";
 
 interface LoginResponse {
     output: {
+        _id: string;
         accessToken: string;
         role: string;
         email: string;

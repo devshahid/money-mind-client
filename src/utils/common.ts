@@ -42,10 +42,15 @@ export function stringToColor(string: string): string {
 }
 
 export function stringAvatar(name: string): { sx: { bgcolor: string }; children: string } {
+    let firstName: string | string[] = name.split(" ");
+    if (Array.isArray(firstName)) firstName = firstName[0][0];
+
+    let lastName: string | string[] = name.split(" ");
+    if (Array.isArray(lastName) && lastName.length > 1) lastName = lastName[1][0];
+    else lastName = "";
+
     return {
-        sx: {
-            bgcolor: stringToColor(name),
-        },
-        children: `${name.split(" ")[0][0]}${name.split(" ")[1][0]}`,
+        sx: { bgcolor: stringToColor(name) },
+        children: `${firstName.toUpperCase()}${lastName.toUpperCase()}`,
     };
 }

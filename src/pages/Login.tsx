@@ -54,7 +54,10 @@ const SignInPage: React.FC = (): JSX.Element => {
 
             localStorage.setItem("accessToken", data.output.accessToken);
             // remove accessToken and set userData to localstorage without accessToken:
-            localStorage.setItem("userData", JSON.stringify({ email: data.output.email, role: data.output.role, fullName: data.output.fullName }));
+            localStorage.setItem(
+                "userData",
+                JSON.stringify({ _id: data.output._id, email: data.output.email, role: data.output.role, fullName: data.output.fullName }),
+            );
             navigate("/");
         } catch (error) {
             if (error instanceof AxiosError) {
