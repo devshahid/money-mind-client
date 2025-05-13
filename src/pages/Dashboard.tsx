@@ -18,7 +18,10 @@ const DashboardPage = (): JSX.Element => {
     const { setHeader } = useOutletContext<LayoutContextType>();
 
     useEffect(() => {
-        setHeader(`Welcome Back, ${userData.fullName?.split(" ")[0] || "User"}`, "It is the best time to manage your finances");
+        let name = userData.fullName?.split(" ") || "User";
+        if (Array.isArray(name)) name = name[0];
+
+        setHeader(`Welcome Back, ${name}`, "It is the best time to manage your finances");
     }, [setHeader, userData]);
 
     useEffect(() => {
