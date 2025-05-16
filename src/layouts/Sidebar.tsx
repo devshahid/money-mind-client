@@ -31,7 +31,7 @@ import {
     WbSunny,
     Logout,
 } from "@mui/icons-material";
-import AppLogo from "/money-mind-logo.png"; // Adjust the path to your logo
+import AppLogo from "../assets/images/money-mind-logo.png";
 import { NavLink, useNavigate } from "react-router-dom";
 import { ColorModeContext } from "../contexts/ThemeContext";
 

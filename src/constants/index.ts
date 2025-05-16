@@ -39,6 +39,8 @@ import GppGoodIcon from "@mui/icons-material/GppGood";
 import CasesIcon from "@mui/icons-material/Cases";
 import Face3Icon from "@mui/icons-material/Face3";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
+import AccessibilityNewIcon from "@mui/icons-material/AccessibilityNew";
 
 export function getExpenseCategories(): ExpenseCategory[] {
     return [
@@ -131,6 +133,18 @@ export function getExpenseCategories(): ExpenseCategory[] {
             icon: HomeWorkIcon,
             color: "#009688", // Teal
             backgroundColor: "#E0F7FA",
+        },
+        {
+            name: "Family",
+            icon: FamilyRestroomIcon,
+            color: "#F57C00", // Brown
+            backgroundColor: "#FFF3E0",
+        },
+        {
+            name: "Personal",
+            icon: AccessibilityNewIcon,
+            color: "#4A148C", // Deep Purple
+            backgroundColor: "#EDE7F6", // Lavender/Light Purple
         },
         {
             name: "Recharge (Mobile, Fibre, TV..)",
