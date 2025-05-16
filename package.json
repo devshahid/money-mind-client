@@ -42,6 +42,7 @@
         "dayjs": "^1.11.13",
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
+        "idb": "^8.0.3",
         "localtunnel": "^2.0.2",
         "lucide-react": "^0.441.0",
         "react": "^18.3.1",

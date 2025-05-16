@@ -2,6 +2,7 @@ import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosClient from "../services/axiosClient";
 import { AxiosError } from "axios";
 import dayjs from "dayjs";
+import { indexDBTransaction } from "../helpers/indexDB/transactionStore";
 
 export interface ITransactionLogs {
     _id: string;
@@ -50,6 +51,8 @@ interface IInitialState {
     labels: { _id: string | null; labelName: string; labelColor: string | null }[];
     page: string;
     limit: string;
+    isLocalTransactions: boolean;
+    syncStatus: "idle" | "success" | "error";
 }
 
 const initialState: IInitialState = {
@@ -60,6 +63,8 @@ const initialState: IInitialState = {
     labels: [{ _id: null, labelName: "", labelColor: null }],
     page: "0",
     limit: "50",
+    isLocalTransactions: false,
+    syncStatus: "idle",
 };
 
 // Mocking a function to fetch transactions
@@ -68,7 +73,14 @@ export const listTransactions = createAsyncThunk<ITransactionLogsApiResponse, IL
     async (payload: IListTransactionPayload, { rejectWithValue }) => {
         try {
             const response = await axiosClient.post<{ output: ITransactionLogsApiResponse }>(`/transaction-logs/list-transactions`, payload);
-            return response.data.output;
+            const localEdits = await indexDBTransaction.getAllTransactions();
+            const apiTransactions = response.data.output.result;
+            // Merge: override matching API records with local edits
+            const mergedTransactions = apiTransactions.map((tx) => {
+                const local = localEdits.find((edit) => edit._id === tx._id);
+                return local ? { ...tx, ...local } : tx;
+            });
+            return { result: mergedTransactions, totalCount: response.data.output.totalCount };
         } catch (error: unknown) {
             if (error instanceof AxiosError && error.response?.data) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -90,17 +102,67 @@ export const updateTransaction = createAsyncThunk<ITransactionLogs, Partial<ITra
         } catch (error: unknown) {
             if (error instanceof AxiosError && error.response?.data) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                return rejectWithValue(error.response?.data || "Failed to fetch transactions");
+                return rejectWithValue(error.response?.data || "Failed to update transactions");
             }
-            return rejectWithValue("An unknown error occurred while fetching transactions");
+            return rejectWithValue("An unknown error occurred while updating transaction");
         }
     },
 );
 
+// Mocking a function to update a transactions
+export const syncTransactions = createAsyncThunk<
+    ITransactionLogsApiResponse,
+    { transactions: Partial<ITransactionLogs[]>; statePage: string; limit: string },
+    { rejectValue: string }
+>("syncTransactions", async ({ transactions, statePage, limit }, { rejectWithValue }) => {
+    try {
+        const response = await axiosClient.put<{ output: { result: ITransactionLogs[]; totalCount: number } }>(
+            `/transaction-logs/sync-transactions`,
+            {
+                transactions,
+                page: statePage,
+                limit: limit,
+            },
+        );
+        const data = response.data.output;
+
+        // delete all indexDB transactions and labels:
+        await indexDBTransaction.deleteAllTransactions();
+        await indexDBTransaction.deleteLabels();
+
+        return { result: data.result, totalCount: data.totalCount };
+    } catch (error: unknown) {
+        if (error instanceof AxiosError && error.response?.data) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+            return rejectWithValue(error.response?.data || "Failed to sync transactions");
+        }
+        return rejectWithValue("An unknown error occurred while syncing transactions");
+    }
+});
+
 export const listLabels = createAsyncThunk<ILabelsApiResponse[], void, { rejectValue: string }>("listLabels", async (_, { rejectWithValue }) => {
     try {
         const response = await axiosClient.get<{ output: ILabelsApiResponse[] }>("/transaction-logs/list-labels");
-        return response.data.output;
+        const apiLabels = response.data.output;
+        const localLabels = await indexDBTransaction.getAllLabels();
+        const mergedLabels = [...apiLabels]; // start with a copy of API labels
+
+        localLabels.forEach((local) => {
+            const index = mergedLabels.findIndex((label) => label.labelName === local.label);
+            if (index !== -1) {
+                // merge with existing label
+                mergedLabels[index] = { ...mergedLabels[index], ...local };
+            } else {
+                // push new local label
+                mergedLabels.push({
+                    _id: local._id,
+                    labelName: local.label,
+                    labelColor: "#000000", // Ensure labelColor is included
+                });
+            }
+        });
+
+        return mergedLabels;
     } catch (error: unknown) {
         if (error instanceof AxiosError && error.response?.data) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -138,6 +200,36 @@ const transactionsSlice = createSlice({
         updateLimit: (state, action: PayloadAction<string>) => {
             state.limit = action.payload;
         },
+        setTransaction: (state, action: PayloadAction<Partial<ITransactionLogs>>) => {
+            state.transactions = state.transactions.map((tx) => (tx._id === action.payload._id ? { ...tx, ...action.payload } : tx));
+        },
+        setIsLocalTransactions: (state, action: PayloadAction<boolean>) => {
+            state.isLocalTransactions = action.payload;
+        },
+        setLabels: (state, action: PayloadAction<{ label: string; _id: string }[]>) => {
+            action.payload.forEach(({ label, _id }) => {
+                const index = state.labels.findIndex((existingLabel) => existingLabel._id === _id || existingLabel.labelName === label);
+
+                if (index !== -1) {
+                    // Update existing label
+                    state.labels[index] = {
+                        ...state.labels[index],
+                        labelName: label,
+                        _id,
+                    };
+                } else {
+                    // Add new label with default color
+                    state.labels.push({
+                        _id,
+                        labelName: label,
+                        labelColor: "", // default color, you can modify this
+                    });
+                }
+            });
+        },
+        resetSyncStatus: (state) => {
+            state.syncStatus = "idle";
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(listTransactions.pending, (state) => {
@@ -149,6 +241,22 @@ const transactionsSlice = createSlice({
             state.totalCount = action.payload.totalCount;
         });
         builder.addCase(listTransactions.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.error.message || "failed to fetch transactions";
+        });
+
+        // sync transactions:
+        builder.addCase(syncTransactions.pending, (state) => {
+            state.loading = true;
+        });
+        builder.addCase(syncTransactions.fulfilled, (state, action: PayloadAction<ITransactionLogsApiResponse>) => {
+            state.loading = false;
+            state.transactions = action.payload.result;
+            state.totalCount = action.payload.totalCount;
+            state.isLocalTransactions = false;
+            state.syncStatus = "success";
+        });
+        builder.addCase(syncTransactions.rejected, (state, action) => {
             state.loading = false;
             state.error = action.error.message || "failed to fetch transactions";
         });
@@ -190,9 +298,7 @@ const transactionsSlice = createSlice({
         builder.addCase(addCashTransaction.fulfilled, (state, action: PayloadAction<ITransactionLogs>) => {
             state.loading = false;
             if (!action.payload._id) return;
-            const insertIndex = state.transactions.findIndex((tx) =>
-                dayjs(action.payload.transactionDate, "DD/MM/YYYY").isAfter(dayjs(tx.transactionDate, "DD/MM/YYYY")),
-            );
+            const insertIndex = state.transactions.findIndex((tx) => dayjs(action.payload.transactionDate).isAfter(dayjs(tx.transactionDate)));
             // Insert the transaction at the correct position
             if (insertIndex === -1) {
                 // Add to the end if no later date found
@@ -208,5 +314,5 @@ const transactionsSlice = createSlice({
     },
 });
 
-export const { updatePage, updateLimit } = transactionsSlice.actions;
+export const { updatePage, updateLimit, setTransaction, setLabels, setIsLocalTransactions, resetSyncStatus } = transactionsSlice.actions;
 export default transactionsSlice.reducer;

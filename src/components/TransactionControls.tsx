@@ -34,12 +34,13 @@ import * as XLSX from "xlsx";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import SyncIcon from "@mui/icons-material/Sync";
 import CancelIcon from "@mui/icons-material/Cancel";
 
 import axiosClient from "../services/axiosClient";
 import { getExpenseCategories } from "../constants";
 
-import { listTransactions } from "../store/transactionSlice";
+import { listTransactions, resetSyncStatus, setIsLocalTransactions, syncTransactions } from "../store/transactionSlice";
 import { useAppDispatch, useAppSelector } from "../hooks/slice-hooks";
 import { useLayout } from "../contexts/LayoutContext";
 import { useSnackbar } from "../contexts/SnackBarContext";
@@ -47,6 +48,7 @@ import { useSnackbar } from "../contexts/SnackBarContext";
 import CustomModal from "./CustomModal";
 import { ITransactionFilters } from "../pages/TransactionLogs";
 import { RootState } from "../store";
+import { indexDBTransaction } from "../helpers/indexDB/transactionStore";
 
 type RowData = Record<string, string>;
 const REQUIRED_HEADERS = ["date", "narration", "refNumber", "withdrawlAmount", "depositAmount", "closingBalance"];
@@ -60,7 +62,7 @@ type Props = {
 
 const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }: Props): JSX.Element => {
     const { headerHeight } = useLayout();
-    const { showErrorSnackbar } = useSnackbar();
+    const { showErrorSnackbar, showSuccessSnackbar } = useSnackbar();
 
     const [filterOpen, setFilterOpen] = useState(false);
     const [activeFiltersCount, setActiveFiltersCount] = useState(0);
@@ -74,6 +76,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [syncTransactionLoader, setSyncTransactionLoader] = useState(false);
 
     const handlePageChange = (newPage: number): void => setPage(newPage);
 
@@ -81,6 +84,9 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
+
+    const dispatch = useAppDispatch();
+    const { labels, page: statePage, limit, loading, isLocalTransactions, syncStatus } = useAppSelector((state: RootState) => state.transactions);
 
     useEffect(() => {
         if (data.length > 0) {
@@ -90,8 +96,37 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
         }
     }, [data]);
 
-    const dispatch = useAppDispatch();
-    const { labels } = useAppSelector((state: RootState) => state.transactions);
+    useEffect(() => {
+        const fetchLocalTransactions = async (): Promise<void> => {
+            const localTransactions = await indexDBTransaction.getAllTransactions();
+            if (localTransactions.length > 0) dispatch(setIsLocalTransactions(true));
+        };
+        void fetchLocalTransactions();
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (isLocalTransactions) {
+            setSyncTransactionLoader(loading);
+        }
+    }, [loading, isLocalTransactions]);
+
+    useEffect(() => {
+        if (syncStatus === "success") {
+            // show snackbar
+            showSuccessSnackbar("Transaction Synced Successfully");
+            void dispatch(resetSyncStatus());
+        }
+    }, [dispatch, showSuccessSnackbar, syncStatus]);
+
+    useEffect(() => {
+        if (!filterOpen && Object.keys(filters).length > 0) {
+            const activeFiltersCount = Object.values(filters).filter((value) => {
+                if (Array.isArray(value)) return value.length > 0;
+                return value !== "" && value !== null;
+            }).length;
+            setActiveFiltersCount(activeFiltersCount);
+        }
+    }, [filterOpen, filters]);
 
     const toggleFilterDrawer = (): void => setFilterOpen(!filterOpen);
 
@@ -111,16 +146,6 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
         void dispatch(listTransactions({ ...cleanUpFilters() }));
         setFilterOpen(false);
     };
-
-    useEffect(() => {
-        if (!filterOpen && Object.keys(filters).length > 0) {
-            const activeFiltersCount = Object.values(filters).filter((value) => {
-                if (Array.isArray(value)) return value.length > 0;
-                return value !== "" && value !== null;
-            }).length;
-            setActiveFiltersCount(activeFiltersCount);
-        }
-    }, [filterOpen, filters]);
 
     const handleMultiChange = (event: SelectChangeEvent<string[]>, type: "category" | "labels"): void => {
         const {
@@ -270,7 +295,6 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
         }
     };
 
-    // (_, reason) => {
     const handleCloseModal = (reason: string): void => {
         if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
             setUploadModal(false);
@@ -278,7 +302,13 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
             setSelectedFileName(null);
         }
     };
-    // }
+
+    const handleSyncTransactions = async (): Promise<void> => {
+        setSyncTransactionLoader(true);
+        const transactions = await indexDBTransaction.getAllTransactions();
+        void dispatch(syncTransactions({ transactions, statePage, limit }));
+    };
+
     return (
         <>
             {/* Top Controls Container */}
@@ -424,6 +454,34 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
                         </IconButton>
                     </Tooltip>
                 </Box>
+                {isLocalTransactions && (
+                    <Box
+                        onClick={() => void handleSyncTransactions()}
+                        sx={{ cursor: "pointer" }}
+                    >
+                        <Tooltip
+                            title="Sync to Database"
+                            arrow
+                        >
+                            <IconButton
+                                color="primary"
+                                sx={
+                                    syncTransactionLoader
+                                        ? {
+                                              animation: "spinReverse 1s linear infinite",
+                                              "@keyframes spinReverse": {
+                                                  "0%": { transform: "rotate(0deg)" },
+                                                  "100%": { transform: "rotate(-360deg)" },
+                                              },
+                                          }
+                                        : {}
+                                }
+                            >
+                                <SyncIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+                )}
             </Box>
 
             {/* Filter Sidebar */}

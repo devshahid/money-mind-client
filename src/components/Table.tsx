@@ -11,6 +11,7 @@ import {
     TableHead,
     TableRow,
     Theme,
+    Tooltip,
     Typography,
 } from "@mui/material";
 import React, { JSX, useContext } from "react";
@@ -21,6 +22,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import { useAppSelector } from "../hooks/slice-hooks";
 import { RootState } from "../store";
 import { OverridableComponent } from "@mui/material/OverridableComponent";
+import dayjs from "dayjs";
 
 type Props = {
     type: "mini" | "full";
@@ -119,7 +121,7 @@ const CustomTable = ({
                                     </TableCell>
                                 )}
 
-                                <TableCell sx={{ textAlign: "center", fontSize: "1rem" }}>{tx.transactionDate}</TableCell>
+                                <TableCell sx={{ textAlign: "center", fontSize: "1rem" }}>{dayjs(tx.transactionDate).format("DD/MM/YYYY")}</TableCell>
                                 <TableCell sx={{ fontSize: "1rem" }}>{tx.narration}</TableCell>
                                 <TableCell sx={{ fontSize: "1rem" }}>{tx.notes}</TableCell>
 
@@ -127,16 +129,50 @@ const CustomTable = ({
                                 <CategoryTransactionRow tx={tx} />
 
                                 <TableCell>
-                                    {tx.label.map((label, index) => (
-                                        <Typography
-                                            key={index}
-                                            variant="body2"
-                                            sx={{ ...tableLabelStyles }}
-                                        >
-                                            {label}
-                                        </Typography>
-                                    ))}
+                                    <Tooltip
+                                        title={
+                                            <Box>
+                                                {tx.label.map((label, index) => (
+                                                    <Typography
+                                                        key={index}
+                                                        variant="body2"
+                                                    >
+                                                        {label}
+                                                    </Typography>
+                                                ))}
+                                            </Box>
+                                        }
+                                        arrow
+                                        placement="top-start"
+                                    >
+                                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, maxWidth: 200, overflow: "hidden" }}>
+                                            {tx.label.slice(0, 2).map((label, index) => (
+                                                <Typography
+                                                    key={index}
+                                                    variant="body2"
+                                                    sx={{
+                                                        ...tableLabelStyles,
+                                                        whiteSpace: "nowrap",
+                                                        textOverflow: "ellipsis",
+                                                        overflow: "hidden",
+                                                        maxWidth: 100,
+                                                    }}
+                                                >
+                                                    {label}
+                                                </Typography>
+                                            ))}
+                                            {tx.label.length > 2 && (
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{ opacity: 0.6 }}
+                                                >
+                                                    ...+{tx.label.length - 2}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    </Tooltip>
                                 </TableCell>
+
                                 <TableCell sx={{ fontSize: "1rem" }}>{tx.bankName}</TableCell>
                                 <TableCell sx={{ fontSize: "1rem" }}>{tx.isCredit ? "Credit" : "Debit"}</TableCell>
                                 <TableCell

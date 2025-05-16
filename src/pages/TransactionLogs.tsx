@@ -1,5 +1,14 @@
 import React, { JSX, useContext, useEffect, useState } from "react";
-import { addCashTransaction, ITransactionLogs, listTransactions, updateLimit, updatePage, updateTransaction } from "../store/transactionSlice";
+import {
+    addCashTransaction,
+    ITransactionLogs,
+    listTransactions,
+    setIsLocalTransactions,
+    setLabels,
+    setTransaction,
+    updateLimit,
+    updatePage,
+} from "../store/transactionSlice";
 import { useAppDispatch, useAppSelector } from "../hooks/slice-hooks";
 import { RootState } from "../store";
 
@@ -32,6 +41,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // ✅ Correct path
 import dayjs from "dayjs";
 import { useSnackbar } from "../contexts/SnackBarContext";
+import { indexDBTransaction } from "../helpers/indexDB/transactionStore";
 
 export interface ITransactionFilters {
     dateFrom: string;
@@ -111,7 +121,7 @@ const TransactionLogs = (): JSX.Element => {
         return Object.values(newErrors).every((error) => error === "");
     };
 
-    const handleUpdateTransaction = (): void => {
+    const handleUpdateTransaction = async (): Promise<void> => {
         if (!validateFields() || !editingTransaction) {
             showErrorSnackbar("Please enter all the required fields");
             console.log("transaction: ", editingTransaction);
@@ -125,7 +135,13 @@ const TransactionLogs = (): JSX.Element => {
             const formattedDate = dayjs(editingTransaction.transactionDate, "MM/DD/YYYY").format("DD/MM/YYYY");
             void dispatch(addCashTransaction({ ...editingTransaction, isCash: true, transactionDate: formattedDate, bankName: "Cash" }));
         } else {
-            void dispatch(updateTransaction(editingTransaction)); // Refresh the transaction list
+            const res = await indexDBTransaction.saveTransaction(editingTransaction);
+            if (res) {
+                dispatch(setIsLocalTransactions(true));
+            }
+            void dispatch(setTransaction(editingTransaction));
+            const labels = await indexDBTransaction.getAllLabels();
+            dispatch(setLabels(labels));
         }
 
         setEditModalOpen(false);
@@ -149,6 +165,7 @@ const TransactionLogs = (): JSX.Element => {
     const editButtonClickEvents = (tx: ITransactionLogs): void => {
         setEditingTransaction(tx); // Pass the transaction to edit
         setEditModalOpen(true);
+        setActionType("edit");
     };
 
     const handleAddEditModalState = (
@@ -156,7 +173,6 @@ const TransactionLogs = (): JSX.Element => {
         name?: string,
         value?: null | string | string[] | boolean,
     ): void => {
-        console.log(name, value);
         if (editingTransaction || actionType === "add") {
             const target = e.target as HTMLInputElement | HTMLTextAreaElement;
             setEditingTransaction({ ...editingTransaction, [name ?? target.name]: value ?? target.value } as ITransactionLogs);
@@ -263,6 +279,7 @@ const TransactionLogs = (): JSX.Element => {
                             options={getExpenseCategories().map((c) => c.name)} // ['Shopping', 'Medical', 'Utilities']
                             onChange={(e, newValue) => handleAddEditModalState(e, "category", newValue)}
                             onInputChange={(e, newValue) => handleAddEditModalState(e, "category", newValue)}
+                            value={editingTransaction?.category}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
@@ -291,14 +308,17 @@ const TransactionLogs = (): JSX.Element => {
                                 );
                             }}
                             renderTags={(value, getTagProps) =>
-                                value.map((option, index) => (
-                                    // eslint-disable-next-line react/jsx-key
-                                    <Chip
-                                        variant="outlined"
-                                        label={option}
-                                        {...getTagProps({ index })}
-                                    />
-                                ))
+                                value.map((option, index) => {
+                                    const tagProps = getTagProps({ index });
+                                    return (
+                                        <Chip
+                                            {...tagProps}
+                                            key={option + index}
+                                            variant="outlined"
+                                            label={option}
+                                        />
+                                    );
+                                })
                             }
                             renderInput={(params) => (
                                 <TextField
@@ -381,7 +401,9 @@ const TransactionLogs = (): JSX.Element => {
                         <Button
                             fullWidth
                             variant="contained"
-                            onClick={() => handleUpdateTransaction()}
+                            onClick={() => {
+                                void handleUpdateTransaction();
+                            }}
                         >
                             Save Changes
                         </Button>
