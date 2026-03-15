@@ -33,6 +33,7 @@ type Props = {
     handleSelectAll?: () => void;
     sx?: SxProps<Theme>;
     component?: OverridableComponent<PaperTypeMap<object, "div">>;
+    renderGroupBadge?: (txId: string) => React.ReactNode;
 };
 
 const CustomTable = ({
@@ -44,6 +45,7 @@ const CustomTable = ({
     handleSelectAll,
     sx,
     component,
+    renderGroupBadge,
 }: Props): JSX.Element => {
     const { mode } = useContext(ColorModeContext);
 
@@ -101,6 +103,7 @@ const CustomTable = ({
                                     {option}
                                 </TableCell>
                             ))}
+                            {renderGroupBadge && <TableCell sx={{ ...commonTableHeadingStyles(mode) }}>Group</TableCell>}
                             {type === "full" && <TableCell sx={{ ...commonTableHeadingStyles(mode) }}>Action</TableCell>}
                         </TableRow>
                     </TableHead>
@@ -186,6 +189,7 @@ const CustomTable = ({
                                 >
                                     ₹ {Number(tx.amount).toFixed(2)}
                                 </TableCell>
+                                {renderGroupBadge && <TableCell>{renderGroupBadge(tx._id)}</TableCell>}
                                 {type === "full" && (
                                     <TableCell align="center">
                                         <IconButton

@@ -28,6 +28,7 @@ import {
     Radio,
     TablePagination,
 } from "@mui/material";
+import GroupWorkIcon from "@mui/icons-material/GroupWork";
 import TableControls from "../components/TransactionControls";
 import { getExpenseCategories } from "../constants";
 import { ColorModeContext } from "../contexts/ThemeContext";
@@ -35,6 +36,12 @@ import { useOutletContext } from "react-router-dom";
 import { LayoutContextType } from "../layouts/main";
 import CustomModel from "../components/CustomModal";
 import CustomTable from "../components/Table";
+import AIAnnotationSuggestion from "../components/transactions/AIAnnotationSuggestion";
+import AIGroupSuggestion from "../components/transactions/AIGroupSuggestion";
+import CreateGroupModal from "../components/transactions/CreateGroupModal";
+import GroupDetailDrawer from "../components/transactions/GroupDetailDrawer";
+import { listGroups } from "../store/transactionGroupSlice";
+import { ITransactionGroup } from "../types/transactionGroup";
 
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -72,6 +79,8 @@ const TransactionLogs = (): JSX.Element => {
         isCredit: "",
     });
     const [rowsPerPage, setRowsPerPage] = useState(50);
+    const [createGroupOpen, setCreateGroupOpen] = useState(false);
+    const [drawerGroup, setDrawerGroup] = useState<ITransactionGroup | null>(null);
 
     const [filters, setFilters] = useState<ITransactionFilters>({
         dateFrom: "",
@@ -88,9 +97,11 @@ const TransactionLogs = (): JSX.Element => {
 
     const dispatch = useAppDispatch();
     const { transactions, loading, labels, page, limit, totalCount } = useAppSelector((state: RootState) => state.transactions);
+    const groups = useAppSelector((state: RootState) => state.transactionGroups.groups);
 
     useEffect(() => {
         setHeader("Transactions", "Overview of your activities");
+        void dispatch(listGroups());
     }, [setHeader]);
 
     useEffect(() => {
@@ -189,6 +200,13 @@ const TransactionLogs = (): JSX.Element => {
         void dispatch(updateLimit(event.target.value));
     };
 
+    const getGroupForTransaction = (txId: string): ITransactionGroup | undefined => groups.find((g) => g.transactionIds.includes(txId));
+
+    const handleGroupBadgeClick = (txId: string): void => {
+        const group = getGroupForTransaction(txId);
+        if (group) setDrawerGroup(group);
+    };
+
     return (
         <Box style={{ padding: "10px", backgroundColor: mode === "dark" ? "#000" : "#fff" }}>
             <TableControls
@@ -197,6 +215,22 @@ const TransactionLogs = (): JSX.Element => {
                 filters={filters}
                 setFilters={setFilters}
             />
+
+            <AIGroupSuggestion />
+
+            {selectedIds.length >= 2 && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2, p: 1.5, borderRadius: 1, bgcolor: "action.hover" }}>
+                    <GroupWorkIcon color="primary" />
+                    <Typography variant="body2">{selectedIds.length} transactions selected</Typography>
+                    <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => setCreateGroupOpen(true)}
+                    >
+                        Create Group
+                    </Button>
+                </Box>
+            )}
 
             {!loading && transactions.length === 0 ? (
                 <EmptyTransactionContainer />
@@ -210,6 +244,21 @@ const TransactionLogs = (): JSX.Element => {
                             isSelected={isSelected}
                             handleSelectOne={handleSelectOne}
                             handleSelectAll={handleSelectAll}
+                            renderGroupBadge={(txId) => {
+                                const group = getGroupForTransaction(txId);
+                                if (!group) return null;
+                                return (
+                                    <Chip
+                                        icon={<GroupWorkIcon fontSize="small" />}
+                                        label={group.name}
+                                        size="small"
+                                        color="primary"
+                                        variant="outlined"
+                                        onClick={() => handleGroupBadgeClick(txId)}
+                                        sx={{ cursor: "pointer", maxWidth: 150 }}
+                                    />
+                                );
+                            }}
                             sx={{
                                 maxHeight: "100vh",
                                 "&::-webkit-scrollbar": {
@@ -233,6 +282,23 @@ const TransactionLogs = (): JSX.Element => {
                     {loading && <LoadingBackDrop />}
                 </div>
             )}
+
+            <CreateGroupModal
+                open={createGroupOpen}
+                onClose={() => setCreateGroupOpen(false)}
+                selectedTransactionIds={selectedIds}
+            />
+
+            <GroupDetailDrawer
+                open={!!drawerGroup}
+                onClose={() => setDrawerGroup(null)}
+                group={drawerGroup}
+                transactions={transactions}
+                onTransactionClick={(tx) => {
+                    setDrawerGroup(null);
+                    editButtonClickEvents(tx);
+                }}
+            />
 
             {/* Modal to edit the transactions */}
             {(editingTransaction || actionType === "add") && (
@@ -273,6 +339,15 @@ const TransactionLogs = (): JSX.Element => {
                             sx={{ mb: 2 }}
                             name="notes"
                         />
+
+                        {actionType === "edit" && (
+                            <AIAnnotationSuggestion
+                                transactionId={editingTransaction?._id}
+                                onAccept={(category, labels) => {
+                                    setEditingTransaction((prev) => (prev ? { ...prev, category, label: labels } : prev));
+                                }}
+                            />
+                        )}
 
                         <Autocomplete
                             freeSolo
