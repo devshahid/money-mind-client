@@ -1,6 +1,7 @@
 // db.ts
 import { openDB, IDBPDatabase, DBSchema } from "idb";
 import { ITransactionLogs } from "../../store/transactionSlice";
+import { ITransactionGroup } from "../../store/groupSlice";
 
 interface ExpenseDB extends DBSchema {
     edited_transactions: {
@@ -14,13 +15,17 @@ interface ExpenseDB extends DBSchema {
             labels: string[];
         };
     };
+    transaction_groups: {
+        key: string;
+        value: ITransactionGroup;
+    };
 }
 
-let dbPromise: Promise<IDBPDatabase<ExpenseDB>>;
+let dbPromise: Promise<IDBPDatabase<ExpenseDB>> | undefined;
 
 export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
     if (dbPromise === undefined) {
-        dbPromise = openDB<ExpenseDB>("ExpenseTrackerDB", 2, {
+        dbPromise = openDB<ExpenseDB>("ExpenseTrackerDB", 4, {
             upgrade(db) {
                 if (!db.objectStoreNames.contains("edited_transactions")) {
                     db.createObjectStore("edited_transactions", { keyPath: "_id" });
@@ -28,7 +33,13 @@ export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
                 if (!db.objectStoreNames.contains("labels")) {
                     db.createObjectStore("labels", { keyPath: "key" }); // Store format: { key: 'listLabels', labels: string[] }
                 }
+                if (!db.objectStoreNames.contains("transaction_groups")) {
+                    db.createObjectStore("transaction_groups", { keyPath: "id" });
+                }
             },
+        }).catch((err) => {
+            dbPromise = undefined;
+            throw err;
         });
     }
     return dbPromise;

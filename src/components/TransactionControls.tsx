@@ -51,7 +51,7 @@ import { RootState } from "../store";
 import { indexDBTransaction } from "../helpers/indexDB/transactionStore";
 
 type RowData = Record<string, string>;
-const REQUIRED_HEADERS = ["date", "narration", "refNumber", "withdrawlAmount", "depositAmount", "closingBalance"];
+const REQUIRED_HEADERS = ["date", "narration", "withdrawlAmount", "depositAmount", "closingBalance"];
 
 type Props = {
     setActionType: (x: "add") => void;
