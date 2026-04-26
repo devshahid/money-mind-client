@@ -48,12 +48,13 @@ import { useLayout } from "../contexts/LayoutContext";
 import { useSnackbar } from "../contexts/SnackBarContext";
 
 import CustomModal from "./CustomModal";
+import StatementUpload from "./statement/StatementUpload";
 import { ITransactionFilters } from "../pages/TransactionLogs";
 import { RootState } from "../store";
 import { indexDBTransaction } from "../helpers/indexDB/transactionStore";
 
 type RowData = Record<string, string>;
-const REQUIRED_HEADERS = ["date", "narration", "refNumber", "withdrawlAmount", "depositAmount", "closingBalance"];
+const REQUIRED_HEADERS = ["date", "narration", "withdrawlAmount", "depositAmount", "closingBalance"];
 
 type Props = {
     setActionType: (x: "add") => void;
@@ -75,6 +76,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
     const [headers, setHeaders] = useState<string[]>(() => (data.length > 0 ? Object.keys(data[0]) : []));
     const [previewUploadedContent, setPreviewUploadedContent] = useState<boolean>(false);
     const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+    const [statementUploadOpen, setStatementUploadOpen] = useState(false);
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(50);
@@ -478,7 +480,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
 
                 {/* Upload Button */}
                 <Box
-                    onClick={() => setUploadModal(true)}
+                    onClick={() => setStatementUploadOpen(true)}
                     sx={{ cursor: "pointer" }}
                 >
                     <Tooltip
@@ -902,6 +904,12 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
                     </Box>
                 </Box>
             )}
+
+            {/* New Statement Upload (multi-step: file select → bank name → preview) */}
+            <StatementUpload
+                open={statementUploadOpen}
+                onClose={() => setStatementUploadOpen(false)}
+            />
         </>
     );
 };

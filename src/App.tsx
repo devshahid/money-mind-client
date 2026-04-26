@@ -3,8 +3,11 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./layouts/main";
 import DashboardPage from "./pages/Dashboard";
 import TransactionLogs from "./pages/TransactionLogs";
-import DebtTable from "./components/Debt";
-import Goals from "./components/Goals";
+import DebtsPage from "./pages/Debts";
+import GoalsPage from "./pages/Goals";
+import BudgetPage from "./pages/Budget";
+import AnalyticsPage from "./pages/Analytics";
+import AIChatPage from "./pages/AIChat";
 import Login from "./pages/Login";
 import Account from "./pages/Account";
 import RegisterPage from "./pages/Register";
@@ -56,19 +59,23 @@ function App(): JSX.Element {
                 },
                 {
                     path: "debts",
-                    element: <DebtTable />,
+                    element: <DebtsPage />,
                 },
                 {
                     path: "goals",
-                    element: <Goals />,
+                    element: <GoalsPage />,
                 },
                 {
                     path: "budget",
-                    element: <h1 className="title">Budget</h1>,
+                    element: <BudgetPage />,
                 },
                 {
                     path: "analytics",
-                    element: <h1 className="title">Analytics</h1>,
+                    element: <AnalyticsPage />,
+                },
+                {
+                    path: "ai-chat",
+                    element: <AIChatPage />,
                 },
                 {
                     path: "settings",
