@@ -28,6 +28,9 @@ const CustomModal = ({ modalOpen, onClose, children }: Props): JSX.Element => {
                     maxHeight: "90vh",
                     overflowY: "auto",
                     borderRadius: 2,
+                    // Hide scrollbar while keeping scroll functionality
+                    scrollbarWidth: "none", // Firefox
+                    "&::-webkit-scrollbar": { display: "none" }, // Chrome, Safari, Edge
                 }}
             >
                 {/* Close Button */}

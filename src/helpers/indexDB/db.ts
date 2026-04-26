@@ -1,7 +1,7 @@
 // db.ts
 import { openDB, IDBPDatabase, DBSchema } from "idb";
 import { ITransactionLogs } from "../../store/transactionSlice";
-import { ITransactionGroup } from "../../types/transactionGroup";
+import { ITransactionGroup } from "../../store/groupSlice";
 import { IDebt } from "../../types/debt";
 import { IGoal } from "../../types/goal";
 import { IBudget } from "../../types/budget";
@@ -12,11 +12,15 @@ interface ExpenseDB extends DBSchema {
         value: Partial<ITransactionLogs>;
     };
     labels: {
-        key: string; // e.g., "listLabels"
+        key: string;
         value: {
-            key: string; // must match keyPath
+            key: string;
             labels: string[];
         };
+    };
+    transaction_groups: {
+        key: string;
+        value: ITransactionGroup;
     };
     pending_groups: {
         key: string;
@@ -36,11 +40,11 @@ interface ExpenseDB extends DBSchema {
     };
 }
 
-let dbPromise: Promise<IDBPDatabase<ExpenseDB>>;
+let dbPromise: Promise<IDBPDatabase<ExpenseDB>> | undefined;
 
 export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
     if (dbPromise === undefined) {
-        dbPromise = openDB<ExpenseDB>("ExpenseTrackerDB", 3, {
+        dbPromise = openDB<ExpenseDB>("ExpenseTrackerDB", 6, {
             upgrade(db: IDBPDatabase<ExpenseDB>, oldVersion: number) {
                 if (oldVersion < 2) {
                     if (!db.objectStoreNames.contains("edited_transactions")) {
@@ -64,7 +68,15 @@ export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
                         db.createObjectStore("pending_budgets", { keyPath: "_id" });
                     }
                 }
+                if (oldVersion < 6) {
+                    if (!db.objectStoreNames.contains("transaction_groups")) {
+                        db.createObjectStore("transaction_groups", { keyPath: "id" });
+                    }
+                }
             },
+        }).catch((err) => {
+            dbPromise = undefined;
+            throw err;
         });
     }
     return dbPromise;

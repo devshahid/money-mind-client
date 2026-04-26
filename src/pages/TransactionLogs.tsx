@@ -11,6 +11,21 @@ import {
 } from "../store/transactionSlice";
 import { useAppDispatch, useAppSelector } from "../hooks/slice-hooks";
 import { RootState } from "../store";
+import {
+    loadGroups,
+    createGroup,
+    updateGroup,
+    deleteGroup,
+    addTransactionsToGroup,
+    removeTransactionFromGroup,
+    syncGroups,
+    resetGroupSyncStatus,
+    ITransactionGroup,
+    IMember,
+} from "../store/groupSlice";
+import { SplitType } from "../types/splitTypes";
+import { mergeLabels } from "../utils/groupUtils";
+import { indexDBTransaction } from "../helpers/indexDB/transactionStore";
 
 import {
     Typography,
@@ -27,8 +42,12 @@ import {
     FormControlLabel,
     Radio,
     TablePagination,
+    Tabs,
+    Tab,
+    IconButton,
+    Tooltip,
 } from "@mui/material";
-import GroupWorkIcon from "@mui/icons-material/GroupWork";
+import SyncIcon from "@mui/icons-material/Sync";
 import TableControls from "../components/TransactionControls";
 import { getExpenseCategories } from "../constants";
 import { ColorModeContext } from "../contexts/ThemeContext";
@@ -36,19 +55,17 @@ import { useOutletContext } from "react-router-dom";
 import { LayoutContextType } from "../layouts/main";
 import CustomModel from "../components/CustomModal";
 import CustomTable from "../components/Table";
-import AIAnnotationSuggestion from "../components/transactions/AIAnnotationSuggestion";
-import AIGroupSuggestion from "../components/transactions/AIGroupSuggestion";
-import CreateGroupModal from "../components/transactions/CreateGroupModal";
-import GroupDetailDrawer from "../components/transactions/GroupDetailDrawer";
-import { listGroups } from "../store/transactionGroupSlice";
-import { ITransactionGroup } from "../types/transactionGroup";
+import BulkActionToolbar from "../components/BulkActionToolbar";
+import LabelAssignmentDialog from "../components/LabelAssignmentDialog";
+import GroupDialog from "../components/GroupDialog";
+import GroupSummaryView from "../components/GroupSummaryView";
+import GroupListView from "../components/GroupListView";
 
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // ✅ Correct path
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { useSnackbar } from "../contexts/SnackBarContext";
-import { indexDBTransaction } from "../helpers/indexDB/transactionStore";
 
 export interface ITransactionFilters {
     dateFrom: string;
@@ -62,11 +79,10 @@ export interface ITransactionFilters {
 }
 
 const TransactionLogs = (): JSX.Element => {
-    // Fetching theme value from context API
     const { mode } = useContext(ColorModeContext);
     const { setHeader } = useOutletContext<LayoutContextType>();
 
-    // Local State Declaration
+    // Local State
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState<Partial<ITransactionLogs> | null>(null);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -79,8 +95,14 @@ const TransactionLogs = (): JSX.Element => {
         isCredit: "",
     });
     const [rowsPerPage, setRowsPerPage] = useState(50);
-    const [createGroupOpen, setCreateGroupOpen] = useState(false);
-    const [drawerGroup, setDrawerGroup] = useState<ITransactionGroup | null>(null);
+    const [activeTab, setActiveTab] = useState(0);
+
+    // Dialog states
+    const [labelDialogOpen, setLabelDialogOpen] = useState(false);
+    const [groupDialogOpen, setGroupDialogOpen] = useState(false);
+    const [groupDialogMode, setGroupDialogMode] = useState<"create" | "edit">("create");
+    const [editingGroup, setEditingGroup] = useState<ITransactionGroup | null>(null);
+    const [summaryGroup, setSummaryGroup] = useState<ITransactionGroup | null>(null);
 
     const [filters, setFilters] = useState<ITransactionFilters>({
         dateFrom: "",
@@ -93,29 +115,66 @@ const TransactionLogs = (): JSX.Element => {
         type: "",
     });
 
-    const { showErrorSnackbar } = useSnackbar();
+    const { showErrorSnackbar, showSuccessSnackbar } = useSnackbar();
 
     const dispatch = useAppDispatch();
     const { transactions, loading, labels, page, limit, totalCount } = useAppSelector((state: RootState) => state.transactions);
-    const groups = useAppSelector((state: RootState) => state.transactionGroups.groups);
+    const groups: ITransactionGroup[] = useAppSelector((state: RootState) => (state as { groups: { groups: ITransactionGroup[] } }).groups.groups);
+    const isLocalGroups = useAppSelector((state: RootState) => (state as { groups: { isLocalGroups: boolean } }).groups.isLocalGroups);
+    const groupSyncStatus = useAppSelector(
+        (state: RootState) => (state as { groups: { groupSyncStatus: "idle" | "success" | "error" } }).groups.groupSyncStatus,
+    );
+    const groupLoading = useAppSelector((state: RootState) => (state as { groups: { loading: boolean } }).groups.loading);
+
+    const [groupSyncLoader, setGroupSyncLoader] = useState(false);
+
+    // Load groups on mount (fetches from API + merges local, sets isLocalGroups automatically)
+    useEffect(() => {
+        void dispatch(loadGroups());
+    }, [dispatch]);
+
+    // Track group sync loading
+    useEffect(() => {
+        if (isLocalGroups) {
+            setGroupSyncLoader(groupLoading);
+        }
+    }, [groupLoading, isLocalGroups]);
+
+    // Handle group sync status
+    useEffect(() => {
+        if (groupSyncStatus === "success") {
+            showSuccessSnackbar("Groups synced successfully");
+            void dispatch(resetGroupSyncStatus());
+        } else if (groupSyncStatus === "error") {
+            showErrorSnackbar("Failed to sync groups");
+            void dispatch(resetGroupSyncStatus());
+        }
+    }, [dispatch, groupSyncStatus, showSuccessSnackbar, showErrorSnackbar]);
 
     useEffect(() => {
         setHeader("Transactions", "Overview of your activities");
-        void dispatch(listGroups());
     }, [setHeader]);
 
     useEffect(() => {
         void dispatch(listTransactions({ ...filters, page: (parseInt(page) + 1).toString(), limit }));
-    }, [dispatch, page, filters]);
+    }, [dispatch, page, filters, limit]);
+
+    // Reset selection when page, filters, or limit change
+    useEffect(() => {
+        setSelectedIds([]);
+    }, [page, filters, limit]);
 
     useEffect(() => {
         if (actionType === "add") {
-            setEditingTransaction({
-                ...editingTransaction,
-                isCredit: false,
-            });
+            setEditingTransaction(
+                (prev) =>
+                    ({
+                        ...prev,
+                        isCredit: false,
+                    }) as ITransactionLogs,
+            );
         }
-    }, [dispatch, actionType]);
+    }, [actionType]);
 
     const validateFields = (): boolean => {
         let newErrors = { ...errors };
@@ -135,7 +194,6 @@ const TransactionLogs = (): JSX.Element => {
     const handleUpdateTransaction = async (): Promise<void> => {
         if (!validateFields() || !editingTransaction) {
             showErrorSnackbar("Please enter all the required fields");
-            console.log("transaction: ", editingTransaction);
             return;
         }
 
@@ -151,12 +209,11 @@ const TransactionLogs = (): JSX.Element => {
                 dispatch(setIsLocalTransactions(true));
             }
             void dispatch(setTransaction(editingTransaction));
-            const labels = await indexDBTransaction.getAllLabels();
-            dispatch(setLabels(labels));
+            const allLabels = await indexDBTransaction.getAllLabels();
+            dispatch(setLabels(allLabels));
         }
 
         setEditModalOpen(false);
-        console.log("transaction: ", editingTransaction);
     };
 
     const handleSelectAll = (): void => {
@@ -174,7 +231,7 @@ const TransactionLogs = (): JSX.Element => {
     const isSelected = (id: string): boolean => selectedIds.includes(id);
 
     const editButtonClickEvents = (tx: ITransactionLogs): void => {
-        setEditingTransaction(tx); // Pass the transaction to edit
+        setEditingTransaction(tx);
         setEditModalOpen(true);
         setActionType("edit");
     };
@@ -200,11 +257,112 @@ const TransactionLogs = (): JSX.Element => {
         void dispatch(updateLimit(event.target.value));
     };
 
-    const getGroupForTransaction = (txId: string): ITransactionGroup | undefined => groups.find((g) => g.transactionIds.includes(txId));
+    // --- Bulk action handlers ---
 
-    const handleGroupBadgeClick = (txId: string): void => {
-        const group = getGroupForTransaction(txId);
-        if (group) setDrawerGroup(group);
+    const handleAttachToLogs = (): void => {
+        setLabelDialogOpen(true);
+    };
+
+    const handleLabelConfirm = async (newLabels: string[]): Promise<void> => {
+        setLabelDialogOpen(false);
+        for (const id of selectedIds) {
+            const tx = transactions.find((t) => t._id === id);
+            if (!tx) continue;
+            const merged = mergeLabels(tx.label, newLabels);
+            const updated = { ...tx, label: merged };
+            const res = await indexDBTransaction.saveTransaction(updated);
+            if (res) {
+                dispatch(setIsLocalTransactions(true));
+            }
+            void dispatch(setTransaction(updated));
+        }
+        const allLabels = await indexDBTransaction.getAllLabels();
+        dispatch(setLabels(allLabels));
+        setSelectedIds([]);
+    };
+
+    const handleCreateGroup = (): void => {
+        setGroupDialogMode("create");
+        setEditingGroup(null);
+        setGroupDialogOpen(true);
+    };
+
+    const handleGroupDialogSubmit = (data: {
+        name: string;
+        involvedParty: string;
+        members: IMember[];
+        notes: string;
+        splitType: SplitType;
+    }): void => {
+        if (groupDialogMode === "create") {
+            void dispatch(
+                createGroup({
+                    name: data.name,
+                    involvedParty: data.involvedParty,
+                    members: data.members,
+                    notes: data.notes,
+                    transactionIds: selectedIds,
+                }),
+            );
+            setSelectedIds([]);
+        } else if (editingGroup) {
+            void dispatch(
+                updateGroup({
+                    id: editingGroup.id,
+                    name: data.name,
+                    involvedParty: data.involvedParty,
+                    members: data.members,
+                    notes: data.notes,
+                    splitType: data.splitType,
+                }),
+            );
+        }
+        setGroupDialogOpen(false);
+        setEditingGroup(null);
+    };
+
+    const handleAddToGroup = (groupId: string): void => {
+        void dispatch(addTransactionsToGroup({ groupId, transactionIds: selectedIds }));
+        setSelectedIds([]);
+    };
+
+    // --- Group summary handlers ---
+
+    const handleGroupBadgeClick = (groupId: string): void => {
+        const group = groups.find((g) => g.id === groupId);
+        if (group) setSummaryGroup(group);
+    };
+
+    const handleGroupListClick = (groupId: string): void => {
+        const group = groups.find((g) => g.id === groupId);
+        if (group) setSummaryGroup(group);
+    };
+
+    const handleEditGroupFromSummary = (): void => {
+        if (!summaryGroup) return;
+        setEditingGroup(summaryGroup);
+        setGroupDialogMode("edit");
+        setSummaryGroup(null);
+        setGroupDialogOpen(true);
+    };
+
+    const handleDeleteGroupFromSummary = (): void => {
+        if (!summaryGroup) return;
+        void dispatch(deleteGroup(summaryGroup.id));
+        setSummaryGroup(null);
+    };
+
+    const handleDeleteGroupFromList = (groupId: string): void => {
+        void dispatch(deleteGroup(groupId));
+    };
+
+    const handleRemoveTransactionFromGroup = (transactionId: string): void => {
+        if (!summaryGroup) return;
+        void dispatch(removeTransactionFromGroup({ groupId: summaryGroup.id, transactionId })).then((result) => {
+            if (removeTransactionFromGroup.fulfilled.match(result)) {
+                setSummaryGroup(result.payload);
+            }
+        });
     };
 
     return (
@@ -216,91 +374,110 @@ const TransactionLogs = (): JSX.Element => {
                 setFilters={setFilters}
             />
 
-            <AIGroupSuggestion />
+            <Tabs
+                value={activeTab}
+                onChange={(_, newValue: number) => setActiveTab(newValue)}
+                sx={{ mb: 2 }}
+            >
+                <Tab label="All Transactions" />
+                <Tab label="Grouped Transactions" />
+            </Tabs>
 
-            {selectedIds.length >= 2 && (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2, p: 1.5, borderRadius: 1, bgcolor: "action.hover" }}>
-                    <GroupWorkIcon color="primary" />
-                    <Typography variant="body2">{selectedIds.length} transactions selected</Typography>
-                    <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => setCreateGroupOpen(true)}
-                    >
-                        Create Group
-                    </Button>
-                </Box>
-            )}
-
-            {!loading && transactions.length === 0 ? (
-                <EmptyTransactionContainer />
-            ) : (
-                <div style={{ width: "100%", borderRadius: 6, border: "1px solid #ccc" }}>
-                    <Box sx={{ overflowX: "auto" }}>
-                        <CustomTable
-                            type="full"
-                            editButtonClickEvents={editButtonClickEvents}
+            {activeTab === 0 && (
+                <>
+                    {selectedIds.length > 0 && (
+                        <BulkActionToolbar
                             selectedIds={selectedIds}
-                            isSelected={isSelected}
-                            handleSelectOne={handleSelectOne}
-                            handleSelectAll={handleSelectAll}
-                            renderGroupBadge={(txId) => {
-                                const group = getGroupForTransaction(txId);
-                                if (!group) return null;
-                                return (
-                                    <Chip
-                                        icon={<GroupWorkIcon fontSize="small" />}
-                                        label={group.name}
-                                        size="small"
-                                        color="primary"
-                                        variant="outlined"
-                                        onClick={() => handleGroupBadgeClick(txId)}
-                                        sx={{ cursor: "pointer", maxWidth: 150 }}
-                                    />
-                                );
-                            }}
-                            sx={{
-                                maxHeight: "100vh",
-                                "&::-webkit-scrollbar": {
-                                    display: "none", // Chrome, Safari, Edge
-                                },
-                            }}
-                            component={Paper}
+                            onClearSelection={() => setSelectedIds([])}
+                            onAttachToLogs={handleAttachToLogs}
+                            onCreateGroup={handleCreateGroup}
+                            onAddToGroup={handleAddToGroup}
+                            groups={groups}
                         />
-                    </Box>
-                    <TablePagination
-                        component="div"
-                        count={totalCount}
-                        page={parseInt(page, 0)}
-                        onPageChange={(_, newPage) => handlePageChange(newPage.toString())}
-                        rowsPerPage={rowsPerPage}
-                        onRowsPerPageChange={handleRowsPerPageChange}
-                        rowsPerPageOptions={[25, 50, 100]}
-                    />
+                    )}
 
-                    {/* Loading Overlay */}
-                    {loading && <LoadingBackDrop />}
-                </div>
+                    {!loading && transactions.length === 0 ? (
+                        <EmptyTransactionContainer />
+                    ) : (
+                        <div style={{ width: "100%", borderRadius: 6, border: "1px solid #ccc" }}>
+                            <Box sx={{ overflowX: "auto" }}>
+                                <CustomTable
+                                    type="full"
+                                    editButtonClickEvents={editButtonClickEvents}
+                                    selectedIds={selectedIds}
+                                    isSelected={isSelected}
+                                    handleSelectOne={handleSelectOne}
+                                    handleSelectAll={handleSelectAll}
+                                    groups={groups}
+                                    onGroupBadgeClick={handleGroupBadgeClick}
+                                    sx={{
+                                        maxHeight: "100vh",
+                                        "&::-webkit-scrollbar": {
+                                            display: "none",
+                                        },
+                                    }}
+                                    component={Paper}
+                                />
+                            </Box>
+                            <TablePagination
+                                component="div"
+                                count={totalCount}
+                                page={parseInt(page, 0)}
+                                onPageChange={(_, newPage) => handlePageChange(newPage.toString())}
+                                rowsPerPage={rowsPerPage}
+                                onRowsPerPageChange={handleRowsPerPageChange}
+                                rowsPerPageOptions={[25, 50, 100]}
+                            />
+                            {loading && <LoadingBackDrop />}
+                        </div>
+                    )}
+                </>
             )}
 
-            <CreateGroupModal
-                open={createGroupOpen}
-                onClose={() => setCreateGroupOpen(false)}
-                selectedTransactionIds={selectedIds}
-            />
+            {activeTab === 1 && (
+                <>
+                    <Box
+                        display="flex"
+                        justifyContent="flex-end"
+                        alignItems="center"
+                        mb={1}
+                        gap={1}
+                    >
+                        {isLocalGroups && (
+                            <Tooltip
+                                title="Sync Groups to Database"
+                                arrow
+                            >
+                                <IconButton
+                                    color="primary"
+                                    onClick={() => void dispatch(syncGroups())}
+                                    sx={
+                                        groupSyncLoader
+                                            ? {
+                                                  animation: "spinReverse 1s linear infinite",
+                                                  "@keyframes spinReverse": {
+                                                      "0%": { transform: "rotate(360deg)" },
+                                                      "100%": { transform: "rotate(0deg)" },
+                                                  },
+                                              }
+                                            : {}
+                                    }
+                                >
+                                    <SyncIcon />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                    </Box>
+                    <GroupListView
+                        groups={groups}
+                        transactions={transactions}
+                        onGroupClick={handleGroupListClick}
+                        onDeleteGroup={handleDeleteGroupFromList}
+                    />
+                </>
+            )}
 
-            <GroupDetailDrawer
-                open={!!drawerGroup}
-                onClose={() => setDrawerGroup(null)}
-                group={drawerGroup}
-                transactions={transactions}
-                onTransactionClick={(tx) => {
-                    setDrawerGroup(null);
-                    editButtonClickEvents(tx);
-                }}
-            />
-
-            {/* Modal to edit the transactions */}
+            {/* Edit transaction modal */}
             {(editingTransaction || actionType === "add") && (
                 <CustomModel
                     modalOpen={editModalOpen}
@@ -318,7 +495,6 @@ const TransactionLogs = (): JSX.Element => {
                             {actionType === "edit" ? "Edit Transaction" : "Add Cash Memo"}
                         </Typography>
 
-                        {/* Notes field */}
                         <TextField
                             fullWidth
                             label="Narration"
@@ -330,7 +506,6 @@ const TransactionLogs = (): JSX.Element => {
                             error={!!errors.narration}
                             helperText={errors.narration}
                         />
-                        {/* Notes field */}
                         <TextField
                             fullWidth
                             label="Notes"
@@ -340,18 +515,9 @@ const TransactionLogs = (): JSX.Element => {
                             name="notes"
                         />
 
-                        {actionType === "edit" && (
-                            <AIAnnotationSuggestion
-                                transactionId={editingTransaction?._id}
-                                onAccept={(category, labels) => {
-                                    setEditingTransaction((prev) => (prev ? { ...prev, category, label: labels } : prev));
-                                }}
-                            />
-                        )}
-
                         <Autocomplete
                             freeSolo
-                            options={getExpenseCategories().map((c) => c.name)} // ['Shopping', 'Medical', 'Utilities']
+                            options={getExpenseCategories().map((c) => c.name)}
                             onChange={(e, newValue) => handleAddEditModalState(e, "category", newValue)}
                             onInputChange={(e, newValue) => handleAddEditModalState(e, "category", newValue)}
                             value={editingTransaction?.category}
@@ -369,7 +535,6 @@ const TransactionLogs = (): JSX.Element => {
                             )}
                         />
 
-                        {/* Labels field (multiselect + search) */}
                         <Autocomplete
                             multiple
                             freeSolo
@@ -410,7 +575,6 @@ const TransactionLogs = (): JSX.Element => {
 
                         {actionType === "add" && (
                             <Box sx={{ display: "flex", gap: 4, flexWrap: "nowrap", mb: 2, justifyContent: "center", alignItems: "center" }}>
-                                {/* Notes field */}
                                 <TextField
                                     label="Amount"
                                     value={editingTransaction?.amount || ""}
@@ -418,7 +582,6 @@ const TransactionLogs = (): JSX.Element => {
                                     sx={{ mb: 2 }}
                                     name="amount"
                                 />
-                                {/* Transaction Type */}
                                 <FormControl component="fieldset">
                                     <RadioGroup
                                         row
@@ -448,13 +611,12 @@ const TransactionLogs = (): JSX.Element => {
                                     )}
                                 </FormControl>
 
-                                {/* Date Picker */}
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                                     <DatePicker
                                         label="Transaction Date"
                                         value={editingTransaction?.transactionDate ? dayjs(editingTransaction?.transactionDate) : dayjs()}
                                         maxDate={dayjs()}
-                                        onChange={(newValue) => {
+                                        onChange={(newValue: dayjs.Dayjs | null) => {
                                             const formattedValue = newValue ? newValue.format("MM/DD/YYYY") : "";
                                             handleAddEditModalState({
                                                 target: { name: "transactionDate", value: formattedValue },
@@ -472,7 +634,6 @@ const TransactionLogs = (): JSX.Element => {
                             </Box>
                         )}
 
-                        {/* Save Button */}
                         <Button
                             fullWidth
                             variant="contained"
@@ -485,6 +646,55 @@ const TransactionLogs = (): JSX.Element => {
                     </>
                 </CustomModel>
             )}
+
+            {/* Label assignment dialog */}
+            <LabelAssignmentDialog
+                open={labelDialogOpen}
+                onClose={() => setLabelDialogOpen(false)}
+                onConfirm={(newLabels) => {
+                    void handleLabelConfirm(newLabels);
+                }}
+                availableLabels={labels.map((l) => l.labelName)}
+            />
+
+            {/* Group create/edit dialog */}
+            <GroupDialog
+                transactions={
+                    editingGroup
+                        ? transactions.filter((tx) => editingGroup.transactionIds.includes(tx._id ?? ""))
+                        : transactions.filter((tx) => selectedIds.includes(tx._id ?? ""))
+                }
+                open={groupDialogOpen}
+                onClose={() => {
+                    setGroupDialogOpen(false);
+                    setEditingGroup(null);
+                }}
+                onSubmit={handleGroupDialogSubmit}
+                mode={groupDialogMode}
+                initialData={
+                    editingGroup
+                        ? {
+                              name: editingGroup.name,
+                              involvedParty: editingGroup.involvedParty,
+                              members: editingGroup.members || [],
+                              notes: editingGroup.notes,
+                              splitType: editingGroup.splitType,
+                          }
+                        : undefined
+                }
+            />
+
+            {/* Group summary view */}
+            {summaryGroup && (
+                <GroupSummaryView
+                    group={summaryGroup}
+                    transactions={transactions}
+                    onRemoveTransaction={handleRemoveTransactionFromGroup}
+                    onEditGroup={handleEditGroupFromSummary}
+                    onDeleteGroup={handleDeleteGroupFromSummary}
+                    onClose={() => setSummaryGroup(null)}
+                />
+            )}
         </Box>
     );
 };
@@ -496,7 +706,6 @@ const LoadingBackDrop = (): JSX.Element => {
             sx={{
                 zIndex: (theme) => theme.zIndex.drawer + 1,
                 color: "#fff",
-                // height: "auto",
             }}
         >
             <div style={{ display: "flex", alignItems: "center" }}>
@@ -517,8 +726,7 @@ const EmptyTransactionContainer = (): JSX.Element => {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                height: "100%", // Ensures it takes the full height of the container
-                // backgroundColor:"#000"
+                height: "100%",
             }}
         >
             <Typography

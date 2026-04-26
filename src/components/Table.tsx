@@ -1,8 +1,10 @@
 import {
     Box,
     Checkbox,
+    Chip,
     IconButton,
     PaperTypeMap,
+    Popover,
     SxProps,
     Table,
     TableBody,
@@ -14,11 +16,14 @@ import {
     Tooltip,
     Typography,
 } from "@mui/material";
-import React, { JSX, useContext } from "react";
+import React, { JSX, useContext, useState } from "react";
 import { ColorModeContext } from "../contexts/ThemeContext";
 import { columnHeaderOptions, commonTableHeadingStyles, getExpenseCategories } from "../constants";
 import { ITransactionLogs } from "../store/transactionSlice";
+import { ITransactionGroup, selectTransactionGroupMap } from "../store/groupSlice";
+import { computeGroupSummary } from "../utils/groupUtils";
 import EditIcon from "@mui/icons-material/Edit";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useAppSelector } from "../hooks/slice-hooks";
 import { RootState } from "../store";
 import { OverridableComponent } from "@mui/material/OverridableComponent";
@@ -33,7 +38,9 @@ type Props = {
     handleSelectAll?: () => void;
     sx?: SxProps<Theme>;
     component?: OverridableComponent<PaperTypeMap<object, "div">>;
-    renderGroupBadge?: (txId: string) => React.ReactNode;
+    groups?: ITransactionGroup[];
+    onGroupBadgeClick?: (groupId: string) => void;
+    onGroupInfoClick?: (event: React.MouseEvent, transactionId: string) => void;
 };
 
 const CustomTable = ({
@@ -45,11 +52,31 @@ const CustomTable = ({
     handleSelectAll,
     sx,
     component,
-    renderGroupBadge,
+    groups,
+    onGroupBadgeClick,
 }: Props): JSX.Element => {
     const { mode } = useContext(ColorModeContext);
 
     const { transactions } = useAppSelector((state: RootState) => state.transactions);
+    const transactionGroupMap = useAppSelector(selectTransactionGroupMap);
+
+    const [infoAnchorEl, setInfoAnchorEl] = useState<HTMLElement | null>(null);
+    const [infoTxId, setInfoTxId] = useState<string | null>(null);
+
+    const handleInfoClick = (event: React.MouseEvent<HTMLElement>, txId: string) => {
+        setInfoAnchorEl(event.currentTarget);
+        setInfoTxId(txId);
+    };
+
+    const handleInfoClose = () => {
+        setInfoAnchorEl(null);
+        setInfoTxId(null);
+    };
+
+    const infoOpen = Boolean(infoAnchorEl);
+    const infoGroups = infoTxId ? (transactionGroupMap[infoTxId] ?? []) : [];
+
+    const showGroupColumn = !!groups;
     const tableLabelStyles = {
         padding: "4px 8px", // Adjusted padding
         borderRadius: "8px", // More rounded corners
@@ -103,7 +130,7 @@ const CustomTable = ({
                                     {option}
                                 </TableCell>
                             ))}
-                            {renderGroupBadge && <TableCell sx={{ ...commonTableHeadingStyles(mode) }}>Group</TableCell>}
+                            {showGroupColumn && <TableCell sx={{ ...commonTableHeadingStyles(mode) }}>Group</TableCell>}
                             {type === "full" && <TableCell sx={{ ...commonTableHeadingStyles(mode) }}>Action</TableCell>}
                         </TableRow>
                     </TableHead>
@@ -183,13 +210,50 @@ const CustomTable = ({
                                         whiteSpace: "nowrap",
                                         textAlign: "center",
                                         fontSize: "1rem",
-                                        width: { xs: "80px", sm: "100px", md: "150px" }, // Responsive widths
+                                        width: { xs: "80px", sm: "100px", md: "150px" },
                                     }}
                                     style={{ color: tx.isCredit ? "#4CAF50" : "#F44336", textAlign: "center", fontWeight: "bold" }}
                                 >
                                     ₹ {Number(tx.amount).toFixed(2)}
                                 </TableCell>
-                                {renderGroupBadge && <TableCell>{renderGroupBadge(tx._id)}</TableCell>}
+                                {showGroupColumn && (
+                                    <TableCell>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
+                                            {(transactionGroupMap[tx._id] ?? []).slice(0, 2).map((g) => (
+                                                <Chip
+                                                    key={g.id}
+                                                    label={g.name}
+                                                    size="small"
+                                                    onClick={() => onGroupBadgeClick?.(g.id)}
+                                                    sx={{
+                                                        backgroundColor: "#E8EAF6",
+                                                        color: "#3F51B5",
+                                                        cursor: "pointer",
+                                                        fontWeight: 500,
+                                                        "&:hover": { backgroundColor: "#C5CAE9" },
+                                                    }}
+                                                />
+                                            ))}
+                                            {(transactionGroupMap[tx._id] ?? []).length > 2 && (
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{ opacity: 0.6, fontSize: "0.8rem" }}
+                                                >
+                                                    +{(transactionGroupMap[tx._id] ?? []).length - 2}
+                                                </Typography>
+                                            )}
+                                            {(transactionGroupMap[tx._id] ?? []).length > 0 && (
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={(e) => handleInfoClick(e, tx._id)}
+                                                    sx={{ color: "#8578e5", ml: 0.5 }}
+                                                >
+                                                    <InfoOutlinedIcon fontSize="small" />
+                                                </IconButton>
+                                            )}
+                                        </Box>
+                                    </TableCell>
+                                )}
                                 {type === "full" && (
                                     <TableCell align="center">
                                         <IconButton
@@ -205,6 +269,66 @@ const CustomTable = ({
                     </TableBody>
                 </Table>
             </TableContainer>
+            <Popover
+                open={infoOpen}
+                anchorEl={infoAnchorEl}
+                onClose={handleInfoClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+                transformOrigin={{ vertical: "top", horizontal: "left" }}
+            >
+                <Box sx={{ p: 2, minWidth: 250, maxWidth: 350 }}>
+                    {infoGroups.map((g) => {
+                        const summary = computeGroupSummary(g, transactions);
+                        return (
+                            <Box
+                                key={g.id}
+                                sx={{ mb: infoGroups.length > 1 ? 1.5 : 0, "&:last-child": { mb: 0 } }}
+                            >
+                                <Typography
+                                    variant="subtitle2"
+                                    sx={{
+                                        color: "#3F51B5",
+                                        cursor: "pointer",
+                                        fontWeight: 600,
+                                        "&:hover": { textDecoration: "underline" },
+                                    }}
+                                    onClick={() => {
+                                        handleInfoClose();
+                                        onGroupBadgeClick?.(g.id);
+                                    }}
+                                >
+                                    {g.name}
+                                </Typography>
+                                {g.involvedParty && (
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                    >
+                                        Party: {g.involvedParty}
+                                    </Typography>
+                                )}
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                >
+                                    Net: ₹{Math.abs(summary.netSettlement).toFixed(2)}{" "}
+                                    {summary.netSettlement > 0 ? "(Owed to you)" : summary.netSettlement < 0 ? "(You owe)" : ""}
+                                </Typography>
+                                <Chip
+                                    label={summary.status}
+                                    size="small"
+                                    sx={{
+                                        mt: 0.5,
+                                        backgroundColor: summary.status === "Settled" ? "#E8F5E9" : "#FFF3E0",
+                                        color: summary.status === "Settled" ? "#4CAF50" : "#FF9800",
+                                        fontWeight: 500,
+                                    }}
+                                />
+                            </Box>
+                        );
+                    })}
+                </Box>
+            </Popover>
         </>
     );
 };

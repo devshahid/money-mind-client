@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
 import transactionReducer from "./transactionSlice"; // ✅
+import groupReducer from "./groupSlice";
 import aiReducer from "./aiSlice";
 import transactionGroupReducer from "./transactionGroupSlice";
 import debtReducer from "./debtSlice";
@@ -10,6 +11,7 @@ export const store = configureStore({
     reducer: {
         auth: authReducer,
         transactions: transactionReducer, // ✅ renamed properly
+        groups: groupReducer,
         ai: aiReducer,
         transactionGroups: transactionGroupReducer,
         debts: debtReducer,
