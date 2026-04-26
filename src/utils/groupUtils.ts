@@ -1,5 +1,6 @@
 import type { ITransactionGroup, IMember } from "../store/groupSlice";
 import type { ITransactionLogs } from "../store/transactionSlice";
+import { ITransaction } from "../types/transaction";
 
 export interface MemberSettlement {
     name: string;
@@ -49,4 +50,15 @@ export function computeGroupSummary(group: ITransactionGroup, transactions: ITra
 
 export function mergeLabels(existing: string[], incoming: string[]): string[] {
     return Array.from(new Set([...existing, ...incoming]));
+}
+
+/**
+ * Calculates the net balance for a group of transactions.
+ * Credits add to the balance, debits subtract from it.
+ */
+export function calculateGroupBalance(transactions: ITransaction[]): number {
+    return transactions.reduce((acc, tx) => {
+        const amount = parseFloat(tx.amount) || 0;
+        return tx.isCredit ? acc + amount : acc - amount;
+    }, 0);
 }

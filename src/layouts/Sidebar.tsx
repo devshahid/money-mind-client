@@ -30,6 +30,7 @@ import {
     DarkMode,
     WbSunny,
     Logout,
+    SmartToy,
 } from "@mui/icons-material";
 import AppLogo from "../assets/images/money-mind-logo.png";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -44,6 +45,7 @@ const navItems = [
     { label: "Goals", icon: <TrendingUp />, path: "/goals" },
     { label: "Budget", icon: <AccountBalance />, path: "/budget" },
     { label: "Analytics", icon: <PieChart />, path: "/analytics" },
+    { label: "AI Assistant", icon: <SmartToy />, path: "/ai-chat" },
     { label: "Settings", icon: <Settings />, path: "/settings" },
     { label: "Account", icon: <AccountCircle />, path: "/account" },
 ];
