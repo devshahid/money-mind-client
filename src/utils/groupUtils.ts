@@ -1,11 +1,19 @@
-import type { ITransactionGroup } from "../store/groupSlice";
+import type { ITransactionGroup, IMember } from "../store/groupSlice";
 import type { ITransactionLogs } from "../store/transactionSlice";
+
+export interface MemberSettlement {
+    name: string;
+    share: number;
+    paid: number;
+    net: number; // paid - share: positive = you owe them, negative = they owe you
+}
 
 export interface GroupSummary {
     totalDebits: number;
     totalCredits: number;
     netSettlement: number;
     status: "Settled" | "Unsettled";
+    memberSettlements: MemberSettlement[];
 }
 
 export function computeGroupSummary(group: ITransactionGroup, transactions: ITransactionLogs[]): GroupSummary {
@@ -24,9 +32,19 @@ export function computeGroupSummary(group: ITransactionGroup, transactions: ITra
     }
 
     const netSettlement = totalCredits - totalDebits;
-    const status: GroupSummary["status"] = netSettlement === 0 ? "Settled" : "Unsettled";
 
-    return { totalDebits, totalCredits, netSettlement, status };
+    const memberSettlements: MemberSettlement[] = (group.members || []).map((m: IMember) => ({
+        name: m.name,
+        share: m.share,
+        paid: m.paid,
+        net: m.paid - m.share,
+    }));
+
+    const allSettled = memberSettlements.length > 0 ? memberSettlements.every((m) => m.net === 0) : netSettlement === 0;
+
+    const status: GroupSummary["status"] = allSettled ? "Settled" : "Unsettled";
+
+    return { totalDebits, totalCredits, netSettlement, status, memberSettlements };
 }
 
 export function mergeLabels(existing: string[], incoming: string[]): string[] {

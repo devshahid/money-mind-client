@@ -98,7 +98,7 @@ const GroupListView = ({ groups, transactions, onGroupClick, onDeleteGroup }: Gr
                     <TableHead>
                         <TableRow>
                             <TableCell>Name</TableCell>
-                            <TableCell>Involved Party</TableCell>
+                            <TableCell>Members</TableCell>
                             <TableCell align="center">Transactions</TableCell>
                             <TableCell align="right">Net Settlement</TableCell>
                             <TableCell align="center">Status</TableCell>
@@ -114,7 +114,9 @@ const GroupListView = ({ groups, transactions, onGroupClick, onDeleteGroup }: Gr
                                 onClick={() => onGroupClick(group.id)}
                             >
                                 <TableCell>{group.name}</TableCell>
-                                <TableCell>{group.involvedParty || "—"}</TableCell>
+                                <TableCell>
+                                    {group.members?.length || 0} member{(group.members?.length || 0) !== 1 ? "s" : ""}
+                                </TableCell>
                                 <TableCell align="center">{group.transactionIds.length}</TableCell>
                                 <TableCell align="right">₹{Math.abs(summary.netSettlement).toFixed(2)}</TableCell>
                                 <TableCell align="center">

@@ -70,6 +70,14 @@ graph TD
 
 5. **Selection state is local to TransactionLogs** — `selectedIds` remains a `useState` array in `TransactionLogs.tsx`, not Redux. This keeps selection ephemeral and automatically resets on unmount.
 
+6. **Per-member expense splitting** — Each group stores a `members: IMember[]` array where each member has `name`, `share` (what they owe), `paid` (what they've returned), and optional `percentage`. Net per member = `paid - share`. Positive means the user owes them (they overpaid), negative means they still owe the user.
+
+7. **Multiple split types** — Groups support 6 split types via `SplitType` enum: Equal (payer included/excluded), Custom Amounts, Percentage, Loan/Lending, and Itemized. Split calculations are pure functions in `splitCalculations.ts`.
+
+8. **Member suggestions from existing groups** — GroupDialog extracts unique member names from all existing groups + the logged-in user for autocomplete suggestions. No separate member API — suggestions are derived locally.
+
+9. **Settlement optimization** — A greedy algorithm in `calculateSettlements()` minimizes the number of transactions needed to settle a group by matching largest debtors with largest creditors.
+
 ## Components and Interfaces
 
 ### New Components
@@ -112,12 +120,13 @@ graph TD
     interface GroupDialogProps {
         open: boolean;
         onClose: () => void;
-        onSubmit: (data: { name: string; involvedParty: string; notes: string }) => void;
-        initialData?: { name: string; involvedParty: string; notes: string };
+        onSubmit: (data: { name: string; involvedParty: string; members: IMember[]; notes: string; splitType: SplitType }) => void;
+        initialData?: { name: string; involvedParty: string; members: IMember[]; notes: string; splitType?: SplitType };
         mode: "create" | "edit";
+        transactions: ITransactionLogs[];
     }
     ```
-- **Behavior:** Wraps `CustomModal`. Three fields: group name (required, validated), involved party (text), notes (text). In edit mode, pre-populates fields. Validates that name is non-empty before submit.
+- **Behavior:** Wraps `CustomModal`. Features split type selection dropdown, auto-calculate shares button, dynamic member rows with Autocomplete name fields (suggestions from existing groups + logged-in user), paid/share/percentage fields per member, real-time net calculation chips, total paid vs total shares summary, and validation warnings. In create mode, auto-populates logged-in user as first member with total debits as paid amount. In edit mode, pre-populates all fields. The `involvedParty` string is auto-generated from member names.
 
 #### `GroupSummaryView`
 
@@ -133,7 +142,7 @@ graph TD
         onClose: () => void;
     }
     ```
-- **Behavior:** Renders as a `CustomModal`. Displays group metadata, computed summary (total debits, total credits, net settlement, status, involved party), and a list of member transactions with remove actions. Shows "Transaction not found" for missing transaction IDs.
+- **Behavior:** Renders as a `CustomModal`. Displays group metadata, split type badge, settlement suggestions (who should pay whom), per-member settlement breakdown (name, share, paid, net with color-coded chips), computed summary (total debits, total credits, net settlement, status), and a list of member transactions with remove actions. Shows "Transaction not found" for missing transaction IDs. Edit button closes summary and opens GroupDialog. Delete with confirmation.
 
 #### `GroupListView`
 
@@ -147,7 +156,7 @@ graph TD
         onDeleteGroup: (groupId: string) => void;
     }
     ```
-- **Behavior:** Renders a list/table of all groups with name, involved party, transaction count, net settlement amount, and status. Supports sorting by name, status, or net amount. Each row is clickable to open `GroupSummaryView`. Delete action per row with confirmation.
+- **Behavior:** Renders a table of all groups with name, member count, transaction count, net settlement amount, and status. Supports sorting by name, status, or net amount. Each row is clickable to open `GroupSummaryView`. Delete action per row with confirmation.
 
 ### Modified Components
 
@@ -178,17 +187,48 @@ graph TD
 - **Signature:**
 
     ```typescript
+    interface MemberSettlement {
+        name: string;
+        share: number;
+        paid: number;
+        net: number; // paid - share: positive = you owe them, negative = they owe you
+    }
+
     interface GroupSummary {
         totalDebits: number;
         totalCredits: number;
         netSettlement: number;
         status: "Settled" | "Unsettled";
+        memberSettlements: MemberSettlement[];
     }
 
     function computeGroupSummary(group: ITransactionGroup, transactions: ITransactionLogs[]): GroupSummary;
     ```
 
-- **Logic:** Filters `transactions` to those whose `_id` is in `group.transactionIds`. Sums `amount` (parsed as number) for credit vs debit transactions. Net = totalCredits - totalDebits. Status = net === 0 ? "Settled" : "Unsettled".
+- **Logic:** Filters `transactions` to those whose `_id` is in `group.transactionIds`. Sums `amount` (parsed as number) for credit vs debit transactions. Net = totalCredits - totalDebits. Computes per-member settlement from `group.members`. Status = "Settled" when all members have net === 0 (or no members and net === 0).
+
+#### `calculateShares`
+
+- **Location:** `src/utils/splitCalculations.ts`
+- **Signature:**
+    ```typescript
+    function calculateShares(members: IMember[], splitType: SplitType, totalAmount: number): IMember[];
+    ```
+- **Logic:** Returns updated members with calculated share values based on split type. Equal splits divide evenly, percentage splits use member percentages, loan splits set lender share to 0 and borrower share to total.
+
+#### `calculateSettlements`
+
+- **Location:** `src/utils/splitCalculations.ts`
+- **Signature:**
+    ```typescript
+    interface SettlementSuggestion {
+        from: string;
+        to: string;
+        amount: number;
+    }
+    function calculateSettlements(members: IMember[]): SettlementSuggestion[];
+    ```
+- **Logic:** Greedy algorithm matching largest debtors with largest creditors to minimize number of settlement transactions.
 
 #### `mergeLabels`
 
@@ -206,20 +246,30 @@ graph TD
 ```typescript
 // src/store/groupSlice.ts
 
+interface IMember {
+    name: string; // Member name
+    share: number; // How much they owe from the total
+    paid: number; // How much they've actually paid back
+    percentage?: number; // For percentage-based splits
+}
+
 interface ITransactionGroup {
     id: string; // UUID, generated via crypto.randomUUID()
     name: string; // Required, non-empty
-    involvedParty: string; // Person/entity name
+    involvedParty: string; // Auto-generated comma-separated member names
+    members: IMember[]; // Per-member share and payment tracking
     notes: string; // Optional free-text
     transactionIds: string[]; // References to ITransactionLogs._id
     createdAt: string; // ISO 8601 timestamp
     updatedAt: string; // ISO 8601 timestamp
+    splitType?: SplitType; // Optional for backward compatibility
+    splitConfig?: SplitConfiguration; // Additional configuration for split
 }
 ```
 
 ### IndexedDB Schema Extension
 
-The existing `ExpenseTrackerDB` database version is bumped from `3` to `4`. The `upgrade` handler in `db.ts` adds a new `transaction_groups` object store:
+The existing `ExpenseTrackerDB` database version is bumped to `5`. The `upgrade` handler in `db.ts` adds a new `transaction_groups` object store:
 
 ```typescript
 // Updated db.ts schema
@@ -244,7 +294,7 @@ The `initDB` upgrade function:
 ```typescript
 export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
     if (dbPromise === undefined) {
-        dbPromise = openDB<ExpenseDB>("ExpenseTrackerDB", 4, {
+        dbPromise = openDB<ExpenseDB>("ExpenseTrackerDB", 5, {
             upgrade(db) {
                 if (!db.objectStoreNames.contains("edited_transactions")) {
                     db.createObjectStore("edited_transactions", { keyPath: "_id" });

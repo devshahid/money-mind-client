@@ -18,8 +18,12 @@ import {
     deleteGroup,
     addTransactionsToGroup,
     removeTransactionFromGroup,
+    syncGroups,
+    resetGroupSyncStatus,
     ITransactionGroup,
+    IMember,
 } from "../store/groupSlice";
+import { SplitType } from "../types/splitTypes";
 import { mergeLabels } from "../utils/groupUtils";
 import { indexDBTransaction } from "../helpers/indexDB/transactionStore";
 
@@ -40,7 +44,10 @@ import {
     TablePagination,
     Tabs,
     Tab,
+    IconButton,
+    Tooltip,
 } from "@mui/material";
+import SyncIcon from "@mui/icons-material/Sync";
 import TableControls from "../components/TransactionControls";
 import { getExpenseCategories } from "../constants";
 import { ColorModeContext } from "../contexts/ThemeContext";
@@ -108,16 +115,41 @@ const TransactionLogs = (): JSX.Element => {
         type: "",
     });
 
-    const { showErrorSnackbar } = useSnackbar();
+    const { showErrorSnackbar, showSuccessSnackbar } = useSnackbar();
 
     const dispatch = useAppDispatch();
     const { transactions, loading, labels, page, limit, totalCount } = useAppSelector((state: RootState) => state.transactions);
     const groups: ITransactionGroup[] = useAppSelector((state: RootState) => (state as { groups: { groups: ITransactionGroup[] } }).groups.groups);
+    const isLocalGroups = useAppSelector((state: RootState) => (state as { groups: { isLocalGroups: boolean } }).groups.isLocalGroups);
+    const groupSyncStatus = useAppSelector(
+        (state: RootState) => (state as { groups: { groupSyncStatus: "idle" | "success" | "error" } }).groups.groupSyncStatus,
+    );
+    const groupLoading = useAppSelector((state: RootState) => (state as { groups: { loading: boolean } }).groups.loading);
 
-    // Load groups on mount
+    const [groupSyncLoader, setGroupSyncLoader] = useState(false);
+
+    // Load groups on mount (fetches from API + merges local, sets isLocalGroups automatically)
     useEffect(() => {
         void dispatch(loadGroups());
     }, [dispatch]);
+
+    // Track group sync loading
+    useEffect(() => {
+        if (isLocalGroups) {
+            setGroupSyncLoader(groupLoading);
+        }
+    }, [groupLoading, isLocalGroups]);
+
+    // Handle group sync status
+    useEffect(() => {
+        if (groupSyncStatus === "success") {
+            showSuccessSnackbar("Groups synced successfully");
+            void dispatch(resetGroupSyncStatus());
+        } else if (groupSyncStatus === "error") {
+            showErrorSnackbar("Failed to sync groups");
+            void dispatch(resetGroupSyncStatus());
+        }
+    }, [dispatch, groupSyncStatus, showSuccessSnackbar, showErrorSnackbar]);
 
     useEffect(() => {
         setHeader("Transactions", "Overview of your activities");
@@ -255,12 +287,35 @@ const TransactionLogs = (): JSX.Element => {
         setGroupDialogOpen(true);
     };
 
-    const handleGroupDialogSubmit = (data: { name: string; involvedParty: string; notes: string }): void => {
+    const handleGroupDialogSubmit = (data: {
+        name: string;
+        involvedParty: string;
+        members: IMember[];
+        notes: string;
+        splitType: SplitType;
+    }): void => {
         if (groupDialogMode === "create") {
-            void dispatch(createGroup({ ...data, transactionIds: selectedIds }));
+            void dispatch(
+                createGroup({
+                    name: data.name,
+                    involvedParty: data.involvedParty,
+                    members: data.members,
+                    notes: data.notes,
+                    transactionIds: selectedIds,
+                }),
+            );
             setSelectedIds([]);
         } else if (editingGroup) {
-            void dispatch(updateGroup({ id: editingGroup.id, ...data }));
+            void dispatch(
+                updateGroup({
+                    id: editingGroup.id,
+                    name: data.name,
+                    involvedParty: data.involvedParty,
+                    members: data.members,
+                    notes: data.notes,
+                    splitType: data.splitType,
+                }),
+            );
         }
         setGroupDialogOpen(false);
         setEditingGroup(null);
@@ -287,6 +342,7 @@ const TransactionLogs = (): JSX.Element => {
         if (!summaryGroup) return;
         setEditingGroup(summaryGroup);
         setGroupDialogMode("edit");
+        setSummaryGroup(null);
         setGroupDialogOpen(true);
     };
 
@@ -379,12 +435,46 @@ const TransactionLogs = (): JSX.Element => {
             )}
 
             {activeTab === 1 && (
-                <GroupListView
-                    groups={groups}
-                    transactions={transactions}
-                    onGroupClick={handleGroupListClick}
-                    onDeleteGroup={handleDeleteGroupFromList}
-                />
+                <>
+                    <Box
+                        display="flex"
+                        justifyContent="flex-end"
+                        alignItems="center"
+                        mb={1}
+                        gap={1}
+                    >
+                        {isLocalGroups && (
+                            <Tooltip
+                                title="Sync Groups to Database"
+                                arrow
+                            >
+                                <IconButton
+                                    color="primary"
+                                    onClick={() => void dispatch(syncGroups())}
+                                    sx={
+                                        groupSyncLoader
+                                            ? {
+                                                  animation: "spinReverse 1s linear infinite",
+                                                  "@keyframes spinReverse": {
+                                                      "0%": { transform: "rotate(360deg)" },
+                                                      "100%": { transform: "rotate(0deg)" },
+                                                  },
+                                              }
+                                            : {}
+                                    }
+                                >
+                                    <SyncIcon />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                    </Box>
+                    <GroupListView
+                        groups={groups}
+                        transactions={transactions}
+                        onGroupClick={handleGroupListClick}
+                        onDeleteGroup={handleDeleteGroupFromList}
+                    />
+                </>
             )}
 
             {/* Edit transaction modal */}
@@ -569,6 +659,11 @@ const TransactionLogs = (): JSX.Element => {
 
             {/* Group create/edit dialog */}
             <GroupDialog
+                transactions={
+                    editingGroup
+                        ? transactions.filter((tx) => editingGroup.transactionIds.includes(tx._id ?? ""))
+                        : transactions.filter((tx) => selectedIds.includes(tx._id ?? ""))
+                }
                 open={groupDialogOpen}
                 onClose={() => {
                     setGroupDialogOpen(false);
@@ -577,7 +672,15 @@ const TransactionLogs = (): JSX.Element => {
                 onSubmit={handleGroupDialogSubmit}
                 mode={groupDialogMode}
                 initialData={
-                    editingGroup ? { name: editingGroup.name, involvedParty: editingGroup.involvedParty, notes: editingGroup.notes } : undefined
+                    editingGroup
+                        ? {
+                              name: editingGroup.name,
+                              involvedParty: editingGroup.involvedParty,
+                              members: editingGroup.members || [],
+                              notes: editingGroup.notes,
+                              splitType: editingGroup.splitType,
+                          }
+                        : undefined
                 }
             />
 

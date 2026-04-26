@@ -14,12 +14,16 @@ import {
     ListItem,
     ListItemText,
     Typography,
+    Alert,
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CustomModal from "./CustomModal";
 import { computeGroupSummary } from "../utils/groupUtils";
+import { calculateSettlements } from "../utils/splitCalculations";
+import { SPLIT_TYPE_LABELS } from "../types/splitTypes";
 import type { ITransactionGroup } from "../store/groupSlice";
 import type { ITransactionLogs } from "../store/transactionSlice";
 
@@ -38,11 +42,18 @@ const GroupSummaryView = ({ group, transactions, onRemoveTransaction, onEditGrou
 
     const summary = computeGroupSummary(group, transactions);
     const txMap = new Map(transactions.map((tx) => [tx._id, tx]));
+    const settlements = calculateSettlements(group.members || []);
 
     const getNetLabel = (net: number): string => {
         if (net > 0) return "Owed to you";
         if (net < 0) return "You owe";
         return "";
+    };
+
+    const getMemberNetLabel = (net: number): string => {
+        if (net > 0) return "You owe them";
+        if (net < 0) return "They owe you";
+        return "Settled";
     };
 
     const handleRemove = (txId: string): void => {
@@ -92,10 +103,110 @@ const GroupSummaryView = ({ group, transactions, onRemoveTransaction, onEditGrou
                         <Typography
                             variant="body2"
                             color="text.secondary"
-                            mb={2}
+                            mb={1}
                         >
-                            Involved Party: {group.involvedParty}
+                            Members: {group.involvedParty}
                         </Typography>
+                    )}
+
+                    {/* Split Type Badge */}
+                    {group.splitType && (
+                        <Box mb={2}>
+                            <Chip
+                                label={SPLIT_TYPE_LABELS[group.splitType] || "Custom Split"}
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                            />
+                        </Box>
+                    )}
+
+                    {/* Settlement Suggestions */}
+                    {settlements.length > 0 && summary.status === "Unsettled" && (
+                        <Alert
+                            severity="info"
+                            sx={{ mb: 2 }}
+                        >
+                            <Typography
+                                variant="subtitle2"
+                                mb={1}
+                            >
+                                Settlement Suggestions:
+                            </Typography>
+                            {settlements.map((settlement, idx) => (
+                                <Box
+                                    key={idx}
+                                    display="flex"
+                                    alignItems="center"
+                                    gap={1}
+                                    mb={0.5}
+                                >
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ fontWeight: 500 }}
+                                    >
+                                        {settlement.from}
+                                    </Typography>
+                                    <ArrowForwardIcon fontSize="small" />
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ fontWeight: 500 }}
+                                    >
+                                        {settlement.to}
+                                    </Typography>
+                                    <Typography variant="body2">₹{settlement.amount.toFixed(2)}</Typography>
+                                </Box>
+                            ))}
+                        </Alert>
+                    )}
+
+                    {/* Per-member settlement */}
+                    {summary.memberSettlements.length > 0 && (
+                        <Box mb={2}>
+                            <Typography
+                                variant="subtitle2"
+                                mb={0.5}
+                            >
+                                Settlement Breakdown
+                            </Typography>
+                            {summary.memberSettlements.map((ms) => (
+                                <Box
+                                    key={ms.name}
+                                    display="flex"
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                    py={0.5}
+                                    px={1}
+                                    sx={{ borderRadius: 1, bgcolor: "action.hover", mb: 0.5 }}
+                                >
+                                    <Typography variant="body2">{ms.name}</Typography>
+                                    <Box
+                                        display="flex"
+                                        gap={1}
+                                        alignItems="center"
+                                    >
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                        >
+                                            Share: ₹{ms.share.toFixed(2)}
+                                        </Typography>
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                        >
+                                            Paid: ₹{ms.paid.toFixed(2)}
+                                        </Typography>
+                                        <Chip
+                                            label={`₹${Math.abs(ms.net).toFixed(2)} ${getMemberNetLabel(ms.net)}`}
+                                            size="small"
+                                            color={ms.net === 0 ? "success" : ms.net > 0 ? "error" : "warning"}
+                                            variant="outlined"
+                                        />
+                                    </Box>
+                                </Box>
+                            ))}
+                        </Box>
                     )}
 
                     {/* Summary */}

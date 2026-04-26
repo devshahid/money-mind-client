@@ -25,13 +25,13 @@ let dbPromise: Promise<IDBPDatabase<ExpenseDB>> | undefined;
 
 export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
     if (dbPromise === undefined) {
-        dbPromise = openDB<ExpenseDB>("ExpenseTrackerDB", 4, {
+        dbPromise = openDB<ExpenseDB>("ExpenseTrackerDB", 5, {
             upgrade(db) {
                 if (!db.objectStoreNames.contains("edited_transactions")) {
                     db.createObjectStore("edited_transactions", { keyPath: "_id" });
                 }
                 if (!db.objectStoreNames.contains("labels")) {
-                    db.createObjectStore("labels", { keyPath: "key" }); // Store format: { key: 'listLabels', labels: string[] }
+                    db.createObjectStore("labels", { keyPath: "key" });
                 }
                 if (!db.objectStoreNames.contains("transaction_groups")) {
                     db.createObjectStore("transaction_groups", { keyPath: "id" });

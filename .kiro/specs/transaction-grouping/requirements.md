@@ -213,3 +213,67 @@ This feature adds bulk action support and transaction grouping to the Transactio
 
 1. WHEN the transaction list is reloaded due to a change in `page`, `filters`, or `limit`, THE Transaction_Logs_Page SHALL reset `selectedIds` to an empty array.
 2. WHEN `selectedIds` is reset due to navigation, THE Bulk_Action_Toolbar SHALL no longer be visible.
+
+### Requirement 17: Per-Member Expense Splitting and Settlement Tracking
+
+**User Story:** As a user, I want to add multiple members to a group with their individual share and payment amounts, so that I can track who owes me and who I owe after a shared expense like a trip.
+
+#### Acceptance Criteria
+
+1. WHEN creating or editing a Group, THE Group_Dialog SHALL allow adding multiple members, each with a name, share amount, and paid amount.
+2. THE Group data model SHALL store a `members` array where each member has `name: string`, `share: number`, `paid: number`, and optional `percentage: number` fields.
+3. WHEN a member's `paid` amount exceeds their `share`, THE Group_Summary_View SHALL indicate that the user owes that member the difference.
+4. WHEN a member's `paid` amount is less than their `share`, THE Group_Summary_View SHALL indicate that the member still owes the user the difference.
+5. WHEN a member's `paid` equals their `share`, THE Group_Summary_View SHALL indicate that member is settled.
+6. THE Group_Summary_View SHALL display a per-member settlement breakdown showing each member's name, share, paid amount, and net balance.
+7. THE Group_Status SHALL be "Settled" when all members have a net balance of zero.
+8. THE `involvedParty` field SHALL be auto-generated as a comma-separated string of member names for backward compatibility.
+
+### Requirement 18: Multiple Split Types
+
+**User Story:** As a user, I want to choose different ways to split expenses (equal, custom, percentage, loan), so that I can handle various real-world scenarios accurately.
+
+#### Acceptance Criteria
+
+1. THE Group_Dialog SHALL provide a split type selection with the following options: Equal Split (Payer Included), Equal Split (Payer Excluded), Custom Amounts, Percentage Split, Loan/Lending, and Itemized Split.
+2. WHEN "Equal Split (Payer Included)" is selected, THE system SHALL divide the total equally among all members including the payer.
+3. WHEN "Equal Split (Payer Excluded)" is selected, THE system SHALL divide the total equally among all members except the payer (payer's share = 0).
+4. WHEN "Custom Amounts" is selected, THE system SHALL allow manual entry of share amounts per member.
+5. WHEN "Percentage Split" is selected, THE system SHALL calculate shares based on each member's percentage of the total.
+6. WHEN "Loan/Lending" is selected, THE system SHALL set the lender's share to 0 and the borrower's share to the total amount.
+7. THE Group_Dialog SHALL provide a "Calculate Shares" button that auto-fills share amounts based on the selected split type.
+8. THE Group data model SHALL store the `splitType` as an optional field for backward compatibility.
+
+### Requirement 19: Auto-Calculate Shares and Settlement Suggestions
+
+**User Story:** As a user, I want the system to automatically calculate shares and suggest optimal settlements, so that I don't have to do manual math.
+
+#### Acceptance Criteria
+
+1. WHEN the user clicks "Calculate Shares", THE system SHALL compute share amounts based on the selected split type and total debit amount.
+2. THE Group_Dialog SHALL display real-time net calculation per member as a color-coded chip (green = settled, yellow = they owe, red = you owe them).
+3. THE Group_Dialog SHALL display a summary showing total paid vs total shares.
+4. THE Group_Dialog SHALL warn if total paid doesn't match the transaction total.
+5. THE Group_Summary_View SHALL display settlement suggestions showing who should pay whom and how much.
+6. THE settlement algorithm SHALL minimize the number of transactions needed to settle the group.
+
+### Requirement 20: Member Name Autocomplete from Existing Groups
+
+**User Story:** As a user, I want member names to auto-suggest from my previous groups, so that I don't have to retype names every time.
+
+#### Acceptance Criteria
+
+1. WHEN adding a member in the Group_Dialog, THE name field SHALL provide autocomplete suggestions extracted from all existing groups' member names and the logged-in user's name.
+2. THE autocomplete SHALL support `freeSolo` mode, allowing users to type names not in the suggestion list.
+3. THE autocomplete SHALL show an "Add new" option when the typed name doesn't match any existing suggestion.
+4. WHEN creating a group in "create" mode, THE Group_Dialog SHALL auto-populate the logged-in user as the first member with the total debit amount as their paid value.
+
+### Requirement 21: Edit Group from Summary View
+
+**User Story:** As a user, I want to edit a group's details directly from the summary view, so that I can update member payments as repayments come in.
+
+#### Acceptance Criteria
+
+1. WHEN the user clicks the edit button in the Group_Summary_View, THE system SHALL close the summary modal and open the Group_Dialog in edit mode.
+2. THE Group_Dialog in edit mode SHALL receive the group's transactions (resolved from transactionIds) rather than the currently selected transactions.
+3. THE Group_Dialog SHALL be rendered regardless of whether transactions are currently selected (not gated by `selectedIds.length > 0`).
