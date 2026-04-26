@@ -1,28 +1,28 @@
-import ReactDOM from "react-dom/client";
-import App from "./App.tsx";
-import "./index.css";
-import { Provider } from "react-redux";
-import { store } from "./store/index.ts";
-import { LayoutProvider } from "./contexts/LayoutContext.tsx";
-import { SnackbarProvider } from "./contexts/SnackBarContext.tsx";
-import GlobalSnackbar from "./components/GlobalSnackbar.tsx";
-import CssBaseline from "@mui/material/CssBaseline";
-import { ColorContextProvider } from "./contexts/ThemeContext.tsx";
+import { StrictMode } from 'react'
+import ReactDOM from 'react-dom/client'
+import { Provider } from 'react-redux'
+import CssBaseline from '@mui/material/CssBaseline'
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-    // <React.StrictMode>
+import { App } from './App'
+import { store } from './store'
+import { LayoutProvider } from './shared/contexts/LayoutContext'
+import { SnackbarProvider } from './shared/contexts/SnackBarContext'
+import { GlobalSnackbar } from './shared/components/GlobalSnackbar'
+import { ColorContextProvider } from './shared/contexts/ThemeContext'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <StrictMode>
     <SnackbarProvider>
-        <LayoutProvider>
-            <ColorContextProvider>
-                <Provider store={store}>
-                    <CssBaseline />
-                    <App />
-                    <GlobalSnackbar />
-                </Provider>
-            </ColorContextProvider>
-            ,
-        </LayoutProvider>
-        ,
-    </SnackbarProvider>,
-    // </React.StrictMode>,
-);
+      <LayoutProvider>
+        <ColorContextProvider>
+          <Provider store={store}>
+            <CssBaseline />
+            <App />
+            <GlobalSnackbar />
+          </Provider>
+        </ColorContextProvider>
+      </LayoutProvider>
+    </SnackbarProvider>
+  </StrictMode>
+)

@@ -1,0 +1,45 @@
+export const API_ROUTES = {
+  user: {
+    login: '/user/login',
+    register: '/user/register',
+    logout: '/user/logout',
+  },
+  transactionLogs: {
+    list: '/transaction-logs/list-transactions',
+    update: (id: string) => `/transaction-logs/update/${id}`,
+    sync: '/transaction-logs/sync-transactions',
+    labels: '/transaction-logs/list-labels',
+    addCashMemo: '/transaction-logs/add-cashmemo',
+    uploadFile: '/transaction-logs/upload-data-from-file',
+    parsePdf: '/transaction-logs/parse-pdf',
+    checkDuplicates: '/transaction-logs/check-duplicates',
+  },
+  transactionGroups: {
+    list: '/transaction-groups',
+    listLocal: '/transaction-groups/list',
+    create: '/transaction-groups',
+    detail: (id: string) => `/transaction-groups/${id}`,
+    add: (id: string) => `/transaction-groups/${id}/add`,
+    remove: (id: string) => `/transaction-groups/${id}/remove`,
+    dissolve: (id: string) => `/transaction-groups/${id}`,
+    sync: '/transaction-groups/sync',
+  },
+  debt: {
+    list: '/debt',
+    create: '/debt',
+    update: (id: string) => `/debt/${id}`,
+    delete: (id: string) => `/debt/${id}`,
+    emiPayments: '/debt/emi-payments',
+  },
+  goals: {
+    list: '/goals',
+    create: '/goals',
+    update: (id: string) => `/goals/${id}`,
+    delete: (id: string) => `/goals/${id}`,
+    contributions: '/goals/contributions',
+  },
+  ai: {
+    chat: '/ai/chat',
+    annotate: '/ai/annotate',
+  },
+} as const

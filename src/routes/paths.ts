@@ -1,0 +1,15 @@
+export const AppRoute = {
+  Root: '/',
+  Dashboard: '/',
+  Transactions: '/transactions',
+  Debts: '/debts',
+  Goals: '/goals',
+  Budget: '/budget',
+  Analytics: '/analytics',
+  AIChat: '/ai-chat',
+  Settings: '/settings',
+  Account: '/account',
+  Login: '/login',
+  Register: '/register',
+  NotFound: '*',
+} as const
