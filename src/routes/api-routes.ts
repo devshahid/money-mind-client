@@ -40,6 +40,13 @@ export const API_ROUTES = {
   },
   ai: {
     chat: '/ai/chat',
+    chatHistory: '/ai/chat-history',
+    clearChatHistory: (sessionId?: string) => `/ai/chat-history${sessionId ? `/${sessionId}` : ''}`,
     annotate: '/ai/annotate',
+    suggestCategories: '/ai/suggest-categories',
+    applySuggestions: '/ai/apply-suggestions',
+    rejectSuggestions: '/ai/reject-suggestions',
+    debtStrategy: '/ai/debt-strategy',
+    budgetRecommendations: '/ai/budget-recommendations',
   },
 } as const

@@ -20,6 +20,7 @@ import {
   Tooltip,
 } from '@mui/material'
 import SyncIcon from '@mui/icons-material/Sync'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
@@ -64,6 +65,7 @@ import { LabelAssignmentDialog } from '../components/LabelAssignmentDialog'
 import { GroupDialog } from '../components/GroupDialog'
 import { GroupSummaryView } from '../components/GroupSummaryView'
 import { GroupListView } from '../components/GroupListView'
+import { AISuggestionReviewDialog } from '../components/AISuggestionReviewDialog'
 import { useSnackbar } from '../../../shared/contexts/SnackBarContext'
 
 export interface ITransactionFilters {
@@ -99,6 +101,7 @@ const TransactionLogs = (): JSX.Element => {
   // Dialog states
   const [labelDialogOpen, setLabelDialogOpen] = useState(false)
   const [groupDialogOpen, setGroupDialogOpen] = useState(false)
+  const [aiSuggestionDialogOpen, setAiSuggestionDialogOpen] = useState(false)
   const [groupDialogMode, setGroupDialogMode] = useState<'create' | 'edit'>('create')
   const [editingGroup, setEditingGroup] = useState<ITransactionGroup | null>(null)
   const [summaryGroup, setSummaryGroup] = useState<ITransactionGroup | null>(null)
@@ -403,6 +406,21 @@ const TransactionLogs = (): JSX.Element => {
               groups={groups}
             />
           )}
+
+          {/* AI Categorize Button */}
+          <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
+            <Button
+              variant='contained'
+              color='primary'
+              startIcon={<AutoAwesomeIcon />}
+              onClick={() => setAiSuggestionDialogOpen(true)}
+              disabled={loading}
+            >
+              {selectedIds.length > 0
+                ? `AI Categorize (${selectedIds.length} selected)`
+                : 'AI Categorize All Uncategorized'}
+            </Button>
+          </Box>
 
           {!loading && transactions.length === 0 ? (
             <EmptyTransactionContainer />
@@ -712,6 +730,19 @@ const TransactionLogs = (): JSX.Element => {
           onClose={() => setSummaryGroup(null)}
         />
       )}
+
+      {/* AI Suggestion Review Dialog */}
+      <AISuggestionReviewDialog
+        open={aiSuggestionDialogOpen}
+        onClose={() => setAiSuggestionDialogOpen(false)}
+        transactionIds={selectedIds.length > 0 ? selectedIds : undefined}
+        categorizeAll={selectedIds.length === 0}
+        onSuccess={() => {
+          void dispatch(listTransactions({ ...filters, page: (parseInt(page) + 1).toString(), limit }))
+          setSelectedIds([])
+          showSuccessSnackbar('AI suggestions applied successfully!')
+        }}
+      />
     </Box>
   )
 }

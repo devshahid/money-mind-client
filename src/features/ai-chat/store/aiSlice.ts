@@ -9,8 +9,21 @@ export const sendChatMessage = createAsyncThunk<IAIChatMessage, string, { reject
   'ai/sendChatMessage',
   async (content, { rejectWithValue }) => {
     try {
-      const response = await axiosClient.post<{ data: IAIChatMessage }>(API_ROUTES.ai.chat, { content })
-      return response.data.data
+      const response = await axiosClient.post<{
+        status: boolean
+        output: {
+          message: string
+          response: string
+          sessionId: string
+        }
+      }>(API_ROUTES.ai.chat, { message: content })
+
+      // Return the assistant's response as a chat message
+      return {
+        role: 'assistant' as const,
+        content: response.data.output.response,
+        timestamp: new Date().toISOString(),
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to send message'
       return rejectWithValue(message)

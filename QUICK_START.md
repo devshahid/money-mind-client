@@ -12,14 +12,14 @@
 2. Click "Create Group"
 3. Choose **"Custom Amounts"** from Split Type
 4. Add 3 members:
-    - You: Paid = ₹20,000
-    - Friend A: Paid = ₹7,000
-    - Friend B: Paid = ₹3,000
+   - You: Paid = ₹20,000
+   - Friend A: Paid = ₹7,000
+   - Friend B: Paid = ₹3,000
 5. Click **"Calculate Shares"** button → Each gets ₹10,000
 6. ✅ Done! You'll see:
-    - Your net: **+₹10,000** (others owe you)
-    - Friend A: **-₹3,000** (owes you)
-    - Friend B: **-₹7,000** (owes you)
+   - Your net: **+₹10,000** (others owe you)
+   - Friend A: **-₹3,000** (owes you)
+   - Friend B: **-₹7,000** (owes you)
 
 ---
 
@@ -51,8 +51,8 @@
 4. Add 2 members: You and Borrower
 5. Set your Paid = ₹10,000
 6. Click **"Calculate Shares"**
-    - Your share: ₹0 (you're getting money back)
-    - Borrower share: ₹10,000
+   - Your share: ₹0 (you're getting money back)
+   - Borrower share: ₹10,000
 7. ✅ Done! Your net: **+₹10,000** (owed to you)
 
 **When they repay:**
@@ -178,17 +178,13 @@ System warns you if:
 
 ## 🆘 Common Questions
 
-**Q: Do I need to add transactions from my friends?**
-A: No! Just enter what they paid in the "Paid" field manually.
+**Q: Do I need to add transactions from my friends?** A: No! Just enter what they paid in the "Paid" field manually.
 
-**Q: What if the total doesn't match?**
-A: System will warn you. Double-check your amounts.
+**Q: What if the total doesn't match?** A: System will warn you. Double-check your amounts.
 
-**Q: Can I edit a group later?**
-A: Yes! Click the Edit icon in the group summary.
+**Q: Can I edit a group later?** A: Yes! Click the Edit icon in the group summary.
 
-**Q: How do I mark as settled?**
-A: When someone pays you back, add their payment as a credit transaction or update their "Paid" amount.
+**Q: How do I mark as settled?** A: When someone pays you back, add their payment as a credit transaction or update their "Paid" amount.
 
 **Q: Which split type should I use?**
 

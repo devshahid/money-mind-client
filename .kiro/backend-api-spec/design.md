@@ -21,89 +21,89 @@ All routes are protected by the existing auth middleware that extracts `userId` 
 
 ```javascript
 const TransactionGroupSchema = new Schema(
-    {
-        userId: {
-            type: Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            index: true,
-        },
-        // Client-generated UUID — used for offline sync matching
-        clientId: {
-            type: String,
-            required: true,
-            unique: true,
-        },
-        name: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-        involvedParty: {
-            type: String,
-            default: "",
-            trim: true,
-        },
-        members: [
-            {
-                name: { type: String, required: true, trim: true },
-                share: { type: Number, default: 0, min: 0 },
-                paid: { type: Number, default: 0, min: 0 },
-                percentage: { type: Number, default: 0, min: 0, max: 100 },
-            },
-        ],
-        notes: {
-            type: String,
-            default: "",
-        },
-        transactionIds: [
-            {
-                type: String,
-            },
-        ],
-        splitType: {
-            type: String,
-            enum: ["EQUAL_INCLUDE_PAYER", "EQUAL_EXCLUDE_PAYER", "CUSTOM_AMOUNTS", "PERCENTAGE_SPLIT", "LOAN", "ITEMIZED"],
-            default: "EQUAL_INCLUDE_PAYER",
-        },
-        splitConfig: {
-            type: Schema.Types.Mixed,
-            default: null,
-        },
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
     },
-    {
-        timestamps: true, // adds createdAt, updatedAt
+    // Client-generated UUID — used for offline sync matching
+    clientId: {
+      type: String,
+      required: true,
+      unique: true,
     },
-);
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    involvedParty: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    members: [
+      {
+        name: { type: String, required: true, trim: true },
+        share: { type: Number, default: 0, min: 0 },
+        paid: { type: Number, default: 0, min: 0 },
+        percentage: { type: Number, default: 0, min: 0, max: 100 },
+      },
+    ],
+    notes: {
+      type: String,
+      default: '',
+    },
+    transactionIds: [
+      {
+        type: String,
+      },
+    ],
+    splitType: {
+      type: String,
+      enum: ['EQUAL_INCLUDE_PAYER', 'EQUAL_EXCLUDE_PAYER', 'CUSTOM_AMOUNTS', 'PERCENTAGE_SPLIT', 'LOAN', 'ITEMIZED'],
+      default: 'EQUAL_INCLUDE_PAYER',
+    },
+    splitConfig: {
+      type: Schema.Types.Mixed,
+      default: null,
+    },
+  },
+  {
+    timestamps: true, // adds createdAt, updatedAt
+  }
+)
 
 // Compound index for user + clientId uniqueness
-TransactionGroupSchema.index({ userId: 1, clientId: 1 }, { unique: true });
+TransactionGroupSchema.index({ userId: 1, clientId: 1 }, { unique: true })
 ```
 
 ### SavedMember (MongoDB Schema)
 
 ```javascript
 const SavedMemberSchema = new Schema(
-    {
-        userId: {
-            type: Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            index: true,
-        },
-        name: {
-            type: String,
-            required: true,
-            trim: true,
-        },
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
     },
-    {
-        timestamps: true, // adds createdAt, updatedAt
+    name: {
+      type: String,
+      required: true,
+      trim: true,
     },
-);
+  },
+  {
+    timestamps: true, // adds createdAt, updatedAt
+  }
+)
 
 // Compound index for unique member names per user (case-insensitive)
-SavedMemberSchema.index({ userId: 1, name: 1 }, { unique: true, collation: { locale: "en", strength: 2 } });
+SavedMemberSchema.index({ userId: 1, name: 1 }, { unique: true, collation: { locale: 'en', strength: 2 } })
 ```
 
 ## API Endpoints
@@ -118,18 +118,18 @@ Creates a new transaction group.
 
 ```json
 {
-    "clientId": "uuid-from-frontend",
-    "name": "Goa Trip",
-    "involvedParty": "Alice, Bob, Charlie",
-    "members": [
-        { "name": "Alice", "share": 10000, "paid": 20000, "percentage": 0 },
-        { "name": "Bob", "share": 10000, "paid": 7000, "percentage": 0 },
-        { "name": "Charlie", "share": 10000, "paid": 3000, "percentage": 0 }
-    ],
-    "notes": "Trip expenses Dec 2025",
-    "transactionIds": ["txn_abc123", "txn_def456"],
-    "splitType": "CUSTOM_AMOUNTS",
-    "splitConfig": null
+  "clientId": "uuid-from-frontend",
+  "name": "Goa Trip",
+  "involvedParty": "Alice, Bob, Charlie",
+  "members": [
+    { "name": "Alice", "share": 10000, "paid": 20000, "percentage": 0 },
+    { "name": "Bob", "share": 10000, "paid": 7000, "percentage": 0 },
+    { "name": "Charlie", "share": 10000, "paid": 3000, "percentage": 0 }
+  ],
+  "notes": "Trip expenses Dec 2025",
+  "transactionIds": ["txn_abc123", "txn_def456"],
+  "splitType": "CUSTOM_AMOUNTS",
+  "splitConfig": null
 }
 ```
 
@@ -214,11 +214,11 @@ Updates a group. Accepts partial updates.
 
 ```json
 {
-    "name": "Goa Trip 2025",
-    "members": [
-        { "name": "Alice", "share": 10000, "paid": 20000 },
-        { "name": "Bob", "share": 10000, "paid": 10000 }
-    ]
+  "name": "Goa Trip 2025",
+  "members": [
+    { "name": "Alice", "share": 10000, "paid": 20000 },
+    { "name": "Bob", "share": 10000, "paid": 10000 }
+  ]
 }
 ```
 
@@ -246,7 +246,7 @@ Appends transaction IDs to a group (deduplicates).
 
 ```json
 {
-    "transactionIds": ["txn_ghi789", "txn_jkl012"]
+  "transactionIds": ["txn_ghi789", "txn_jkl012"]
 }
 ```
 
@@ -262,7 +262,7 @@ Removes a single transaction ID from a group.
 
 ```json
 {
-    "transactionId": "txn_abc123"
+  "transactionId": "txn_abc123"
 }
 ```
 
@@ -322,11 +322,11 @@ Bulk upsert groups from offline storage.
 
 ```json
 {
-    "output": {
-        "_id": "mongo_object_id",
-        "name": "Alice",
-        "createdAt": "2025-12-15T10:00:00.000Z"
-    }
+  "output": {
+    "_id": "mongo_object_id",
+    "name": "Alice",
+    "createdAt": "2025-12-15T10:00:00.000Z"
+  }
 }
 ```
 
@@ -343,10 +343,10 @@ Bulk upsert groups from offline storage.
 
 ```json
 {
-    "output": [
-        { "_id": "...", "name": "Alice", "createdAt": "..." },
-        { "_id": "...", "name": "Bob", "createdAt": "..." }
-    ]
+  "output": [
+    { "_id": "...", "name": "Alice", "createdAt": "..." },
+    { "_id": "...", "name": "Bob", "createdAt": "..." }
+  ]
 }
 ```
 

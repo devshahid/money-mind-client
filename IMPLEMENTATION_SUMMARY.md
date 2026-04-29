@@ -16,51 +16,51 @@ This implementation adds a powerful expense splitting system to Money Mind that 
 
 1. **`src/types/splitTypes.ts`** - Core split type definitions
 
-    - 6 split types (Equal Include/Exclude, Custom, Percentage, Loan, Itemized)
-    - Configuration interfaces
-    - User-friendly labels and descriptions
+   - 6 split types (Equal Include/Exclude, Custom, Percentage, Loan, Itemized)
+   - Configuration interfaces
+   - User-friendly labels and descriptions
 
 2. **`src/utils/splitCalculations.ts`** - Split calculation logic
 
-    - Calculate shares based on split type
-    - Settlement optimization algorithm
-    - Member settlement calculations
-    - User-friendly explanations
+   - Calculate shares based on split type
+   - Settlement optimization algorithm
+   - Member settlement calculations
+   - User-friendly explanations
 
 3. **`EXPENSE_SPLIT_GUIDE.md`** - Comprehensive user guide
-    - Step-by-step instructions for each use case
-    - Examples with real numbers
-    - FAQ and best practices
+   - Step-by-step instructions for each use case
+   - Examples with real numbers
+   - FAQ and best practices
 
 ### Modified Files
 
 1. **`src/store/groupSlice.ts`**
 
-    - Added `splitType` and `splitConfig` to `ITransactionGroup`
-    - Added `percentage` field to `IMember`
-    - Maintains backward compatibility
+   - Added `splitType` and `splitConfig` to `ITransactionGroup`
+   - Added `percentage` field to `IMember`
+   - Maintains backward compatibility
 
 2. **`src/components/GroupDialog.tsx`**
 
-    - Complete UI overhaul with split type selection
-    - Auto-calculate shares button
-    - Real-time net calculation display
-    - Validation warnings
-    - Improved member management UI
+   - Complete UI overhaul with split type selection
+   - Auto-calculate shares button
+   - Real-time net calculation display
+   - Validation warnings
+   - Improved member management UI
 
 3. **`src/components/GroupSummaryView.tsx`**
 
-    - Shows split type badge
-    - Settlement suggestions display
-    - Enhanced member settlement view
+   - Shows split type badge
+   - Settlement suggestions display
+   - Enhanced member settlement view
 
 4. **`src/pages/TransactionLogs.tsx`**
 
-    - Updated to handle new split type parameter
-    - Passes split type to group dialog
+   - Updated to handle new split type parameter
+   - Passes split type to group dialog
 
 5. **`src/utils/groupUtils.ts`** (no changes needed)
-    - Existing functions work with new fields
+   - Existing functions work with new fields
 
 ## 🚀 Key Features
 
@@ -119,9 +119,9 @@ Users can choose from 6 different split types:
 3. Add 3 members, set paid amounts
 4. Click "Calculate Shares" → ₹10,000 each
 5. **Result:**
-    - You: Net = +₹10,000 (owed to you)
-    - Friend A: Net = -₹3,000 (owes you)
-    - Friend B: Net = -₹7,000 (owes you)
+   - You: Net = +₹10,000 (owed to you)
+   - Friend A: Net = -₹3,000 (owes you)
+   - Friend B: Net = -₹7,000 (owes you)
 
 ### Use Case 2: Movie Tickets ✅
 
@@ -151,8 +151,8 @@ Users can choose from 6 different split types:
 3. Add you and borrower
 4. Set your paid to ₹10,000
 5. Click "Calculate Shares"
-    - Your share: ₹0
-    - Borrower's share: ₹10,000
+   - Your share: ₹0
+   - Borrower's share: ₹10,000
 6. As they repay, update their "Paid" amount
 7. Net automatically updates to show remaining amount owed
 
@@ -162,25 +162,25 @@ Users can choose from 6 different split types:
 
 ```typescript
 interface IMember {
-    name: string;
-    share: number; // What they should pay
-    paid: number; // What they actually paid
-    percentage?: number; // For percentage-based splits
+  name: string
+  share: number // What they should pay
+  paid: number // What they actually paid
+  percentage?: number // For percentage-based splits
 }
 
 interface ITransactionGroup {
-    // ... existing fields
-    splitType?: SplitType;
-    splitConfig?: SplitConfiguration;
+  // ... existing fields
+  splitType?: SplitType
+  splitConfig?: SplitConfiguration
 }
 
 enum SplitType {
-    EQUAL_INCLUDE_PAYER,
-    EQUAL_EXCLUDE_PAYER,
-    CUSTOM_AMOUNTS,
-    PERCENTAGE_SPLIT,
-    LOAN,
-    ITEMIZED,
+  EQUAL_INCLUDE_PAYER,
+  EQUAL_EXCLUDE_PAYER,
+  CUSTOM_AMOUNTS,
+  PERCENTAGE_SPLIT,
+  LOAN,
+  ITEMIZED,
 }
 ```
 
@@ -188,13 +188,13 @@ enum SplitType {
 
 ```typescript
 // Calculate shares based on split type
-const updatedMembers = calculateShares(members, splitType, totalAmount);
+const updatedMembers = calculateShares(members, splitType, totalAmount)
 
 // Calculate who owes whom
-const settlements = calculateSettlements(members);
+const settlements = calculateSettlements(members)
 
 // Check if settled
-const isSettled = members.every((m) => Math.abs(m.paid - m.share) < 0.01);
+const isSettled = members.every(m => Math.abs(m.paid - m.share) < 0.01)
 ```
 
 ### Settlement Optimization
@@ -241,30 +241,30 @@ The implementation is fully backward compatible:
 
 1. **Test equal split with payer included**
 
-    - Create group with 3 members
-    - Set one person paid ₹900
-    - Calculate shares → each gets ₹300
-    - Verify net is correct
+   - Create group with 3 members
+   - Set one person paid ₹900
+   - Calculate shares → each gets ₹300
+   - Verify net is correct
 
 2. **Test custom amounts**
 
-    - Create group with 3 members
-    - Set different paid amounts
-    - Manually set shares
-    - Verify settlement suggestions
+   - Create group with 3 members
+   - Set different paid amounts
+   - Manually set shares
+   - Verify settlement suggestions
 
 3. **Test loan scenario**
 
-    - Create loan group
-    - Verify lender's share is ₹0
-    - Update paid as repayments come in
-    - Verify net updates correctly
+   - Create loan group
+   - Verify lender's share is ₹0
+   - Update paid as repayments come in
+   - Verify net updates correctly
 
 4. **Test percentage split**
-    - Set percentages for each member
-    - Ensure they add to 100%
-    - Calculate shares
-    - Verify amounts are correct
+   - Set percentages for each member
+   - Ensure they add to 100%
+   - Calculate shares
+   - Verify amounts are correct
 
 ## 📝 Future Enhancements
 
@@ -272,30 +272,30 @@ Potential improvements:
 
 1. **Split by Weight/Units**
 
-    - For utility bills based on usage
+   - For utility bills based on usage
 
 2. **Recurring Splits**
 
-    - Template groups for regular expenses
+   - Template groups for regular expenses
 
 3. **Currency Conversion**
 
-    - For international trips
+   - For international trips
 
 4. **Receipt Scanning**
 
-    - OCR to auto-extract amounts
+   - OCR to auto-extract amounts
 
 5. **Payment Integration**
 
-    - Direct payment links in settlements
+   - Direct payment links in settlements
 
 6. **Export Settlements**
 
-    - PDF/Excel export of group summaries
+   - PDF/Excel export of group summaries
 
 7. **Notification System**
-    - Remind members of pending payments
+   - Remind members of pending payments
 
 ## 🐛 Known Issues
 
@@ -321,15 +321,7 @@ See `EXPENSE_SPLIT_GUIDE.md` for:
 
 ## 🎉 Success Criteria
 
-✅ Handles trip with multiple payers
-✅ Handles movie ticket scenario (payer included)
-✅ Handles lending/loan tracking
-✅ Auto-calculates shares
-✅ Shows settlement suggestions
-✅ Backward compatible
-✅ Type-safe implementation
-✅ Comprehensive documentation
-✅ User-friendly UI
+✅ Handles trip with multiple payers ✅ Handles movie ticket scenario (payer included) ✅ Handles lending/loan tracking ✅ Auto-calculates shares ✅ Shows settlement suggestions ✅ Backward compatible ✅ Type-safe implementation ✅ Comprehensive documentation ✅ User-friendly UI
 
 ---
 
