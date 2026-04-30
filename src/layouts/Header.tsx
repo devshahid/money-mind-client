@@ -5,6 +5,7 @@ import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
 import { useAppSelector } from '../shared/hooks/slice-hooks'
 import { RootState } from '../store'
 import { stringAvatar } from '../shared/utils/common'
+import { colors, spacing } from '../shared/theme'
 
 interface HeaderProps {
   heading: string
@@ -20,7 +21,7 @@ const Header: React.FC<HeaderProps> = ({ heading, subheading, notifications = 0 
   return (
     <Paper
       elevation={0}
-      sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+      sx={{ p: spacing[2], display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
     >
       {/* Left: Title and Subtitle */}
       <Box>
@@ -41,7 +42,7 @@ const Header: React.FC<HeaderProps> = ({ heading, subheading, notifications = 0 
       {/* Right: Icons and User Info */}
       <Stack
         direction='row'
-        spacing={2}
+        spacing={spacing[2]}
         alignItems='center'
       >
         <IconButton>
@@ -59,9 +60,9 @@ const Header: React.FC<HeaderProps> = ({ heading, subheading, notifications = 0 
           sx={{
             display: 'flex',
             alignItems: 'center',
-            border: '1px solid #e0e0e0',
+            border: `1px solid ${colors.grayscale.lightGray}`,
             borderRadius: '999px',
-            p: '4px 8px',
+            p: spacing[1],
           }}
         >
           <Avatar

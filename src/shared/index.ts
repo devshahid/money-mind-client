@@ -7,3 +7,6 @@ export { ColorModeContext, ColorContextProvider } from './contexts/ThemeContext'
 export { useAppDispatch, useAppSelector } from './hooks/slice-hooks'
 export { axiosClient } from './services/axiosClient'
 export { generateRandomColor, getTextColor, stringToColor, stringAvatar } from './utils/common'
+
+// Theme exports
+export * from './theme'

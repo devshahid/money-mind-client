@@ -1,5 +1,6 @@
 import { Card, CardContent, Box, Typography } from '@mui/material'
 import { JSX, ElementType } from 'react'
+import { colors, spacing, borderRadius } from '../../../shared/theme'
 
 interface SummaryCardProps {
   title: string
@@ -9,28 +10,37 @@ interface SummaryCardProps {
   subHeading?: string
 }
 
-const SummaryCard = ({ title, value, icon: Icon, color = '#1976d2', subHeading }: SummaryCardProps): JSX.Element => {
+const SummaryCard = ({
+  title,
+  value,
+  icon: Icon,
+  color = colors.primary.blue,
+  subHeading,
+}: SummaryCardProps): JSX.Element => {
   return (
     <Card sx={{ flex: '1 1 250px', minWidth: 250 }}>
       <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: spacing[1], mb: spacing[1] }}>
           <Box
             sx={{
               backgroundColor: `${color}20`,
-              borderRadius: 2,
-              p: 1,
+              borderRadius: borderRadius.base,
+              p: spacing[1],
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Icon size={22} />
+            <Icon
+              size={28}
+              color={color}
+            />
           </Box>
           <Typography variant='h6'>{title}</Typography>
         </Box>
         <Typography
-          variant='h5'
-          sx={{ fontWeight: 600 }}
+          variant='h4'
+          sx={{ fontWeight: 700 }}
         >
           {value}
         </Typography>

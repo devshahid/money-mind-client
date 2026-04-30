@@ -1,48 +1,25 @@
-* {
-  margin: 0;
-  padding: 0;
-  /* Target the scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px; /* vertical scrollbar width */
-    height: 8px; /* horizontal scrollbar height */
-  }
-
-  /* Track (background) */
-  ::-webkit-scrollbar-track {
-    background: #f0f0f0;
-    border-radius: 4px;
-  }
-
-  /* Thumb (scroll handle) */
-  ::-webkit-scrollbar-thumb {
-    background-color: #c1c1c1;
-    border-radius: 4px;
-    border: 2px solid transparent;
-    background-clip: content-box;
-  }
-
-  /* On hover */
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: #a0a0a0;
-  }
-  /* Webkit */
-  /* ::-webkit-scrollbar {
-        display: none;
-    } */
-
-  /* Firefox */
-  /* * {
-        scrollbar-width: none;
-    } */
-}
-
+/**
+ * Font face definitions
+ * Custom Lufga font family
+ */
 @font-face {
   font-family: 'Lufga';
-  src: url('/src/assets/fonts/LufgaRegular.ttf') format('truetype'); /* Adjust path */
+  src: url('/src/assets/fonts/LufgaRegular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
 
+/**
+ * Apply font family to body
+ * Additional global styles are managed via GlobalStyles in main.tsx
+ */
 body {
-  font-family: 'Lufga', sans-serif;
+  font-family:
+    'Lufga',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Roboto',
+    sans-serif;
 }

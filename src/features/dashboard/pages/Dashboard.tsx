@@ -15,6 +15,7 @@ import { EMIReminderBanner } from '../components/EMIReminderBanner'
 import { BudgetWarningBanner } from '../components/BudgetWarningBanner'
 import { IGoal } from '../../goals/types/goal'
 import { useSelector } from 'react-redux'
+import { colors, spacing, borderRadius } from '../../../shared/theme'
 
 interface GoalSliceState {
   goals: IGoal[]
@@ -80,35 +81,35 @@ const DashboardPage = (): JSX.Element => {
       {/* Summary Cards */}
       <Stack
         direction='row'
-        gap={2}
-        padding={2}
+        gap={spacing[2]}
+        padding={spacing[2]}
         flexWrap='wrap'
       >
         <SummaryCard
           icon={Package}
           title='Total Balance'
           value={fmt(totalBalance)}
-          color='#1976d2'
+          color={colors.primary.blue}
         />
         <SummaryCard
           icon={DollarSign}
           title='Income'
           value={fmt(monthlyIncome)}
-          color='#2e7d32'
+          color={colors.semantic.success}
           subHeading='This month'
         />
         <SummaryCard
           icon={CreditCard}
           title='Expenses'
           value={fmt(monthlyExpenses)}
-          color='#d32f2f'
+          color={colors.semantic.error}
           subHeading='This month'
         />
         <SummaryCard
           icon={Target}
           title='Goal Savings'
           value={fmt(activeGoalSavings)}
-          color='#ed6c02'
+          color={colors.semantic.warning}
           subHeading={`${activeGoals.length} active goal${activeGoals.length !== 1 ? 's' : ''}`}
         />
       </Stack>
@@ -116,10 +117,10 @@ const DashboardPage = (): JSX.Element => {
       {/* Charts + Content placeholder */}
       <Stack
         flexWrap='wrap'
-        gap={2}
-        padding={2}
+        gap={spacing[2]}
+        padding={spacing[2]}
       >
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2] }}>
           <Box sx={{ flex: { xs: '100%', md: '50%' }, minWidth: 0 }}>
             <Card>
               <CardContent>
@@ -140,11 +141,19 @@ const DashboardPage = (): JSX.Element => {
       {/* Recent Transactions + Goals */}
       <Stack
         flexWrap='wrap'
-        gap={2}
-        padding={2}
+        gap={spacing[2]}
+        padding={spacing[2]}
       >
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-          <Box sx={{ flex: { xs: '100%', md: '50%', borderRadius: 6, border: '1px solid #ccc' }, minWidth: 0 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2] }}>
+          <Box
+            sx={{
+              flex: { xs: '100%', md: '50%' },
+              minWidth: 0,
+              borderRadius: borderRadius.lg,
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
             <Typography variant='h4'>Recent Transactions</Typography>
             {transactions.length > 0 ? (
               <CustomTable
@@ -201,7 +210,7 @@ const DashboardPage = (): JSX.Element => {
                           <LinearProgress
                             variant='determinate'
                             value={pct}
-                            sx={{ height: 8, borderRadius: 4 }}
+                            sx={{ height: 8, borderRadius: borderRadius.md }}
                           />
                           <Typography
                             variant='caption'

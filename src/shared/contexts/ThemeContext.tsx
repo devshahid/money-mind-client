@@ -2,6 +2,7 @@ import { createTheme, PaletteMode, ThemeProvider } from '@mui/material'
 import { createContext, JSX, useMemo, useState } from 'react'
 
 import type { PropsWithChildren } from 'react'
+import { lightTheme, darkTheme } from '../theme'
 
 export const ColorModeContext = createContext({
   toggleMode: () => {},
@@ -9,7 +10,7 @@ export const ColorModeContext = createContext({
 })
 
 export const ColorContextProvider = ({ children }: PropsWithChildren): JSX.Element => {
-  const [mode, setMode] = useState<PaletteMode>('dark')
+  const [mode, setMode] = useState<PaletteMode>('light')
 
   const colorMode = useMemo(
     () => ({
@@ -19,10 +20,7 @@ export const ColorContextProvider = ({ children }: PropsWithChildren): JSX.Eleme
     [mode]
   )
 
-  const theme = createTheme({
-    typography: { fontFamily: 'Lufga, sans-serif' },
-    palette: { mode },
-  })
+  const theme = useMemo(() => createTheme(mode === 'light' ? lightTheme : darkTheme), [mode])
 
   return (
     <ColorModeContext.Provider value={colorMode}>

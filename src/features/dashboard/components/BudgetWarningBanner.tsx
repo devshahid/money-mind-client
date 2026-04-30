@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux'
 import { IBudget } from '../../budget/types/budget'
 import { ITransaction } from '../../transactions/types/transaction'
 import { calculateSpentForBudget, getBudgetStatus } from '../../budget/utils/budgetUtils'
+import { spacing } from '../../../shared/theme'
 
 interface BudgetSliceState {
   budgets: IBudget[]
@@ -34,8 +35,8 @@ const BudgetWarningBanner = (): JSX.Element | null => {
 
   return (
     <Stack
-      spacing={1}
-      sx={{ px: 2, pt: 1 }}
+      spacing={spacing[1]}
+      sx={{ px: spacing[2], pt: spacing[1] }}
     >
       {warnings.map(({ budget, spent, isOverBudget }) => (
         <Alert

@@ -1,16 +1,17 @@
 import { Box, Typography, Link } from '@mui/material'
 import { JSX } from 'react'
+import { spacing } from '../shared/theme'
 
 export const Footer = (): JSX.Element => {
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', pt: 4, gap: 4 }}>
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', pt: spacing[4], gap: spacing[4] }}>
       <Typography
         variant='body2'
         sx={{ color: 'text.primary' }}
       >
         © 2024 XD Code All Rights Reserved
       </Typography>
-      <Box sx={{ display: 'flex', gap: 2 }}>
+      <Box sx={{ display: 'flex', gap: spacing[2] }}>
         <Link
           href='#'
           sx={{ textDecoration: 'none', color: 'primary.main' }}

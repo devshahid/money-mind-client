@@ -35,6 +35,7 @@ import {
 import AppLogo from '../assets/images/money-mind-logo.png'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { ColorModeContext } from '../shared/contexts/ThemeContext'
+import { colors, spacing } from '../shared/theme'
 
 const drawerWidth = 240
 
@@ -74,7 +75,7 @@ const Sidebar: React.FC = () => {
         '& .MuiDrawer-paper': {
           width: collapsed ? 100 : drawerWidth,
           boxSizing: 'border-box',
-          background: mode === 'light' ? '#f3f1fb' : '#222126',
+          background: mode === 'light' ? colors.background.lavender : colors.grayscale.black,
           display: 'flex',
           flexDirection: 'column', // Ensure items stack vertically
           alignItems: 'center', // Center items horizontally
@@ -91,16 +92,16 @@ const Sidebar: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          px: 2,
-          py: 2,
-          borderBottom: '1px solid #ddd',
-          cursor: 'pointer', // Changed to pointer for better UX
-          width: '100%', // Ensure the box takes full width
+          px: spacing[2],
+          py: spacing[2],
+          borderBottom: `1px solid ${colors.grayscale.lightGray}`,
+          cursor: 'pointer',
+          width: '100%',
         }}
       >
         <Box
           onClick={() => navigate('/')}
-          sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
+          sx={{ display: 'flex', gap: spacing[1], alignItems: 'center' }}
         >
           <Avatar
             src={AppLogo}
@@ -124,12 +125,12 @@ const Sidebar: React.FC = () => {
           <IconButton
             onClick={toggleSidebar}
             sx={{
-              ml: collapsed ? 0 : 1,
-              border: '1px solid #ddd',
-              background: mode === 'light' ? '#f3f1fb' : '#222126',
-              color: mode === 'light' ? '#000' : '#fff',
+              ml: collapsed ? 0 : spacing[1],
+              border: `1px solid ${colors.grayscale.lightGray}`,
+              background: mode === 'light' ? colors.grayscale.white : colors.grayscale.black,
+              color: mode === 'light' ? colors.grayscale.black : colors.grayscale.white,
               '&:hover': {
-                backgroundColor: '#f0f0f0',
+                backgroundColor: mode === 'light' ? colors.grayscale.background : colors.grayscale.dark,
               },
             }}
           >
@@ -149,11 +150,11 @@ const Sidebar: React.FC = () => {
       </Box>
       <List
         sx={{
-          width: '100%', // Make the list take full width of the drawer
+          width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center', // Center items horizontally
-          padding: 1,
+          alignItems: 'center',
+          padding: spacing[1],
         }}
       >
         {navItems.map((item, index) => (
@@ -176,12 +177,16 @@ const Sidebar: React.FC = () => {
                 to={item.path}
                 style={({ isActive }) => ({
                   textDecoration: 'none',
-                  color: mode === 'light' ? '#000' : '#fff',
-                  width: collapsed ? 0 : '100%', // Make the NavLink take full width
+                  color: isActive
+                    ? colors.grayscale.white
+                    : mode === 'light'
+                      ? colors.grayscale.black
+                      : colors.grayscale.white,
+                  width: collapsed ? 0 : '100%',
                   display: 'flex',
                   justifyContent: 'center',
                   borderRadius: '30px',
-                  backgroundColor: isActive ? '#8470FF' : 'transparent',
+                  backgroundColor: isActive ? colors.accent.purple : 'rgba(71, 71, 78, 0)',
                   transition: 'background-color 0.3s ease',
                 })}
               >
@@ -189,12 +194,12 @@ const Sidebar: React.FC = () => {
                   sx={{
                     minHeight: 48,
                     justifyContent: 'center',
-                    px: 2.5,
-                    gap: collapsed ? 0 : 1,
+                    px: spacing[2],
+                    gap: collapsed ? 0 : spacing[1],
                     width: '100%',
                     borderRadius: '30px',
                     '&:hover': {
-                      backgroundColor: mode === 'light' ? '#dcd6ff' : '#453f64',
+                      backgroundColor: mode === 'light' ? colors.background.purple : 'rgba(71, 71, 78, 0.1)',
                     },
                   }}
                 >
@@ -220,23 +225,24 @@ const Sidebar: React.FC = () => {
           onClick={() => setOpenLogout(true)}
           sx={{
             width: collapsed ? 48 : 'calc(100% - 16px)',
-            // mx: 1,
             transition: 'all 0.3s ease',
             borderRadius: '30px',
-            color: mode === 'light' ? '#000' : '#fff',
+            color: colors.grayscale.white,
             minWidth: 0,
-            backgroundColor: '#da377c',
+            backgroundColor: colors.semantic.error,
+            display: 'flex',
+            gap: spacing[1],
           }}
         >
           <Logout />
-          {!collapsed && <span style={{ marginLeft: 8 }}>Logout</span>}
+          {!collapsed && <Typography component='span'>Logout</Typography>}
         </IconButton>
       </List>
 
       <Box
         sx={{
-          my: 2,
-          py: 1,
+          my: spacing[2],
+          py: spacing[1],
           width: '100%',
           display: 'flex',
           justifyContent: 'center',
@@ -260,11 +266,11 @@ const Sidebar: React.FC = () => {
               disableFocusRipple
               onClick={toggleMode}
               sx={{
-                backgroundColor: '#8470FF',
-                color: '#fff',
+                backgroundColor: colors.accent.purple,
+                color: colors.grayscale.white,
                 transition: 'all 0.3s ease-in-out',
                 '&:hover': {
-                  backgroundColor: '#8470FF',
+                  backgroundColor: colors.accent.purple,
                 },
               }}
             >
@@ -278,11 +284,11 @@ const Sidebar: React.FC = () => {
                 disableFocusRipple
                 onClick={() => mode !== 'light' && toggleMode()}
                 sx={{
-                  backgroundColor: mode === 'light' ? '#8470FF' : 'transparent',
-                  color: mode === 'light' ? '#fff' : '#8470FF',
+                  backgroundColor: mode === 'light' ? colors.accent.purple : 'transparent',
+                  color: mode === 'light' ? colors.grayscale.white : colors.accent.purple,
                   transition: 'all 0.3s ease-in-out',
                   '&:hover': {
-                    backgroundColor: mode === 'light' ? '#8470FF' : 'transparent',
+                    backgroundColor: mode === 'light' ? colors.accent.purple : 'transparent',
                   },
                   transform: mode === 'light' ? 'rotate(0deg)' : 'rotate(-20deg)',
                 }}
@@ -295,11 +301,11 @@ const Sidebar: React.FC = () => {
                 disableFocusRipple
                 onClick={() => mode !== 'dark' && toggleMode()}
                 sx={{
-                  backgroundColor: mode === 'dark' ? '#8470FF' : 'transparent',
-                  color: mode === 'dark' ? '#fff' : '#8470FF',
+                  backgroundColor: mode === 'dark' ? colors.accent.purple : 'transparent',
+                  color: mode === 'dark' ? colors.grayscale.white : colors.accent.purple,
                   transition: 'all 0.3s ease-in-out',
                   '&:hover': {
-                    backgroundColor: mode === 'dark' ? '#8470FF' : 'transparent',
+                    backgroundColor: mode === 'dark' ? colors.accent.purple : 'transparent',
                   },
                   transform: mode === 'dark' ? 'rotate(0deg)' : 'rotate(20deg)',
                 }}

@@ -3,6 +3,7 @@ import { JSX } from 'react'
 import dayjs from 'dayjs'
 import { useSelector } from 'react-redux'
 import { IDebt } from '../../debts/types/debt'
+import { spacing } from '../../../shared/theme'
 
 interface DebtSliceState {
   debts: IDebt[]
@@ -22,8 +23,8 @@ const EMIReminderBanner = (): JSX.Element | null => {
 
   return (
     <Stack
-      spacing={1}
-      sx={{ px: 2, pt: 1 }}
+      spacing={spacing[1]}
+      sx={{ px: spacing[2], pt: spacing[1] }}
     >
       {upcomingDebts.map(debt => {
         const daysLeft = dayjs(debt.nextPaymentDate).diff(today, 'day')
