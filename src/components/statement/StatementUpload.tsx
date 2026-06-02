@@ -18,7 +18,6 @@ import * as XLSX from "xlsx";
 
 import { uploadStatementFile, parsePdf, checkDuplicates } from "../../services/statementService";
 import { listTransactions } from "../../store/transactionSlice";
-import { fetchAnnotationSuggestions } from "../../store/aiSlice";
 import { useAppDispatch, useAppSelector } from "../../hooks/slice-hooks";
 import { useSnackbar } from "../../contexts/SnackBarContext";
 import { RootState } from "../../store";
@@ -98,8 +97,8 @@ const StatementUpload: React.FC<StatementUploadProps> = ({ open, onClose }) => {
 
                     const transactions: Partial<ITransaction>[] = rows.map((row) => {
                         const keys = Object.keys(row);
-                        const dateKey = keys.find((k) => /date/i.test(k)) ?? keys[0];
-                        const narrationKey = keys.find((k) => /narration|description|particular/i.test(k)) ?? keys[1];
+                        const dateKey: string = keys.find((k) => /date/i.test(k)) ?? keys[0];
+                        const narrationKey: string = keys.find((k) => /narration|description|particular/i.test(k)) ?? keys[1];
                         const withdrawKey = keys.find((k) => /withdraw|debit/i.test(k));
                         const depositKey = keys.find((k) => /deposit|credit/i.test(k));
                         const amountKey = keys.find((k) => /amount/i.test(k));
@@ -212,7 +211,7 @@ const StatementUpload: React.FC<StatementUploadProps> = ({ open, onClose }) => {
                 return;
             }
 
-            const imported = await uploadStatementFile(file, bankName.trim());
+            await uploadStatementFile(file, bankName.trim());
 
             showSuccessSnackbar(`Successfully imported ${rowsToImport.length} transaction(s).`);
 

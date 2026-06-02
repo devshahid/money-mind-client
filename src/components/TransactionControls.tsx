@@ -28,6 +28,8 @@ import {
     TableBody,
     TablePagination,
     SelectChangeEvent,
+    SxProps,
+    Theme,
 } from "@mui/material";
 import * as XLSX from "xlsx";
 
@@ -77,7 +79,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
     const [statementUploadOpen, setStatementUploadOpen] = useState(false);
 
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(50);
     const [syncTransactionLoader, setSyncTransactionLoader] = useState(false);
 
     const handlePageChange = (newPage: number): void => setPage(newPage);
@@ -244,7 +246,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
                 const wb = XLSX.read(arrayBuffer, { type: "array" });
                 const wsname = wb.SheetNames[0];
                 const ws = wb.Sheets[wsname];
-                const rawData: (string | number | null)[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+                const rawData: (string | number | null)[][] = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false });
 
                 const header = rawData[0];
                 const body = rawData.slice(1);
@@ -258,7 +260,30 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
                     return;
                 }
 
-                parsedRows = mergeRows(body, sanitizedHeader, sanitizedHeader[0]);
+                // Date serial handling
+                const dateIndex = sanitizedHeader.findIndex((h) => h.toLowerCase() === "date");
+
+                const isExcelDateSerial = (value: number): boolean => typeof value === "number" && value > 30000 && value < 60000;
+
+                const convertExcelSerialToDate = (serial: number): string => {
+                    const utcDays = Math.floor(serial - 25569);
+                    const date = new Date(utcDays * 86400 * 1000);
+                    return date.toISOString().split("T")[0]; // returns 'YYYY-MM-DD'
+                };
+
+                // ✅ Convert date serials in the body
+                const updatedBody = body.map((row) => {
+                    const newRow = [...row];
+                    if (dateIndex !== -1) {
+                        const cell = newRow[dateIndex];
+                        if (isExcelDateSerial(cell as number)) {
+                            newRow[dateIndex] = convertExcelSerialToDate(cell as number);
+                        }
+                    }
+                    return newRow;
+                });
+
+                parsedRows = mergeRows(updatedBody, sanitizedHeader, sanitizedHeader[0]);
             } catch (error) {
                 console.error("Error parsing file:", error);
             } finally {
@@ -290,6 +315,8 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
             }
             const response = await axiosClient.post("transaction-logs/upload-data-from-file", { bankName, rows: data });
             console.log("response", response.data);
+            handleCloseModal("");
+            void dispatch(listTransactions({ page: "1", limit: "50" }));
             alert("Saved to DB!");
         } catch (err) {
             console.error(err);
@@ -299,9 +326,11 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
 
     const handleCloseModal = (reason: string): void => {
         if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
+            setPreviewUploadedContent(false);
             setUploadModal(false);
             setData([]);
             setSelectedFileName(null);
+            setBankName(null);
         }
     };
 
@@ -309,6 +338,29 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
         setSyncTransactionLoader(true);
         const transactions = await indexDBTransaction.getAllTransactions();
         void dispatch(syncTransactions({ transactions, statePage, limit }));
+    };
+
+    const getFieldStyles = (key: string): SxProps<Theme> => {
+        switch (key) {
+            case "withdrawlAmount":
+                return {
+                    backgroundColor: "#FFD6D6",
+                    "& .MuiInputBase-input": { color: "#000" },
+                    width: "100px",
+                };
+            case "depositAmount":
+                return { backgroundColor: "#DFF5E1", "& .MuiInputBase-input": { color: "#000" }, width: "100px" };
+            case "closingBalance":
+                return { backgroundColor: "#FFF9DB", "& .MuiInputBase-input": { color: "#000" }, width: "140px", textAlign: "right" };
+            case "narration":
+                return { width: "500px" };
+            case "date":
+            case "valueDate":
+            case "refNumber":
+                return { width: "100px" };
+            default:
+                return { fontWeight: 600 };
+        }
     };
 
     return (
@@ -725,11 +777,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
                         <Dialog
                             fullScreen
                             open={previewUploadedContent}
-                            onClose={() => {
-                                setPreviewUploadedContent(false);
-                                setData([]);
-                                setSelectedFileName(null);
-                            }}
+                            onClose={handleCloseModal}
                         >
                             <AppBar sx={{ position: "relative" }}>
                                 <Toolbar>
@@ -821,19 +869,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
                                                                     size="small"
                                                                     variant="outlined"
                                                                     value={row[key]}
-                                                                    sx={
-                                                                        key === "withdrawlAmount"
-                                                                            ? { backgroundColor: "#FFD6D6", width: "100px" }
-                                                                            : key === "depositAmount"
-                                                                              ? { backgroundColor: "#DFF5E1	", width: "100px" }
-                                                                              : key === "closingBalance"
-                                                                                ? { width: "140px", textAlign: "right", backgroundColor: "#FFF9DB" }
-                                                                                : ["date", "valueDate", "refNumber"].includes(key)
-                                                                                  ? { width: "100px" }
-                                                                                  : key === "narration"
-                                                                                    ? { width: "500px" }
-                                                                                    : { fontWeight: 600 }
-                                                                    }
+                                                                    sx={{ ...getFieldStyles(key) }}
                                                                     onChange={(e) => handleChange(page * rowsPerPage + i, key, e.target.value)}
                                                                 />
                                                             </TableCell>
@@ -860,7 +896,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
                                         onPageChange={(_, newPage) => handlePageChange(newPage)}
                                         rowsPerPage={rowsPerPage}
                                         onRowsPerPageChange={handleRowsPerPageChange}
-                                        rowsPerPageOptions={[10, 25]}
+                                        rowsPerPageOptions={[25, 50, 75]}
                                     />
                                 </TableContainer>
                             </Box>
