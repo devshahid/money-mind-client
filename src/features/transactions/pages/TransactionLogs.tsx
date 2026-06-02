@@ -129,6 +129,20 @@ const TransactionLogs = (): JSX.Element => {
   const isLocalGroups = useAppSelector(
     (state: RootState) => (state as { groups: { isLocalGroups: boolean } }).groups.isLocalGroups
   )
+
+  // Clean up filters - only send non-empty values
+  const cleanUpFilters = React.useCallback(() => {
+    const cleaned: Record<string, string | string[]> = {}
+    Object.entries(filters).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        if (value.length > 0) cleaned[key] = value
+      } else if (typeof value === 'string' && value.trim().length > 0) {
+        cleaned[key] = value
+      }
+    })
+    return cleaned
+  }, [filters])
+
   const groupSyncStatus = useAppSelector(
     (state: RootState) =>
       (state as { groups: { groupSyncStatus: 'idle' | 'success' | 'error' } }).groups.groupSyncStatus
@@ -165,8 +179,8 @@ const TransactionLogs = (): JSX.Element => {
   }, [setHeader])
 
   useEffect(() => {
-    void dispatch(listTransactions({ ...filters, page: (parseInt(page) + 1).toString(), limit }))
-  }, [dispatch, page, filters, limit])
+    void dispatch(listTransactions({ ...cleanUpFilters(), page: (parseInt(page) + 1).toString(), limit }))
+  }, [dispatch, page, limit, cleanUpFilters])
 
   // Reset selection when page, filters, or limit change
   useEffect(() => {
@@ -425,7 +439,7 @@ const TransactionLogs = (): JSX.Element => {
           {!loading && transactions.length === 0 ? (
             <EmptyTransactionContainer />
           ) : (
-            <div style={{ width: '100%', borderRadius: 6, border: '1px solid #ccc' }}>
+            <Box sx={{ width: '100%', borderRadius: 1.5, border: '1px solid #ccc' }}>
               <Box sx={{ overflowX: 'auto' }}>
                 <CustomTable
                   type='full'
@@ -455,7 +469,7 @@ const TransactionLogs = (): JSX.Element => {
                 rowsPerPageOptions={[25, 50, 100]}
               />
               {loading && <LoadingBackDrop />}
-            </div>
+            </Box>
           )}
         </>
       )}
@@ -738,7 +752,7 @@ const TransactionLogs = (): JSX.Element => {
         transactionIds={selectedIds.length > 0 ? selectedIds : undefined}
         categorizeAll={selectedIds.length === 0}
         onSuccess={() => {
-          void dispatch(listTransactions({ ...filters, page: (parseInt(page) + 1).toString(), limit }))
+          void dispatch(listTransactions({ ...cleanUpFilters(), page: (parseInt(page) + 1).toString(), limit }))
           setSelectedIds([])
           showSuccessSnackbar('AI suggestions applied successfully!')
         }}
@@ -756,13 +770,13 @@ const LoadingBackDrop = (): JSX.Element => {
         color: '#fff',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <CircularProgress
           color='inherit'
-          style={{ marginRight: 10 }}
+          sx={{ marginRight: 1.25 }}
         />
         Please wait...
-      </div>
+      </Box>
     </Backdrop>
   )
 }
