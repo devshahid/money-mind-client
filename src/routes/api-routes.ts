@@ -30,11 +30,21 @@ export const API_ROUTES = {
     update: '/debt/update-debt',
     delete: (id: string) => `/debt/delete-debt/${id}`,
     get: (id: string) => `/debt/get-debt/${id}`,
+    detailed: (id: string) => `/debt/detailed/${id}`,
     recordPayment: '/debt/record-payment',
     paymentHistory: (id: string) => `/debt/payment-history/${id}`,
     payoffProjection: (id: string) => `/debt/payoff-projection/${id}`,
     summary: '/debt/summary',
     strategy: '/debt/strategy',
+    // Schedule management
+    generateSchedule: (id: string) => `/debt/schedule/generate/${id}`,
+    importSchedule: (id: string) => `/debt/schedule/import/${id}`,
+    getSchedule: (id: string) => `/debt/schedule/${id}`,
+    updateScheduleItem: (id: string, month: number) => `/debt/schedule/${id}/${month}`,
+    // Transaction linking
+    linkTransaction: (id: string) => `/debt/link-transaction/${id}`,
+    unlinkTransaction: (id: string, transactionId: string) => `/debt/unlink-transaction/${id}/${transactionId}`,
+    getLinkedTransactions: (id: string) => `/debt/linked-transactions/${id}`,
   },
   goals: {
     list: '/goals',

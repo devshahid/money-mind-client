@@ -12,10 +12,11 @@ import {
   IconButton,
   Chip,
 } from '@mui/material'
-import { Eye, Trash2, DollarSign } from 'lucide-react'
+import { Eye, Trash2, IndianRupee } from 'lucide-react'
 
 import { colors, spacing } from '../../../shared/theme'
 import type { IDebt } from '../types/debt'
+import React from 'react'
 
 interface DebtListTableProps {
   debts: IDebt[]
@@ -24,11 +25,16 @@ interface DebtListTableProps {
   onDelete: (debtId: string) => void
 }
 
-export const DebtListTable = ({ debts, onViewDetails, onRecordPayment, onDelete }: DebtListTableProps) => {
-  const formatCurrency = (amount: number) => `₹${amount.toLocaleString('en-IN')}`
-  const formatDate = (date: string) => new Date(date).toLocaleDateString('en-IN')
+export const DebtListTable = ({
+  debts,
+  onViewDetails,
+  onRecordPayment,
+  onDelete,
+}: DebtListTableProps): React.JSX.Element => {
+  const formatCurrency = (amount: number): string => `₹${amount.toLocaleString('en-IN')}`
+  const formatDate = (date: string): string => new Date(date).toLocaleDateString('en-IN')
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): string => {
     switch (status) {
       case 'ACTIVE':
         return colors.semantic.warning
@@ -41,7 +47,7 @@ export const DebtListTable = ({ debts, onViewDetails, onRecordPayment, onDelete 
     }
   }
 
-  const calculateProgress = (debt: IDebt) => {
+  const calculateProgress = (debt: IDebt): number => {
     const paid = debt.principal - debt.remainingBalance
     return (paid / debt.principal) * 100
   }
@@ -149,7 +155,7 @@ export const DebtListTable = ({ debts, onViewDetails, onRecordPayment, onDelete 
                         title='Record Payment'
                         sx={{ color: colors.semantic.success }}
                       >
-                        <DollarSign size={18} />
+                        <IndianRupee size={18} />
                       </IconButton>
                     )}
                     <IconButton

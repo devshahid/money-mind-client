@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Box, Button, Typography, Container } from '@mui/material'
 import { Plus } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -11,7 +11,6 @@ import {
   listDebts,
   getDebtSummary,
   recordPayment,
-  getPaymentHistory,
   getDebtStrategy,
   deleteDebt,
   createDebt,
@@ -27,7 +26,7 @@ import { DebtStrategyPanel } from '../components/DebtStrategyPanel'
 import { CreateDebtDialog, type DebtFormData } from '../components/CreateDebtDialog'
 import type { IDebt } from '../types/debt'
 
-const DebtsPage = () => {
+const DebtsPage = (): React.JSX.Element => {
   const { setHeader } = useOutletContext<LayoutContextType>()
   const dispatch = useDispatch<AppDispatch>()
   const { debts, summary, paymentHistory, payoffProjection, strategy, loading, error } = useSelector(
@@ -49,7 +48,7 @@ const DebtsPage = () => {
     void dispatch(getDebtSummary())
   }, [dispatch])
 
-  const handleRecordPayment = (debt: IDebt) => {
+  const handleRecordPayment = (debt: IDebt): void => {
     setSelectedDebt(debt)
     setRecordPaymentOpen(true)
   }
@@ -68,14 +67,10 @@ const DebtsPage = () => {
     void dispatch(getDebtSummary())
   }
 
-  const handleViewDetails = async (debtId: string): Promise<void> => {
-    const debt = debts.find(d => d._id === debtId)
-    if (debt) {
-      setSelectedDebt(debt)
-      // Fetch payment history for this debt
-      await dispatch(getPaymentHistory(debtId))
-      setPaymentHistoryOpen(true)
-    }
+  const handleViewDetails = (debtId: string): void => {
+    // TODO: Navigate to detail page when it's created
+    console.log('View details for debt:', debtId)
+    // navigate(AppRoute.DebtDetail.replace(':debtId', debtId))
   }
 
   const handleDeleteDebt = async (debtId: string): Promise<void> => {

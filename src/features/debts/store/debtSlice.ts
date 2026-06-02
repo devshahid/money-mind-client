@@ -7,6 +7,11 @@ import type {
   IPayoffProjection,
   IDebtSummary,
   IDebtStrategy,
+  IDetailedDebt,
+  IRepaymentSchedule,
+  IDebtTransactionLink,
+  IScheduleImportData,
+  ScheduleItemStatus,
 } from '../types/debt'
 import {
   listDebts as listDebtsService,
@@ -19,15 +24,26 @@ import {
   getPayoffProjection as getPayoffProjectionService,
   getDebtSummary as getDebtSummaryService,
   getDebtStrategy as getDebtStrategyService,
+  getDetailedDebt as getDetailedDebtService,
+  generateRepaymentSchedule as generateScheduleService,
+  importRepaymentSchedule as importScheduleService,
+  getRepaymentSchedule as getScheduleService,
+  updateScheduleItem as updateScheduleItemService,
+  linkTransactionToDebt as linkTransactionService,
+  unlinkTransactionFromDebt as unlinkTransactionService,
+  getLinkedTransactions as getLinkedTransactionsService,
 } from '../services/debtService'
 
 type DebtState = {
   debts: IDebt[]
   currentDebt: IDebt | null
+  detailedDebt: IDetailedDebt | null
   summary: IDebtSummary | null
   paymentHistory: IPaymentHistory | null
   payoffProjection: IPayoffProjection | null
   strategy: IDebtStrategy | null
+  schedule: IRepaymentSchedule | null
+  linkedTransactions: IDebtTransactionLink[]
   loading: boolean
   error: string | null
 }
@@ -35,10 +51,13 @@ type DebtState = {
 const initialState: DebtState = {
   debts: [],
   currentDebt: null,
+  detailedDebt: null,
   summary: null,
   paymentHistory: null,
   payoffProjection: null,
   strategy: null,
+  schedule: null,
+  linkedTransactions: [],
   loading: false,
   error: null,
 }
@@ -156,6 +175,113 @@ export const getDebtStrategy = createAsyncThunk<
   }
 })
 
+export const getDetailedDebt = createAsyncThunk<IDetailedDebt, string, { rejectValue: string }>(
+  'debts/getDetailedDebt',
+  async (debtId, { rejectWithValue }) => {
+    try {
+      return await getDetailedDebtService(debtId)
+    } catch {
+      return rejectWithValue('Failed to fetch detailed debt information')
+    }
+  }
+)
+
+// Schedule Management Actions
+export const generateSchedule = createAsyncThunk<
+  { message: string; totalMonths: number },
+  string,
+  { rejectValue: string }
+>('debts/generateSchedule', async (debtId, { rejectWithValue }) => {
+  try {
+    return await generateScheduleService(debtId)
+  } catch {
+    return rejectWithValue('Failed to generate repayment schedule')
+  }
+})
+
+export const importSchedule = createAsyncThunk<
+  { message: string; itemCount: number },
+  { debtId: string; scheduleData: IScheduleImportData[] },
+  { rejectValue: string }
+>('debts/importSchedule', async ({ debtId, scheduleData }, { rejectWithValue }) => {
+  try {
+    return await importScheduleService(debtId, scheduleData)
+  } catch {
+    return rejectWithValue('Failed to import repayment schedule')
+  }
+})
+
+export const getSchedule = createAsyncThunk<
+  { hasSchedule: boolean; schedule: IRepaymentSchedule | null },
+  string,
+  { rejectValue: string }
+>('debts/getSchedule', async (debtId, { rejectWithValue }) => {
+  try {
+    return await getScheduleService(debtId)
+  } catch {
+    return rejectWithValue('Failed to fetch repayment schedule')
+  }
+})
+
+export const updateScheduleItem = createAsyncThunk<
+  { message: string },
+  {
+    debtId: string
+    month: number
+    updates: {
+      status?: ScheduleItemStatus
+      actualPaymentId?: string
+      linkedTransactionId?: string
+      variance?: number
+      notes?: string
+    }
+  },
+  { rejectValue: string }
+>('debts/updateScheduleItem', async ({ debtId, month, updates }, { rejectWithValue }) => {
+  try {
+    return await updateScheduleItemService(debtId, month, updates)
+  } catch {
+    return rejectWithValue('Failed to update schedule item')
+  }
+})
+
+// Transaction Linking Actions
+export const linkTransaction = createAsyncThunk<
+  { message: string; link: IDebtTransactionLink },
+  { debtId: string; transactionId: string; linkType: 'AUTO' | 'MANUAL'; confidence?: number; notes?: string },
+  { rejectValue: string }
+>('debts/linkTransaction', async ({ debtId, transactionId, linkType, confidence, notes }, { rejectWithValue }) => {
+  try {
+    return await linkTransactionService(debtId, transactionId, linkType, confidence, notes)
+  } catch {
+    return rejectWithValue('Failed to link transaction')
+  }
+})
+
+export const unlinkTransaction = createAsyncThunk<
+  { message: string },
+  { debtId: string; transactionId: string },
+  { rejectValue: string }
+>('debts/unlinkTransaction', async ({ debtId, transactionId }, { rejectWithValue }) => {
+  try {
+    return await unlinkTransactionService(debtId, transactionId)
+  } catch {
+    return rejectWithValue('Failed to unlink transaction')
+  }
+})
+
+export const getLinkedTransactions = createAsyncThunk<
+  { links: IDebtTransactionLink[]; totalLinks: number },
+  string,
+  { rejectValue: string }
+>('debts/getLinkedTransactions', async (debtId, { rejectWithValue }) => {
+  try {
+    return await getLinkedTransactionsService(debtId)
+  } catch {
+    return rejectWithValue('Failed to fetch linked transactions')
+  }
+})
+
 const debtSlice = createSlice({
   name: 'debts',
   initialState,
@@ -166,6 +292,9 @@ const debtSlice = createSlice({
     clearCurrentDebt: state => {
       state.currentDebt = null
     },
+    clearDetailedDebt: state => {
+      state.detailedDebt = null
+    },
     clearPaymentHistory: state => {
       state.paymentHistory = null
     },
@@ -174,6 +303,12 @@ const debtSlice = createSlice({
     },
     clearStrategy: state => {
       state.strategy = null
+    },
+    clearSchedule: state => {
+      state.schedule = null
+    },
+    clearLinkedTransactions: state => {
+      state.linkedTransactions = []
     },
   },
   extraReducers: builder => {
@@ -340,9 +475,134 @@ const debtSlice = createSlice({
         state.loading = false
         state.error = action.payload ?? 'Failed to fetch debt strategy'
       })
+
+    // Get Detailed Debt
+    builder
+      .addCase(getDetailedDebt.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(getDetailedDebt.fulfilled, (state, action) => {
+        state.loading = false
+        state.detailedDebt = action.payload
+      })
+      .addCase(getDetailedDebt.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload ?? 'Failed to fetch detailed debt information'
+      })
+
+    // Generate Schedule
+    builder
+      .addCase(generateSchedule.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(generateSchedule.fulfilled, state => {
+        state.loading = false
+      })
+      .addCase(generateSchedule.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload ?? 'Failed to generate schedule'
+      })
+
+    // Import Schedule
+    builder
+      .addCase(importSchedule.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(importSchedule.fulfilled, state => {
+        state.loading = false
+      })
+      .addCase(importSchedule.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload ?? 'Failed to import schedule'
+      })
+
+    // Get Schedule
+    builder
+      .addCase(getSchedule.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(getSchedule.fulfilled, (state, action) => {
+        state.loading = false
+        state.schedule = action.payload.schedule
+      })
+      .addCase(getSchedule.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload ?? 'Failed to fetch schedule'
+      })
+
+    // Update Schedule Item
+    builder
+      .addCase(updateScheduleItem.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateScheduleItem.fulfilled, state => {
+        state.loading = false
+      })
+      .addCase(updateScheduleItem.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload ?? 'Failed to update schedule item'
+      })
+
+    // Link Transaction
+    builder
+      .addCase(linkTransaction.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(linkTransaction.fulfilled, (state, action) => {
+        state.loading = false
+        state.linkedTransactions.push(action.payload.link)
+      })
+      .addCase(linkTransaction.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload ?? 'Failed to link transaction'
+      })
+
+    // Unlink Transaction
+    builder
+      .addCase(unlinkTransaction.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(unlinkTransaction.fulfilled, state => {
+        state.loading = false
+        // Transaction will be removed when we refresh with getLinkedTransactions
+      })
+      .addCase(unlinkTransaction.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload ?? 'Failed to unlink transaction'
+      })
+
+    // Get Linked Transactions
+    builder
+      .addCase(getLinkedTransactions.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(getLinkedTransactions.fulfilled, (state, action) => {
+        state.loading = false
+        state.linkedTransactions = action.payload.links
+      })
+      .addCase(getLinkedTransactions.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload ?? 'Failed to fetch linked transactions'
+      })
   },
 })
 
-export const { clearDebtError, clearCurrentDebt, clearPaymentHistory, clearPayoffProjection, clearStrategy } =
-  debtSlice.actions
+export const {
+  clearDebtError,
+  clearCurrentDebt,
+  clearDetailedDebt,
+  clearPaymentHistory,
+  clearPayoffProjection,
+  clearStrategy,
+  clearSchedule,
+  clearLinkedTransactions,
+} = debtSlice.actions
 export const debtReducer = debtSlice.reducer

@@ -99,3 +99,79 @@ export type IDebtStrategy = {
   strategyExplanation: string
   tips: string[]
 }
+
+export type ScheduleItemStatus = 'UPCOMING' | 'PAID' | 'PARTIAL' | 'MISSED' | 'OVERPAID'
+
+export type IRepaymentScheduleItem = {
+  month: number
+  dueDate: string
+  expectedAmount: number
+  principalComponent: number
+  interestComponent: number
+  expectedBalance: number
+  actualPaymentId?: string
+  linkedTransactionId?: string
+  status: ScheduleItemStatus
+  variance?: number
+  notes?: string
+}
+
+export type IRepaymentSchedule = {
+  scheduleType: 'MANUAL' | 'IMPORTED' | 'AUTO_GENERATED'
+  scheduleItems: IRepaymentScheduleItem[]
+  totalItems: number
+  createdAt: string
+  updatedAt: string
+}
+
+export type LinkType = 'AUTO' | 'MANUAL'
+
+export type IDebtTransactionLink = {
+  _id: string
+  transactionId: string
+  linkType: LinkType
+  confidence?: number
+  linkedDate: string
+  notes?: string
+  createdBy?: 'SYSTEM' | 'USER'
+}
+
+export type IScheduleImportData = {
+  month: number
+  dueDate: string
+  expectedAmount: number
+  principalComponent: number
+  interestComponent: number
+  expectedBalance: number
+}
+
+export type IDetailedDebt = {
+  debt: IDebt
+  paymentHistory: {
+    payments: IDebtPayment[]
+    totalPaid: number
+    paymentCount: number
+    recentPayments: IDebtPayment[]
+  }
+  payoffProjection: {
+    monthlyPayment: number
+    totalMonths: number
+    totalInterest: number
+    totalPayment: number
+    payoffDate: string
+    monthlyBreakdown: Array<{
+      month: number
+      payment: number
+      principal: number
+      interest: number
+      remainingBalance: number
+    }>
+  } | null
+  statistics: {
+    progressPercentage: number
+    totalPaid: number
+    totalAmount: number
+    remainingAmount: number
+    monthsElapsed: number
+  }
+}

@@ -23,6 +23,12 @@ const LazyDebts = async (): Promise<{ Component: React.ComponentType }> => {
   return { Component: DebtsPage }
 }
 
+// TODO: Create DebtDetail page
+// const LazyDebtDetail = async (): Promise<{ Component: React.ComponentType }> => {
+//   const { DebtDetailPage } = await import('./features/debts/pages/DebtDetail')
+//   return { Component: DebtDetailPage }
+// }
+
 const LazyGoals = async (): Promise<{ Component: React.ComponentType }> => {
   const { GoalsPage } = await import('./features/goals/pages/Goals')
   return { Component: GoalsPage }
@@ -78,6 +84,11 @@ export const router = createBrowserRouter([
             path: AppRoute.Debts,
             lazy: LazyDebts,
           },
+          // TODO: Uncomment when DebtDetail page is created
+          // {
+          //   path: AppRoute.DebtDetail,
+          //   lazy: LazyDebtDetail,
+          // },
           {
             path: AppRoute.Goals,
             lazy: LazyGoals,
