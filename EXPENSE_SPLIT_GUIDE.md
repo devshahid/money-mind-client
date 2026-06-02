@@ -73,17 +73,17 @@ The Money Mind expense split system now supports multiple split types to handle 
 2. Create a group with "Custom Amounts"
 3. Add 3 members: You, Friend A, Friend B
 4. Set Paid amounts:
-    - You: ₹20,000
-    - Friend A: ₹7,000
-    - Friend B: ₹3,000
+   - You: ₹20,000
+   - Friend A: ₹7,000
+   - Friend B: ₹3,000
 5. Manually set Share amounts (or click Calculate for equal):
-    - You: ₹10,000
-    - Friend A: ₹10,000
-    - Friend B: ₹10,000
+   - You: ₹10,000
+   - Friend A: ₹10,000
+   - Friend B: ₹10,000
 6. Result:
-    - Your net: ₹20,000 - ₹10,000 = **₹10,000** (others owe you)
-    - Friend A net: ₹7,000 - ₹10,000 = **-₹3,000** (they owe ₹3,000)
-    - Friend B net: ₹3,000 - ₹10,000 = **-₹7,000** (they owe ₹7,000)
+   - Your net: ₹20,000 - ₹10,000 = **₹10,000** (others owe you)
+   - Friend A net: ₹7,000 - ₹10,000 = **-₹3,000** (they owe ₹3,000)
+   - Friend B net: ₹3,000 - ₹10,000 = **-₹7,000** (they owe ₹7,000)
 
 **Settlement Suggestions:**
 
@@ -113,8 +113,8 @@ The Money Mind expense split system now supports multiple split types to handle 
 1. Select rent transaction
 2. Choose "Percentage Split"
 3. Add members and set percentages:
-    - You: 50%
-    - Roommate: 50%
+   - You: 50%
+   - Roommate: 50%
 4. Click "Calculate Shares"
 
 ---
@@ -138,8 +138,8 @@ The Money Mind expense split system now supports multiple split types to handle 
 3. Add 2 members: You (lender) and Friend (borrower)
 4. Set your "Paid" to ₹10,000
 5. Click "Calculate Shares":
-    - Your share: ₹0 (you're getting money back, not spending)
-    - Friend's share: ₹10,000 (they need to repay)
+   - Your share: ₹0 (you're getting money back, not spending)
+   - Friend's share: ₹10,000 (they need to repay)
 6. Result: Your net = ₹10,000 (they owe you)
 
 **Step 2: Track Repayments**
@@ -240,8 +240,7 @@ The Money Mind expense split system now supports multiple split types to handle 
 
 The system automatically generates optimal settlement suggestions:
 
-**Example:**
-If in a group:
+**Example:** If in a group:
 
 - You: Net = +₹10,000
 - Friend A: Net = -₹3,000
@@ -260,52 +259,47 @@ This minimizes the number of transactions needed to settle the group.
 
 1. **Always verify "Total Paid" matches total debits**
 
-    - The system warns you if they don't match
+   - The system warns you if they don't match
 
 2. **Use Calculate Shares button**
 
-    - Saves time and prevents calculation errors
-    - Click after adding/updating members
+   - Saves time and prevents calculation errors
+   - Click after adding/updating members
 
 3. **For complex trips**
 
-    - Use "Custom Amounts"
-    - Enter all payments upfront
-    - Let the system calculate settlements
+   - Use "Custom Amounts"
+   - Enter all payments upfront
+   - Let the system calculate settlements
 
 4. **For loans**
 
-    - Use "Loan/Lending" type
-    - Lender's share is always ₹0
-    - Update "Paid" as repayments come in
+   - Use "Loan/Lending" type
+   - Lender's share is always ₹0
+   - Update "Paid" as repayments come in
 
 5. **Credits vs Debits**
 
-    - Debits (expenses) increase what others owe you
-    - Credits (repayments) reduce what they owe
+   - Debits (expenses) increase what others owe you
+   - Credits (repayments) reduce what they owe
 
 6. **Check settlement suggestions**
-    - Shows the simplest way to settle up
-    - Minimizes number of transactions
+   - Shows the simplest way to settle up
+   - Minimizes number of transactions
 
 ---
 
 ## FAQ
 
-**Q: Can I mix different payment methods in one group?**
-A: Yes! Just add all related transactions to the group.
+**Q: Can I mix different payment methods in one group?** A: Yes! Just add all related transactions to the group.
 
-**Q: What if someone paid outside the app?**
-A: Manually enter their paid amount when creating the group.
+**Q: What if someone paid outside the app?** A: Manually enter their paid amount when creating the group.
 
-**Q: How do I handle partial repayments?**
-A: Use "Loan/Lending" type and update the "Paid" field as repayments are received.
+**Q: How do I handle partial repayments?** A: Use "Loan/Lending" type and update the "Paid" field as repayments are received.
 
-**Q: Can I change split type after creating a group?**
-A: Yes, edit the group and change the split type, then recalculate shares.
+**Q: Can I change split type after creating a group?** A: Yes, edit the group and change the split type, then recalculate shares.
 
-**Q: Why is my net negative?**
-A: Negative net means you owe money. You paid less than your fair share.
+**Q: Why is my net negative?** A: Negative net means you owe money. You paid less than your fair share.
 
 ---
 

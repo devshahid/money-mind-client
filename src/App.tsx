@@ -1,111 +1,31 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { RouterProvider } from 'react-router-dom'
+import { JSX, useEffect } from 'react'
 
-import Layout from "./layouts/main";
-import DashboardPage from "./pages/Dashboard";
-import TransactionLogs from "./pages/TransactionLogs";
-import DebtsPage from "./pages/Debts";
-import GoalsPage from "./pages/Goals";
-import BudgetPage from "./pages/Budget";
-import AnalyticsPage from "./pages/Analytics";
-import AIChatPage from "./pages/AIChat";
-import Login from "./pages/Login";
-import Account from "./pages/Account";
-import RegisterPage from "./pages/Register";
-import ProtectedRoute from "./components/ProtectedRoute";
-import GuestRoute from "./components/GuestRoute";
-import { JSX, useEffect } from "react";
-import { setUserData } from "./store/authSlice";
-import { useAppDispatch } from "./hooks/slice-hooks";
-import { listLabels } from "./store/transactionSlice";
+import { setUserData } from './features/auth/store/authSlice'
+import { useAppDispatch } from './shared/hooks/slice-hooks'
+import { listLabels } from './features/transactions/store/transactionSlice'
+import { router } from './router'
 
-function App(): JSX.Element {
-    const dispatch = useAppDispatch();
+export const App = (): JSX.Element => {
+  const dispatch = useAppDispatch()
 
-    useEffect(() => {
-        const userData = localStorage.getItem("userData");
-        const accessToken = localStorage.getItem("accessToken");
-        void dispatch(listLabels());
-        if (userData && Object.values(userData).length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const parsedObj: { fullName: string; email: string; role: string; _id: string } = JSON.parse(userData);
-            dispatch(
-                setUserData({
-                    fullName: parsedObj.fullName,
-                    email: parsedObj.email,
-                    role: parsedObj.role,
-                    _id: parsedObj._id,
-                    accessToken: accessToken as string,
-                }),
-            );
-        }
-    }, [dispatch]);
+  useEffect(() => {
+    const userData = localStorage.getItem('userData')
+    const accessToken = localStorage.getItem('accessToken')
+    void dispatch(listLabels())
+    if (userData && Object.values(userData).length > 0) {
+      const parsedObj = JSON.parse(userData) as { fullName: string; email: string; role: string; _id: string }
+      dispatch(
+        setUserData({
+          fullName: parsedObj.fullName,
+          email: parsedObj.email,
+          role: parsedObj.role,
+          _id: parsedObj._id,
+          accessToken: accessToken as string,
+        })
+      )
+    }
+  }, [dispatch])
 
-    const router = createBrowserRouter([
-        {
-            path: "/",
-            element: (
-                <ProtectedRoute>
-                    <Layout />
-                </ProtectedRoute>
-            ),
-            children: [
-                {
-                    index: true,
-                    element: <DashboardPage />,
-                },
-                {
-                    path: "transactions",
-                    element: <TransactionLogs />,
-                },
-                {
-                    path: "debts",
-                    element: <DebtsPage />,
-                },
-                {
-                    path: "goals",
-                    element: <GoalsPage />,
-                },
-                {
-                    path: "budget",
-                    element: <BudgetPage />,
-                },
-                {
-                    path: "analytics",
-                    element: <AnalyticsPage />,
-                },
-                {
-                    path: "ai-chat",
-                    element: <AIChatPage />,
-                },
-                {
-                    path: "settings",
-                    element: <h1 className="title">Settings</h1>,
-                },
-                {
-                    path: "account",
-                    element: <Account />,
-                },
-            ],
-        },
-        {
-            path: "login",
-            element: (
-                <GuestRoute>
-                    <Login />
-                </GuestRoute>
-            ),
-        },
-        {
-            path: "register",
-            element: (
-                <GuestRoute>
-                    <RegisterPage />
-                </GuestRoute>
-            ),
-        },
-    ]);
-
-    return <RouterProvider router={router} />;
+  return <RouterProvider router={router} />
 }
-
-export default App;

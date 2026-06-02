@@ -125,22 +125,22 @@ All TypeScript interfaces are defined in `src/types/` (new directory) and import
 ```typescript
 // src/types/transaction.ts
 export interface ITransaction {
-    _id: string;
-    transactionDate: string;
-    narration: string;
-    notes: string;
-    category: string;
-    label: string[];
-    amount: string;
-    bankName: string;
-    isCredit: boolean;
-    isCash: boolean;
-    groupId?: string | null; // NEW: reference to TransactionGroup
-    debtId?: string | null; // NEW: linked debt (EMI payment)
-    goalId?: string | null; // NEW: linked goal (contribution)
-    aiSuggestedCategory?: string; // NEW: AI suggestion
-    aiSuggestedLabels?: string[]; // NEW: AI suggestion
-    aiSuggestionAccepted?: boolean; // NEW: user feedback
+  _id: string
+  transactionDate: string
+  narration: string
+  notes: string
+  category: string
+  label: string[]
+  amount: string
+  bankName: string
+  isCredit: boolean
+  isCash: boolean
+  groupId?: string | null // NEW: reference to TransactionGroup
+  debtId?: string | null // NEW: linked debt (EMI payment)
+  goalId?: string | null // NEW: linked goal (contribution)
+  aiSuggestedCategory?: string // NEW: AI suggestion
+  aiSuggestedLabels?: string[] // NEW: AI suggestion
+  aiSuggestionAccepted?: boolean // NEW: user feedback
 }
 ```
 
@@ -149,17 +149,17 @@ export interface ITransaction {
 ```typescript
 // src/types/transactionGroup.ts
 export interface ITransactionGroup {
-    _id: string;
-    name: string;
-    transactionIds: string[];
-    groupBalance: number; // credits - debits, computed client-side and stored
-    isSettled: boolean; // groupBalance === 0
-    createdAt: string;
-    updatedAt: string;
+  _id: string
+  name: string
+  transactionIds: string[]
+  groupBalance: number // credits - debits, computed client-side and stored
+  isSettled: boolean // groupBalance === 0
+  createdAt: string
+  updatedAt: string
 }
 
 export interface ITransactionGroupDetail extends ITransactionGroup {
-    transactions: ITransaction[]; // populated on fetch
+  transactions: ITransaction[] // populated on fetch
 }
 ```
 
@@ -167,33 +167,33 @@ export interface ITransactionGroupDetail extends ITransactionGroup {
 
 ```typescript
 // src/types/debt.ts
-export type DebtStatus = "ACTIVE" | "PAID_OFF" | "PAUSED";
+export type DebtStatus = 'ACTIVE' | 'PAID_OFF' | 'PAUSED'
 
 export interface IDebt {
-    _id: string;
-    debtName: string;
-    lender: string;
-    principal: number;
-    interestRate: number; // annual percentage
-    startDate: string;
-    expectedEndDate: string;
-    monthlyExpectedEMI: number;
-    remainingBalance: number;
-    totalInterestPayable: number; // computed: stored for display
-    nextPaymentDate: string;
-    status: DebtStatus;
-    linkedTransactionIds: string[];
-    createdAt: string;
-    updatedAt: string;
+  _id: string
+  debtName: string
+  lender: string
+  principal: number
+  interestRate: number // annual percentage
+  startDate: string
+  expectedEndDate: string
+  monthlyExpectedEMI: number
+  remainingBalance: number
+  totalInterestPayable: number // computed: stored for display
+  nextPaymentDate: string
+  status: DebtStatus
+  linkedTransactionIds: string[]
+  createdAt: string
+  updatedAt: string
 }
 
 export interface IEMIPayment {
-    _id: string;
-    debtId: string;
-    amount: number;
-    paymentDate: string;
-    isPartPayment: boolean;
-    transactionId?: string;
+  _id: string
+  debtId: string
+  amount: number
+  paymentDate: string
+  isPartPayment: boolean
+  transactionId?: string
 }
 ```
 
@@ -202,24 +202,24 @@ export interface IEMIPayment {
 ```typescript
 // src/types/goal.ts
 export interface IGoal {
-    _id: string;
-    name: string;
-    targetAmount: number;
-    currentSavedAmount: number;
-    deadline?: string;
-    description?: string;
-    isAchieved: boolean;
-    linkedTransactionIds: string[];
-    createdAt: string;
-    updatedAt: string;
+  _id: string
+  name: string
+  targetAmount: number
+  currentSavedAmount: number
+  deadline?: string
+  description?: string
+  isAchieved: boolean
+  linkedTransactionIds: string[]
+  createdAt: string
+  updatedAt: string
 }
 
 export interface IGoalContribution {
-    _id: string;
-    goalId: string;
-    amount: number;
-    date: string;
-    transactionId?: string;
+  _id: string
+  goalId: string
+  amount: number
+  date: string
+  transactionId?: string
 }
 ```
 
@@ -228,14 +228,14 @@ export interface IGoalContribution {
 ```typescript
 // src/types/budget.ts
 export interface IBudget {
-    _id: string;
-    category: string;
-    limitAmount: number;
-    month: number; // 1-12
-    year: number;
-    spentAmount: number; // computed from transactions, stored for caching
-    createdAt: string;
-    updatedAt: string;
+  _id: string
+  category: string
+  limitAmount: number
+  month: number // 1-12
+  year: number
+  spentAmount: number // computed from transactions, stored for caching
+  createdAt: string
+  updatedAt: string
 }
 ```
 
@@ -244,31 +244,31 @@ export interface IBudget {
 ```typescript
 // src/types/ai.ts
 export interface IAISuggestion {
-    transactionId: string;
-    suggestedCategory: string;
-    suggestedLabels: string[];
-    confidence: number; // 0-1
-    accepted?: boolean;
+  transactionId: string
+  suggestedCategory: string
+  suggestedLabels: string[]
+  confidence: number // 0-1
+  accepted?: boolean
 }
 
 export interface IAIGroupSuggestion {
-    transactionIds: string[];
-    suggestedName: string;
-    confidence: number;
-    dismissed?: boolean;
+  transactionIds: string[]
+  suggestedName: string
+  confidence: number
+  dismissed?: boolean
 }
 
 export interface IAIDebtStrategy {
-    method: "avalanche" | "snowball";
-    orderedDebtIds: string[];
-    projectedPayoffDate: string;
-    rationale: string;
+  method: 'avalanche' | 'snowball'
+  orderedDebtIds: string[]
+  projectedPayoffDate: string
+  rationale: string
 }
 
 export interface IAIChatMessage {
-    role: "user" | "assistant";
-    content: string;
-    timestamp: string;
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: string
 }
 ```
 
@@ -278,13 +278,13 @@ Extends `ExpenseDB` in `src/helpers/indexDB/db.ts`:
 
 ```typescript
 interface ExpenseDB extends DBSchema {
-    edited_transactions: { key: string; value: Partial<ITransaction> };
-    labels: { key: string; value: { key: string; labels: string[] } };
-    // NEW stores:
-    pending_groups: { key: string; value: Partial<ITransactionGroup> };
-    pending_debts: { key: string; value: Partial<IDebt> };
-    pending_goals: { key: string; value: Partial<IGoal> };
-    pending_budgets: { key: string; value: Partial<IBudget> };
+  edited_transactions: { key: string; value: Partial<ITransaction> }
+  labels: { key: string; value: { key: string; labels: string[] } }
+  // NEW stores:
+  pending_groups: { key: string; value: Partial<ITransactionGroup> }
+  pending_debts: { key: string; value: Partial<IDebt> }
+  pending_goals: { key: string; value: Partial<IGoal> }
+  pending_budgets: { key: string; value: Partial<IBudget> }
 }
 // DB version bumped from 2 → 3
 ```
@@ -308,25 +308,25 @@ src/store/
 Updated `src/store/index.ts`:
 
 ```typescript
-import transactionGroupReducer from "./transactionGroupSlice";
-import debtReducer from "./debtSlice";
-import goalReducer from "./goalSlice";
-import budgetReducer from "./budgetSlice";
-import analyticsReducer from "./analyticsSlice";
-import aiReducer from "./aiSlice";
+import transactionGroupReducer from './transactionGroupSlice'
+import debtReducer from './debtSlice'
+import goalReducer from './goalSlice'
+import budgetReducer from './budgetSlice'
+import analyticsReducer from './analyticsSlice'
+import aiReducer from './aiSlice'
 
 export const store = configureStore({
-    reducer: {
-        auth: authReducer,
-        transactions: transactionReducer,
-        transactionGroups: transactionGroupReducer,
-        debts: debtReducer,
-        goals: goalReducer,
-        budgets: budgetReducer,
-        analytics: analyticsReducer,
-        ai: aiReducer,
-    },
-});
+  reducer: {
+    auth: authReducer,
+    transactions: transactionReducer,
+    transactionGroups: transactionGroupReducer,
+    debts: debtReducer,
+    goals: goalReducer,
+    budgets: budgetReducer,
+    analytics: analyticsReducer,
+    ai: aiReducer,
+  },
+})
 ```
 
 ### Slice Shapes
@@ -335,10 +335,10 @@ export const store = configureStore({
 
 ```typescript
 interface TransactionGroupState {
-    groups: ITransactionGroup[];
-    loading: boolean;
-    error: string | null;
-    aiGroupSuggestions: IAIGroupSuggestion[];
+  groups: ITransactionGroup[]
+  loading: boolean
+  error: string | null
+  aiGroupSuggestions: IAIGroupSuggestion[]
 }
 // Thunks: listGroups, createGroup, addToGroup, removeFromGroup, dissolveGroup
 // Reducers: optimisticCreateGroup, revertGroup
@@ -348,11 +348,11 @@ interface TransactionGroupState {
 
 ```typescript
 interface DebtState {
-    debts: IDebt[];
-    emiPayments: IEMIPayment[];
-    loading: boolean;
-    error: string | null;
-    aiStrategy: IAIDebtStrategy | null;
+  debts: IDebt[]
+  emiPayments: IEMIPayment[]
+  loading: boolean
+  error: string | null
+  aiStrategy: IAIDebtStrategy | null
 }
 // Thunks: listDebts, createDebt, updateDebt, deleteDebt, recordEMIPayment, fetchAIDebtStrategy
 ```
@@ -361,10 +361,10 @@ interface DebtState {
 
 ```typescript
 interface GoalState {
-    goals: IGoal[];
-    contributions: IGoalContribution[];
-    loading: boolean;
-    error: string | null;
+  goals: IGoal[]
+  contributions: IGoalContribution[]
+  loading: boolean
+  error: string | null
 }
 // Thunks: listGoals, createGoal, updateGoal, deleteGoal, recordContribution
 ```
@@ -373,9 +373,9 @@ interface GoalState {
 
 ```typescript
 interface BudgetState {
-    budgets: IBudget[];
-    loading: boolean;
-    error: string | null;
+  budgets: IBudget[]
+  loading: boolean
+  error: string | null
 }
 // Thunks: listBudgets, createBudget, updateBudget, deleteBudget, copyBudgetsFromMonth
 ```
@@ -384,12 +384,12 @@ interface BudgetState {
 
 ```typescript
 interface AnalyticsState {
-    monthlyIncomeExpense: { month: string; income: number; expense: number }[];
-    categoryBreakdown: { category: string; amount: number }[];
-    netSavingsTrend: { month: string; netSavings: number }[];
-    loading: boolean;
-    error: string | null;
-    filters: { dateFrom: string; dateTo: string; bankName: string };
+  monthlyIncomeExpense: { month: string; income: number; expense: number }[]
+  categoryBreakdown: { category: string; amount: number }[]
+  netSavingsTrend: { month: string; netSavings: number }[]
+  loading: boolean
+  error: string | null
+  filters: { dateFrom: string; dateTo: string; bankName: string }
 }
 // Thunks: fetchAnalytics (single thunk, parameterized by filters)
 ```
@@ -398,12 +398,12 @@ interface AnalyticsState {
 
 ```typescript
 interface AIState {
-    annotationSuggestions: IAISuggestion[];
-    groupSuggestions: IAIGroupSuggestion[];
-    debtStrategy: IAIDebtStrategy | null;
-    chatHistory: IAIChatMessage[];
-    loading: boolean;
-    error: string | null;
+  annotationSuggestions: IAISuggestion[]
+  groupSuggestions: IAIGroupSuggestion[]
+  debtStrategy: IAIDebtStrategy | null
+  chatHistory: IAIChatMessage[]
+  loading: boolean
+  error: string | null
 }
 // Thunks: fetchAnnotationSuggestions, fetchGroupSuggestions, fetchDebtStrategy,
 //         fetchGoalSuggestion, fetchBudgetSuggestions, sendChatMessage
@@ -440,10 +440,10 @@ All thunks call these service functions rather than calling `axiosClient` direct
 ```typescript
 // Pure function — no side effects, used in slice and UI
 function calculateGroupBalance(transactions: ITransaction[]): number {
-    return transactions.reduce((acc, tx) => {
-        const amount = parseFloat(tx.amount) || 0;
-        return tx.isCredit ? acc + amount : acc - amount;
-    }, 0);
+  return transactions.reduce((acc, tx) => {
+    const amount = parseFloat(tx.amount) || 0
+    return tx.isCredit ? acc + amount : acc - amount
+  }, 0)
 }
 ```
 
@@ -452,13 +452,13 @@ function calculateGroupBalance(transactions: ITransaction[]): number {
 ```typescript
 // P = principal, r = monthly rate (annualRate/12/100), n = tenure months
 function calculateEMI(principal: number, annualRate: number, tenureMonths: number): number {
-    if (annualRate === 0) return principal / tenureMonths;
-    const r = annualRate / 12 / 100;
-    return (principal * r * Math.pow(1 + r, tenureMonths)) / (Math.pow(1 + r, tenureMonths) - 1);
+  if (annualRate === 0) return principal / tenureMonths
+  const r = annualRate / 12 / 100
+  return (principal * r * Math.pow(1 + r, tenureMonths)) / (Math.pow(1 + r, tenureMonths) - 1)
 }
 
 function calculateTotalInterest(principal: number, emi: number, tenureMonths: number): number {
-    return emi * tenureMonths - principal;
+  return emi * tenureMonths - principal
 }
 ```
 
@@ -466,20 +466,20 @@ function calculateTotalInterest(principal: number, emi: number, tenureMonths: nu
 
 ```typescript
 function projectedPayoffDate(remainingBalance: number, monthlyEMI: number, annualRate: number, fromDate: Date): Date {
-    const r = annualRate / 12 / 100;
-    let balance = remainingBalance;
-    let months = 0;
-    while (balance > 0 && months < 600) {
-        // 600 = 50yr safety cap
-        const interest = balance * r;
-        const principal = monthlyEMI - interest;
-        if (principal <= 0) break; // EMI too low to cover interest
-        balance -= principal;
-        months++;
-    }
-    const result = new Date(fromDate);
-    result.setMonth(result.getMonth() + months);
-    return result;
+  const r = annualRate / 12 / 100
+  let balance = remainingBalance
+  let months = 0
+  while (balance > 0 && months < 600) {
+    // 600 = 50yr safety cap
+    const interest = balance * r
+    const principal = monthlyEMI - interest
+    if (principal <= 0) break // EMI too low to cover interest
+    balance -= principal
+    months++
+  }
+  const result = new Date(fromDate)
+  result.setMonth(result.getMonth() + months)
+  return result
 }
 ```
 
@@ -489,12 +489,12 @@ Computed client-side from the Redux `transactions` state — no separate API cal
 
 ```typescript
 function calculateSpentForBudget(transactions: ITransaction[], category: string, month: number, year: number): number {
-    return transactions
-        .filter((tx) => {
-            const d = dayjs(tx.transactionDate);
-            return !tx.isCredit && tx.category === category && d.month() + 1 === month && d.year() === year;
-        })
-        .reduce((sum, tx) => sum + (parseFloat(tx.amount) || 0), 0);
+  return transactions
+    .filter(tx => {
+      const d = dayjs(tx.transactionDate)
+      return !tx.isCredit && tx.category === category && d.month() + 1 === month && d.year() === year
+    })
+    .reduce((sum, tx) => sum + (parseFloat(tx.amount) || 0), 0)
 }
 ```
 
@@ -723,28 +723,28 @@ All async thunks follow the existing pattern from `transactionSlice.ts`:
 
 ```typescript
 builder.addCase(someThunk.rejected, (state, action) => {
-    state.loading = false;
-    state.error = action.payload ?? "An error occurred";
-    // revert optimistic snapshot if applicable
-});
+  state.loading = false
+  state.error = action.payload ?? 'An error occurred'
+  // revert optimistic snapshot if applicable
+})
 ```
 
 UI error display uses the existing `useSnackbar()` hook. Components call `showErrorSnackbar(state.error)` in a `useEffect` watching the slice's `error` field.
 
 Specific error cases:
 
-| Scenario                                      | Behavior                                                                                         |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Scenario | Behavior |
+| --- | --- |
 | Statement file malformed / unsupported format | `showErrorSnackbar` with server's descriptive message; no transactions imported; store unchanged |
-| Duplicate transactions in preview             | Flagged rows in `StatementPreviewTable`; user chooses skip or overwrite per row                  |
-| Sync failure                                  | Retain IndexedDB queue; show persistent error snackbar (existing pattern)                        |
-| AI low confidence                             | Display suggestion with "low confidence" chip; never auto-apply                                  |
-| EMI too low to cover interest                 | Display warning in `DebtPayoffPlanner`; show projected balance growing                           |
-| Debt delete with linked transactions          | Confirmation dialog required before deletion proceeds                                            |
-| Group creation with < 2 transactions          | Disable "Create Group" action; show tooltip explaining minimum                                   |
-| Transaction already in a group                | Show informative snackbar; prevent add-to-group action                                           |
-| Optimistic update + server failure            | Revert Redux store to pre-action snapshot; `showErrorSnackbar`                                   |
-| Goal contribution exceeds target              | Allow it (over-contribution is valid); mark goal as achieved                                     |
+| Duplicate transactions in preview | Flagged rows in `StatementPreviewTable`; user chooses skip or overwrite per row |
+| Sync failure | Retain IndexedDB queue; show persistent error snackbar (existing pattern) |
+| AI low confidence | Display suggestion with "low confidence" chip; never auto-apply |
+| EMI too low to cover interest | Display warning in `DebtPayoffPlanner`; show projected balance growing |
+| Debt delete with linked transactions | Confirmation dialog required before deletion proceeds |
+| Group creation with < 2 transactions | Disable "Create Group" action; show tooltip explaining minimum |
+| Transaction already in a group | Show informative snackbar; prevent add-to-group action |
+| Optimistic update + server failure | Revert Redux store to pre-action snapshot; `showErrorSnackbar` |
+| Goal contribution exceeds target | Allow it (over-contribution is valid); mark goal as achieved |
 
 ---
 
@@ -786,63 +786,63 @@ Each correctness property from the design document must be implemented by exactl
 **Example test structure:**
 
 ```typescript
-import fc from "fast-check";
-import { calculateGroupBalance } from "../utils/groupUtils";
+import fc from 'fast-check'
+import { calculateGroupBalance } from '../utils/groupUtils'
 
-test("Property 13: Group balance calculation", () => {
-    // Feature: money-mind-upgrade, Property 13: group balance = credits - debits
-    fc.assert(
-        fc.property(
-            fc.array(
-                fc.record({
-                    amount: fc.float({ min: 0.01, max: 100000 }).map(String),
-                    isCredit: fc.boolean(),
-                }),
-                { minLength: 2 },
-            ),
-            (transactions) => {
-                const balance = calculateGroupBalance(transactions as any);
-                const expected = transactions.reduce((acc, tx) => {
-                    const amt = parseFloat(tx.amount);
-                    return tx.isCredit ? acc + amt : acc - amt;
-                }, 0);
-                return Math.abs(balance - expected) < 0.001; // float tolerance
-            },
-        ),
-        { numRuns: 100 },
-    );
-});
+test('Property 13: Group balance calculation', () => {
+  // Feature: money-mind-upgrade, Property 13: group balance = credits - debits
+  fc.assert(
+    fc.property(
+      fc.array(
+        fc.record({
+          amount: fc.float({ min: 0.01, max: 100000 }).map(String),
+          isCredit: fc.boolean(),
+        }),
+        { minLength: 2 }
+      ),
+      transactions => {
+        const balance = calculateGroupBalance(transactions as any)
+        const expected = transactions.reduce((acc, tx) => {
+          const amt = parseFloat(tx.amount)
+          return tx.isCredit ? acc + amt : acc - amt
+        }, 0)
+        return Math.abs(balance - expected) < 0.001 // float tolerance
+      }
+    ),
+    { numRuns: 100 }
+  )
+})
 ```
 
 **Properties mapped to test files:**
 
-| Property                                   | Test File                                | Generator Strategy                              |
-| ------------------------------------------ | ---------------------------------------- | ----------------------------------------------- |
-| 1 — Statement parsing extracts all rows    | `statement.property.test.ts`             | Generate arrays of row objects                  |
-| 2 — Bank name association                  | `statement.property.test.ts`             | Generate bank name strings + row arrays         |
-| 3 — Malformed file → no imports            | `statement.property.test.ts`             | Generate invalid file content                   |
-| 4 — Duplicate flagging                     | `statement.property.test.ts`             | Generate transactions with matching fields      |
-| 5 — Bank filter isolation                  | `transactionFilter.property.test.ts`     | Generate transactions with two distinct banks   |
-| 6 — Annotation round-trip                  | `annotation.property.test.ts`            | Generate transaction + annotation objects       |
-| 7 — Filter returns only matching           | `transactionFilter.property.test.ts`     | Generate transactions + filter combos           |
-| 8 — Optimistic annotation update           | `transactionSlice.property.test.ts`      | Generate annotation payloads                    |
-| 9 — Sync cleanup round-trip                | `indexDB.property.test.ts`               | Generate sets of pending edits                  |
-| 10 — Sync failure retains queue            | `indexDB.property.test.ts`               | Generate pending edits + simulate failure       |
-| 11 — Persistence round-trip                | `api.property.test.ts`                   | Generate entity objects (mock API)              |
-| 12 — Optimistic rollback                   | `transactionSlice.property.test.ts`      | Generate actions + simulate rejection           |
-| 13 — Group balance calculation             | `groupUtils.property.test.ts`            | Generate transaction arrays                     |
-| 14 — Group membership mutation             | `transactionGroupSlice.property.test.ts` | Generate groups + transactions                  |
-| 15 — Group dissolution                     | `transactionGroupSlice.property.test.ts` | Generate groups with members                    |
-| 16 — Double-grouping prevention            | `transactionGroupSlice.property.test.ts` | Generate already-grouped transactions           |
-| 17 — EMI and interest calculations         | `debtUtils.property.test.ts`             | Generate principal/rate/tenure triples          |
-| 18 — Payment reduces balance               | `debtUtils.property.test.ts`             | Generate debt + payment amounts                 |
-| 19 — Debt auto-paid-off invariant          | `debtSlice.property.test.ts`             | Generate debts with zero/negative balance       |
-| 20 — EMI reminder threshold                | `debtUtils.property.test.ts`             | Generate dates within/outside 5-day window      |
-| 21 — Goal contribution invariant           | `goalUtils.property.test.ts`             | Generate goals + contribution amounts           |
-| 22 — Budget spend calculation              | `budgetUtils.property.test.ts`           | Generate transactions + budget params           |
-| 23 — Budget threshold indicators           | `budgetUtils.property.test.ts`           | Generate spend/limit ratios                     |
-| 24 — Analytics mathematical invariants     | `analyticsUtils.property.test.ts`        | Generate transaction sets                       |
-| 25 — Analytics filter correctness          | `analyticsUtils.property.test.ts`        | Generate transactions + filter params           |
-| 26 — AI suggestion coverage and confidence | `aiSlice.property.test.ts`               | Generate transaction arrays + mock AI responses |
-| 27 — AI goal contribution suggestion       | `aiUtils.property.test.ts`               | Generate goal params + deadlines                |
-| 28 — AI suggestion feedback round-trip     | `aiSlice.property.test.ts`               | Generate suggestions + accept/reject decisions  |
+| Property | Test File | Generator Strategy |
+| --- | --- | --- |
+| 1 — Statement parsing extracts all rows | `statement.property.test.ts` | Generate arrays of row objects |
+| 2 — Bank name association | `statement.property.test.ts` | Generate bank name strings + row arrays |
+| 3 — Malformed file → no imports | `statement.property.test.ts` | Generate invalid file content |
+| 4 — Duplicate flagging | `statement.property.test.ts` | Generate transactions with matching fields |
+| 5 — Bank filter isolation | `transactionFilter.property.test.ts` | Generate transactions with two distinct banks |
+| 6 — Annotation round-trip | `annotation.property.test.ts` | Generate transaction + annotation objects |
+| 7 — Filter returns only matching | `transactionFilter.property.test.ts` | Generate transactions + filter combos |
+| 8 — Optimistic annotation update | `transactionSlice.property.test.ts` | Generate annotation payloads |
+| 9 — Sync cleanup round-trip | `indexDB.property.test.ts` | Generate sets of pending edits |
+| 10 — Sync failure retains queue | `indexDB.property.test.ts` | Generate pending edits + simulate failure |
+| 11 — Persistence round-trip | `api.property.test.ts` | Generate entity objects (mock API) |
+| 12 — Optimistic rollback | `transactionSlice.property.test.ts` | Generate actions + simulate rejection |
+| 13 — Group balance calculation | `groupUtils.property.test.ts` | Generate transaction arrays |
+| 14 — Group membership mutation | `transactionGroupSlice.property.test.ts` | Generate groups + transactions |
+| 15 — Group dissolution | `transactionGroupSlice.property.test.ts` | Generate groups with members |
+| 16 — Double-grouping prevention | `transactionGroupSlice.property.test.ts` | Generate already-grouped transactions |
+| 17 — EMI and interest calculations | `debtUtils.property.test.ts` | Generate principal/rate/tenure triples |
+| 18 — Payment reduces balance | `debtUtils.property.test.ts` | Generate debt + payment amounts |
+| 19 — Debt auto-paid-off invariant | `debtSlice.property.test.ts` | Generate debts with zero/negative balance |
+| 20 — EMI reminder threshold | `debtUtils.property.test.ts` | Generate dates within/outside 5-day window |
+| 21 — Goal contribution invariant | `goalUtils.property.test.ts` | Generate goals + contribution amounts |
+| 22 — Budget spend calculation | `budgetUtils.property.test.ts` | Generate transactions + budget params |
+| 23 — Budget threshold indicators | `budgetUtils.property.test.ts` | Generate spend/limit ratios |
+| 24 — Analytics mathematical invariants | `analyticsUtils.property.test.ts` | Generate transaction sets |
+| 25 — Analytics filter correctness | `analyticsUtils.property.test.ts` | Generate transactions + filter params |
+| 26 — AI suggestion coverage and confidence | `aiSlice.property.test.ts` | Generate transaction arrays + mock AI responses |
+| 27 — AI goal contribution suggestion | `aiUtils.property.test.ts` | Generate goal params + deadlines |
+| 28 — AI suggestion feedback round-trip | `aiSlice.property.test.ts` | Generate suggestions + accept/reject decisions |

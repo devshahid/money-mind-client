@@ -17,24 +17,24 @@ Members can now be selected from a dropdown with intelligent search functionalit
 ```typescript
 // Extracts unique member names from all groups
 const memberSuggestions = useMemo(() => {
-    const uniqueNames = new Set<string>();
+  const uniqueNames = new Set<string>()
 
-    // Add current user first
-    if (currentUser) {
-        uniqueNames.add(currentUser);
-    }
+  // Add current user first
+  if (currentUser) {
+    uniqueNames.add(currentUser)
+  }
 
-    // Add all members from existing groups
-    allGroups.forEach((group) => {
-        group.members?.forEach((member) => {
-            if (member.name.trim()) {
-                uniqueNames.add(member.name.trim());
-            }
-        });
-    });
+  // Add all members from existing groups
+  allGroups.forEach(group => {
+    group.members?.forEach(member => {
+      if (member.name.trim()) {
+        uniqueNames.add(member.name.trim())
+      }
+    })
+  })
 
-    return Array.from(uniqueNames).sort();
-}, [allGroups, currentUser]);
+  return Array.from(uniqueNames).sort()
+}, [allGroups, currentUser])
 ```
 
 ### 2. **Auto-populate Logged-in User** ✅
@@ -52,14 +52,14 @@ When creating a new group with equal split:
 
 ```typescript
 if (currentUser) {
-    setMembers([
-        {
-            name: currentUser, // Your name
-            share: 0, // Will be calculated
-            paid: totalDebits, // Auto-filled with ₹20,000
-            percentage: 0,
-        },
-    ]);
+  setMembers([
+    {
+      name: currentUser, // Your name
+      share: 0, // Will be calculated
+      paid: totalDebits, // Auto-filled with ₹20,000
+      percentage: 0,
+    },
+  ])
 }
 ```
 
@@ -114,27 +114,27 @@ Name: [Dropdown with Search ▼    ]
 
 1. **User opens dialog**
 
-    - Group name: Empty
-    - Members: `[{ name: "Shahid Qureshi", paid: 3000, share: 0 }]` ← Auto-populated
-    - Split Type: Equal Split (Payer Included) ← Default
+   - Group name: Empty
+   - Members: `[{ name: "Shahid Qureshi", paid: 3000, share: 0 }]` ← Auto-populated
+   - Split Type: Equal Split (Payer Included) ← Default
 
 2. **User adds more members**
 
-    - Click "+ Add Member"
-    - Type "Fri" → Sees "Friend A" in dropdown
-    - Select "Friend A"
-    - Add 8 more members (10 total)
+   - Click "+ Add Member"
+   - Type "Fri" → Sees "Friend A" in dropdown
+   - Select "Friend A"
+   - Add 8 more members (10 total)
 
 3. **User clicks "Calculate Shares"**
 
-    - System divides ₹3,000 by 10 members
-    - Each member share: ₹300
-    - Shahid's net: ₹3,000 - ₹300 = **₹2,700** (others owe)
+   - System divides ₹3,000 by 10 members
+   - Each member share: ₹300
+   - Shahid's net: ₹3,000 - ₹300 = **₹2,700** (others owe)
 
 4. **Smart Adjustment**
-    - If you add 11th member and click calculate again
-    - Automatically recalculates: ₹3,000 ÷ 11 = ₹272.73 each
-    - No manual work needed!
+   - If you add 11th member and click calculate again
+   - Automatically recalculates: ₹3,000 ÷ 11 = ₹272.73 each
+   - No manual work needed!
 
 ## 🔧 Technical Implementation
 
@@ -147,26 +147,26 @@ Name: [Dropdown with Search ▼    ]
 1. **Import Autocomplete & Redux**
 
 ```typescript
-import { Autocomplete } from "@mui/material";
-import { useSelector } from "react-redux";
-import { RootState } from "../store";
+import { Autocomplete } from '@mui/material'
+import { useSelector } from 'react-redux'
+import { RootState } from '../store'
 ```
 
 2. **Get User Data from Redux**
 
 ```typescript
-const currentUser = useSelector((state: RootState) => state.auth.userData.fullName);
-const allGroups = useSelector((state: RootState) => state.groups.groups);
+const currentUser = useSelector((state: RootState) => state.auth.userData.fullName)
+const allGroups = useSelector((state: RootState) => state.groups.groups)
 ```
 
 3. **Member Suggestions with Memoization**
 
 ```typescript
 const memberSuggestions = useMemo(() => {
-    // Extract unique names from all groups
-    // Current user appears first
-    // Sorted alphabetically
-}, [allGroups, currentUser]);
+  // Extract unique names from all groups
+  // Current user appears first
+  // Sorted alphabetically
+}, [allGroups, currentUser])
 ```
 
 4. **Replace TextField with Autocomplete**
@@ -197,15 +197,15 @@ const memberSuggestions = useMemo(() => {
 
 ```typescript
 const handleSplitTypeChange = (newSplitType: SplitType): void => {
-    setSplitType(newSplitType);
+  setSplitType(newSplitType)
 
-    // Auto-populate user if switching to equal split
-    if (currentUser && mode === "create") {
-        if (newSplitType === SplitType.EQUAL_INCLUDE_PAYER || newSplitType === SplitType.EQUAL_EXCLUDE_PAYER) {
-            // Add current user if no members have names
-        }
+  // Auto-populate user if switching to equal split
+  if (currentUser && mode === 'create') {
+    if (newSplitType === SplitType.EQUAL_INCLUDE_PAYER || newSplitType === SplitType.EQUAL_EXCLUDE_PAYER) {
+      // Add current user if no members have names
     }
-};
+  }
+}
 ```
 
 ## ✨ Benefits
@@ -269,8 +269,7 @@ const handleSplitTypeChange = (newSplitType: SplitType): void => {
 
 ### Example 3: Add New Member
 
-**Before:**
-Only text input, every time manually type
+**Before:** Only text input, every time manually type
 
 **After:**
 

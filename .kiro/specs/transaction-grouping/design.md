@@ -86,76 +86,82 @@ graph TD
 
 - **Location:** `src/components/BulkActionToolbar.tsx`
 - **Props:**
-    ```typescript
-    interface BulkActionToolbarProps {
-        selectedIds: string[];
-        onClearSelection: () => void;
-        onAttachToLogs: () => void;
-        onCreateGroup: () => void;
-        onAddToGroup: (groupId: string) => void;
-        groupsExist: boolean;
-    }
-    ```
+  ```typescript
+  interface BulkActionToolbarProps {
+    selectedIds: string[]
+    onClearSelection: () => void
+    onAttachToLogs: () => void
+    onCreateGroup: () => void
+    onAddToGroup: (groupId: string) => void
+    groupsExist: boolean
+  }
+  ```
 - **Behavior:** Renders between `TransactionControls` and `CustomTable` when `selectedIds.length > 0`. Shows count, "Clear Selection" button, "Attach to Logs" button, "Create Group" button (disabled when `selectedIds.length < 2`), and "Add to Group" dropdown (visible only when `groupsExist` is true).
 
 #### `LabelAssignmentDialog`
 
 - **Location:** `src/components/LabelAssignmentDialog.tsx`
 - **Props:**
-    ```typescript
-    interface LabelAssignmentDialogProps {
-        open: boolean;
-        onClose: () => void;
-        onConfirm: (labels: string[]) => void;
-        availableLabels: string[];
-    }
-    ```
+  ```typescript
+  interface LabelAssignmentDialogProps {
+    open: boolean
+    onClose: () => void
+    onConfirm: (labels: string[]) => void
+    availableLabels: string[]
+  }
+  ```
 - **Behavior:** Wraps `CustomModal`. Contains a multi-select `Autocomplete` with `freeSolo` for label selection. On confirm, passes selected labels back. On close without confirm, no-ops.
 
 #### `GroupDialog`
 
 - **Location:** `src/components/GroupDialog.tsx`
 - **Props:**
-    ```typescript
-    interface GroupDialogProps {
-        open: boolean;
-        onClose: () => void;
-        onSubmit: (data: { name: string; involvedParty: string; members: IMember[]; notes: string; splitType: SplitType }) => void;
-        initialData?: { name: string; involvedParty: string; members: IMember[]; notes: string; splitType?: SplitType };
-        mode: "create" | "edit";
-        transactions: ITransactionLogs[];
-    }
-    ```
+  ```typescript
+  interface GroupDialogProps {
+    open: boolean
+    onClose: () => void
+    onSubmit: (data: {
+      name: string
+      involvedParty: string
+      members: IMember[]
+      notes: string
+      splitType: SplitType
+    }) => void
+    initialData?: { name: string; involvedParty: string; members: IMember[]; notes: string; splitType?: SplitType }
+    mode: 'create' | 'edit'
+    transactions: ITransactionLogs[]
+  }
+  ```
 - **Behavior:** Wraps `CustomModal`. Features split type selection dropdown, auto-calculate shares button, dynamic member rows with Autocomplete name fields (suggestions from existing groups + logged-in user), paid/share/percentage fields per member, real-time net calculation chips, total paid vs total shares summary, and validation warnings. In create mode, auto-populates logged-in user as first member with total debits as paid amount. In edit mode, pre-populates all fields. The `involvedParty` string is auto-generated from member names.
 
 #### `GroupSummaryView`
 
 - **Location:** `src/components/GroupSummaryView.tsx`
 - **Props:**
-    ```typescript
-    interface GroupSummaryViewProps {
-        group: ITransactionGroup;
-        transactions: ITransactionLogs[];
-        onRemoveTransaction: (transactionId: string) => void;
-        onEditGroup: () => void;
-        onDeleteGroup: () => void;
-        onClose: () => void;
-    }
-    ```
+  ```typescript
+  interface GroupSummaryViewProps {
+    group: ITransactionGroup
+    transactions: ITransactionLogs[]
+    onRemoveTransaction: (transactionId: string) => void
+    onEditGroup: () => void
+    onDeleteGroup: () => void
+    onClose: () => void
+  }
+  ```
 - **Behavior:** Renders as a `CustomModal`. Displays group metadata, split type badge, settlement suggestions (who should pay whom), per-member settlement breakdown (name, share, paid, net with color-coded chips), computed summary (total debits, total credits, net settlement, status), and a list of member transactions with remove actions. Shows "Transaction not found" for missing transaction IDs. Edit button closes summary and opens GroupDialog. Delete with confirmation.
 
 #### `GroupListView`
 
 - **Location:** `src/components/GroupListView.tsx`
 - **Props:**
-    ```typescript
-    interface GroupListViewProps {
-        groups: ITransactionGroup[];
-        transactions: ITransactionLogs[];
-        onGroupClick: (groupId: string) => void;
-        onDeleteGroup: (groupId: string) => void;
-    }
-    ```
+  ```typescript
+  interface GroupListViewProps {
+    groups: ITransactionGroup[]
+    transactions: ITransactionLogs[]
+    onGroupClick: (groupId: string) => void
+    onDeleteGroup: (groupId: string) => void
+  }
+  ```
 - **Behavior:** Renders a table of all groups with name, member count, transaction count, net settlement amount, and status. Supports sorting by name, status, or net amount. Each row is clickable to open `GroupSummaryView`. Delete action per row with confirmation.
 
 ### Modified Components
@@ -164,12 +170,12 @@ graph TD
 
 - **New columns:** "Group" column showing `Group_Badge` chips (MUI `Chip`) and `Group_Info_Icon` (`InfoOutlined`).
 - **New props added:**
-    ```typescript
-    // Added to existing Props type
-    groups?: ITransactionGroup[];
-    onGroupBadgeClick?: (groupId: string) => void;
-    onGroupInfoClick?: (event: React.MouseEvent, transactionId: string) => void;
-    ```
+  ```typescript
+  // Added to existing Props type
+  groups?: ITransactionGroup[];
+  onGroupBadgeClick?: (groupId: string) => void;
+  onGroupInfoClick?: (event: React.MouseEvent, transactionId: string) => void;
+  ```
 - **Badge overflow:** Shows first 2 group chips, then "+N" for additional groups — consistent with existing label overflow pattern.
 
 #### `TransactionLogs` (TransactionLogs.tsx)
@@ -186,24 +192,24 @@ graph TD
 - **Location:** `src/utils/groupUtils.ts`
 - **Signature:**
 
-    ```typescript
-    interface MemberSettlement {
-        name: string;
-        share: number;
-        paid: number;
-        net: number; // paid - share: positive = you owe them, negative = they owe you
-    }
+  ```typescript
+  interface MemberSettlement {
+    name: string
+    share: number
+    paid: number
+    net: number // paid - share: positive = you owe them, negative = they owe you
+  }
 
-    interface GroupSummary {
-        totalDebits: number;
-        totalCredits: number;
-        netSettlement: number;
-        status: "Settled" | "Unsettled";
-        memberSettlements: MemberSettlement[];
-    }
+  interface GroupSummary {
+    totalDebits: number
+    totalCredits: number
+    netSettlement: number
+    status: 'Settled' | 'Unsettled'
+    memberSettlements: MemberSettlement[]
+  }
 
-    function computeGroupSummary(group: ITransactionGroup, transactions: ITransactionLogs[]): GroupSummary;
-    ```
+  function computeGroupSummary(group: ITransactionGroup, transactions: ITransactionLogs[]): GroupSummary
+  ```
 
 - **Logic:** Filters `transactions` to those whose `_id` is in `group.transactionIds`. Sums `amount` (parsed as number) for credit vs debit transactions. Net = totalCredits - totalDebits. Computes per-member settlement from `group.members`. Status = "Settled" when all members have net === 0 (or no members and net === 0).
 
@@ -211,32 +217,32 @@ graph TD
 
 - **Location:** `src/utils/splitCalculations.ts`
 - **Signature:**
-    ```typescript
-    function calculateShares(members: IMember[], splitType: SplitType, totalAmount: number): IMember[];
-    ```
+  ```typescript
+  function calculateShares(members: IMember[], splitType: SplitType, totalAmount: number): IMember[]
+  ```
 - **Logic:** Returns updated members with calculated share values based on split type. Equal splits divide evenly, percentage splits use member percentages, loan splits set lender share to 0 and borrower share to total.
 
 #### `calculateSettlements`
 
 - **Location:** `src/utils/splitCalculations.ts`
 - **Signature:**
-    ```typescript
-    interface SettlementSuggestion {
-        from: string;
-        to: string;
-        amount: number;
-    }
-    function calculateSettlements(members: IMember[]): SettlementSuggestion[];
-    ```
+  ```typescript
+  interface SettlementSuggestion {
+    from: string
+    to: string
+    amount: number
+  }
+  function calculateSettlements(members: IMember[]): SettlementSuggestion[]
+  ```
 - **Logic:** Greedy algorithm matching largest debtors with largest creditors to minimize number of settlement transactions.
 
 #### `mergeLabels`
 
 - **Location:** `src/utils/groupUtils.ts`
 - **Signature:**
-    ```typescript
-    function mergeLabels(existing: string[], incoming: string[]): string[];
-    ```
+  ```typescript
+  function mergeLabels(existing: string[], incoming: string[]): string[]
+  ```
 - **Logic:** Returns `Array.from(new Set([...existing, ...incoming]))`. Used by bulk label assignment to merge without duplicates.
 
 ## Data Models
@@ -247,23 +253,23 @@ graph TD
 // src/store/groupSlice.ts
 
 interface IMember {
-    name: string; // Member name
-    share: number; // How much they owe from the total
-    paid: number; // How much they've actually paid back
-    percentage?: number; // For percentage-based splits
+  name: string // Member name
+  share: number // How much they owe from the total
+  paid: number // How much they've actually paid back
+  percentage?: number // For percentage-based splits
 }
 
 interface ITransactionGroup {
-    id: string; // UUID, generated via crypto.randomUUID()
-    name: string; // Required, non-empty
-    involvedParty: string; // Auto-generated comma-separated member names
-    members: IMember[]; // Per-member share and payment tracking
-    notes: string; // Optional free-text
-    transactionIds: string[]; // References to ITransactionLogs._id
-    createdAt: string; // ISO 8601 timestamp
-    updatedAt: string; // ISO 8601 timestamp
-    splitType?: SplitType; // Optional for backward compatibility
-    splitConfig?: SplitConfiguration; // Additional configuration for split
+  id: string // UUID, generated via crypto.randomUUID()
+  name: string // Required, non-empty
+  involvedParty: string // Auto-generated comma-separated member names
+  members: IMember[] // Per-member share and payment tracking
+  notes: string // Optional free-text
+  transactionIds: string[] // References to ITransactionLogs._id
+  createdAt: string // ISO 8601 timestamp
+  updatedAt: string // ISO 8601 timestamp
+  splitType?: SplitType // Optional for backward compatibility
+  splitConfig?: SplitConfiguration // Additional configuration for split
 }
 ```
 
@@ -274,18 +280,18 @@ The existing `ExpenseTrackerDB` database version is bumped to `5`. The `upgrade`
 ```typescript
 // Updated db.ts schema
 interface ExpenseDB extends DBSchema {
-    edited_transactions: {
-        key: string;
-        value: Partial<ITransactionLogs>;
-    };
-    labels: {
-        key: string;
-        value: { key: string; labels: string[] };
-    };
-    transaction_groups: {
-        key: string;
-        value: ITransactionGroup;
-    };
+  edited_transactions: {
+    key: string
+    value: Partial<ITransactionLogs>
+  }
+  labels: {
+    key: string
+    value: { key: string; labels: string[] }
+  }
+  transaction_groups: {
+    key: string
+    value: ITransactionGroup
+  }
 }
 ```
 
@@ -293,25 +299,25 @@ The `initDB` upgrade function:
 
 ```typescript
 export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
-    if (dbPromise === undefined) {
-        dbPromise = openDB<ExpenseDB>("ExpenseTrackerDB", 5, {
-            upgrade(db) {
-                if (!db.objectStoreNames.contains("edited_transactions")) {
-                    db.createObjectStore("edited_transactions", { keyPath: "_id" });
-                }
-                if (!db.objectStoreNames.contains("labels")) {
-                    db.createObjectStore("labels", { keyPath: "key" });
-                }
-                if (!db.objectStoreNames.contains("transaction_groups")) {
-                    db.createObjectStore("transaction_groups", { keyPath: "id" });
-                }
-            },
-        }).catch((err) => {
-            dbPromise = undefined;
-            throw err;
-        });
-    }
-    return dbPromise;
+  if (dbPromise === undefined) {
+    dbPromise = openDB<ExpenseDB>('ExpenseTrackerDB', 5, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains('edited_transactions')) {
+          db.createObjectStore('edited_transactions', { keyPath: '_id' })
+        }
+        if (!db.objectStoreNames.contains('labels')) {
+          db.createObjectStore('labels', { keyPath: 'key' })
+        }
+        if (!db.objectStoreNames.contains('transaction_groups')) {
+          db.createObjectStore('transaction_groups', { keyPath: 'id' })
+        }
+      },
+    }).catch(err => {
+      dbPromise = undefined
+      throw err
+    })
+  }
+  return dbPromise
 }
 ```
 
@@ -321,10 +327,10 @@ export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
 // src/helpers/indexDB/groupStore.ts
 
 class GroupStore {
-    async saveGroup(group: ITransactionGroup): Promise<void>;
-    async getAllGroups(): Promise<ITransactionGroup[]>;
-    async getGroup(id: string): Promise<ITransactionGroup | undefined>;
-    async deleteGroup(id: string): Promise<void>;
+  async saveGroup(group: ITransactionGroup): Promise<void>
+  async getAllGroups(): Promise<ITransactionGroup[]>
+  async getGroup(id: string): Promise<ITransactionGroup | undefined>
+  async deleteGroup(id: string): Promise<void>
 }
 ```
 
@@ -336,16 +342,16 @@ Follows the same pattern as `IndexDBTransactions` — gets the DB via `initDB()`
 // src/store/groupSlice.ts
 
 interface IGroupState {
-    groups: ITransactionGroup[];
-    loading: boolean;
-    error: string | null;
+  groups: ITransactionGroup[]
+  loading: boolean
+  error: string | null
 }
 
 const initialState: IGroupState = {
-    groups: [],
-    loading: false,
-    error: null,
-};
+  groups: [],
+  loading: false,
+  error: null,
+}
 ```
 
 **Actions:**
@@ -360,15 +366,15 @@ const initialState: IGroupState = {
 **Store registration** in `src/store/index.ts`:
 
 ```typescript
-import groupReducer from "./groupSlice";
+import groupReducer from './groupSlice'
 
 export const store = configureStore({
-    reducer: {
-        auth: authReducer,
-        transactions: transactionReducer,
-        groups: groupReducer,
-    },
-});
+  reducer: {
+    auth: authReducer,
+    transactions: transactionReducer,
+    groups: groupReducer,
+  },
+})
 ```
 
 ### Transaction-to-Group Lookup
@@ -377,16 +383,19 @@ To efficiently render group badges on transaction rows, a derived lookup map is 
 
 ```typescript
 // Selector in groupSlice.ts or a selectors file
-const selectTransactionGroupMap = createSelector([(state: RootState) => state.groups.groups], (groups): Record<string, ITransactionGroup[]> => {
-    const map: Record<string, ITransactionGroup[]> = {};
+const selectTransactionGroupMap = createSelector(
+  [(state: RootState) => state.groups.groups],
+  (groups): Record<string, ITransactionGroup[]> => {
+    const map: Record<string, ITransactionGroup[]> = {}
     for (const group of groups) {
-        for (const txId of group.transactionIds) {
-            if (!map[txId]) map[txId] = [];
-            map[txId].push(group);
-        }
+      for (const txId of group.transactionIds) {
+        if (!map[txId]) map[txId] = []
+        map[txId].push(group)
+      }
     }
-    return map;
-});
+    return map
+  }
+)
 ```
 
 This memoized selector avoids recomputing the map on every render unless `groups` changes.
@@ -551,9 +560,9 @@ _For any_ change in `page`, `filters`, or `limit` values, the `selectedIds` stat
 
 - Minimum 100 iterations per property test (`numRuns: 100`)
 - Each test tagged with a comment referencing the design property:
-    ```typescript
-    // Feature: transaction-grouping, Property 9: Group summary computation
-    ```
+  ```typescript
+  // Feature: transaction-grouping, Property 9: Group summary computation
+  ```
 
 **Property tests cover:**
 

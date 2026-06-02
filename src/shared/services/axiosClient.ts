@@ -1,0 +1,31 @@
+import axios from 'axios'
+
+const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL as string
+
+const axiosClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
+})
+
+axiosClient.interceptors.request.use(
+  config => {
+    const accessToken = localStorage.getItem('accessToken')
+    if (accessToken) config.headers.accessToken = `${accessToken}`
+    return config
+  },
+  error => Promise.reject(error instanceof Error ? error : new Error(String(error)))
+)
+
+axiosClient.interceptors.response.use(
+  response => response,
+  (error: import('axios').AxiosError) => {
+    if (error.response?.status === 401) {
+      console.error('Unauthorized! Logging out...')
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('userData')
+    }
+    return Promise.reject(error)
+  }
+)
+
+export { axiosClient }
