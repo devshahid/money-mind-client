@@ -7,7 +7,19 @@ import typescriptPlugin from '@typescript-eslint/eslint-plugin'
 import typescriptParser from '@typescript-eslint/parser'
 
 export default [
-  { ignores: ['dist', 'vite.config.ts', 'node_modules', 'eslint.config.js', '**/*.test.ts'] },
+  {
+    ignores: [
+      'dist',
+      'vite.config.ts',
+      'vitest.config.ts',
+      'node_modules',
+      'eslint.config.js',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/__tests__/**',
+      'src/tests/**',
+    ],
+  },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
@@ -39,7 +51,7 @@ export default [
       ...typescriptPlugin.configs['recommended-type-checked'].rules,
       'react/jsx-no-target-blank': 'off',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-      '@typescript-eslint/explicit-function-return-type': 'warn',
+      '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',
     },
   },

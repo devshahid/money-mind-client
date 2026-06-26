@@ -128,7 +128,16 @@ export type LinkType = 'AUTO' | 'MANUAL'
 
 export type IDebtTransactionLink = {
   _id: string
-  transactionId: string
+  transactionId:
+    | string
+    | {
+        _id: string
+        transactionDate: string
+        narration?: string
+        amount: number
+        bankName?: string
+        isCredit: boolean
+      }
   linkType: LinkType
   confidence?: number
   linkedDate: string
@@ -174,4 +183,16 @@ export type IDetailedDebt = {
     remainingAmount: number
     monthsElapsed: number
   }
+}
+
+export type ILinkedTransaction = {
+  _id: string
+  transactionDate: string
+  narration?: string
+  amount: number
+  bankName?: string
+  isCredit: boolean
+  linkType?: LinkType
+  confidence?: number
+  actualPaymentAmount?: number
 }
