@@ -12,7 +12,7 @@ import {
 import { useForm, Controller } from 'react-hook-form'
 import { IDebt } from '../types/debt'
 import { useAppDispatch } from '../../../shared/hooks/slice-hooks'
-import { recordPayment } from '../store/debtSlice'
+import { recordEMIPayment } from '../store/debtSlice'
 import { useSnackbar } from '../../../shared/contexts/SnackBarContext'
 
 interface EMIPaymentModalProps {
@@ -45,21 +45,22 @@ const EMIPaymentModal: React.FC<EMIPaymentModalProps> = ({ open, onClose, debt }
     if (!debt) return
 
     dispatch(
-      recordPayment({
+      recordEMIPayment({
         debtId: debt._id,
         amount: data.amount,
         paymentDate: data.paymentDate,
+        isPartPayment: data.isPartPayment,
         ...(data.transactionId ? { transactionId: data.transactionId } : {}),
       })
     )
       .unwrap()
       .then(() => {
-        showSuccessSnackbar('Payment recorded successfully')
+        showSuccessSnackbar('EMI payment recorded successfully')
         reset()
         onClose()
       })
       .catch(() => {
-        showErrorSnackbar('Failed to record payment')
+        showErrorSnackbar('Failed to record EMI payment')
       })
   }
 
