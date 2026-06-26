@@ -3,7 +3,6 @@ export const AppRoute = {
   Dashboard: '/',
   Transactions: '/transactions',
   Debts: '/debts',
-  DebtDetail: '/debts/:debtId',
   Goals: '/goals',
   Budget: '/budget',
   Analytics: '/analytics',

@@ -12,10 +12,7 @@
     "check-prettier": "prettier src/**/* --check",
     "check-eslint": "eslint \"src/**/*.{js,ts,tsx,jsx}\" --ext .js,.ts,.tsx,.jsx",
     "prepare": "husky",
-    "fix-prettier": "npx prettier . --write",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "fix-prettier": "npx prettier . --write"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -62,9 +59,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.26.0",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.15.17",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -73,7 +67,6 @@
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
     "@vitejs/plugin-react": "^4.3.1",
-    "@vitest/ui": "^4.1.9",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.26.0",
     "eslint-plugin-react": "^7.37.5",
@@ -82,7 +75,6 @@
     "fast-check": "^4.6.0",
     "globals": "^15.15.0",
     "husky": "^9.1.7",
-    "jsdom": "^29.1.1",
     "lint-staged": "^15.5.1",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.6",
