@@ -145,7 +145,14 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
     // Only send non-empty filters
     const updatedFilters = Object.entries(filters).reduce(
       (acc, [key, value]: [string, string | string[]]) => {
-        if (value.length > 0) acc[key] = value
+        // Skip empty strings and empty arrays
+        if (Array.isArray(value)) {
+          if (value.length > 0) acc[key] = value
+        } else if (typeof value === 'string') {
+          if (value.trim().length > 0) acc[key] = value
+        } else if (value != null) {
+          acc[key] = value
+        }
         return acc
       },
       {} as Record<string, string | string[]>

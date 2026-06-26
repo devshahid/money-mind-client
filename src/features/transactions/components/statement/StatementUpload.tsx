@@ -16,14 +16,14 @@ import {
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import * as XLSX from 'xlsx'
 
-import { uploadStatementFile, parsePdf, checkDuplicates } from '../../services/statementService'
+import { parsePdf, checkDuplicates, importTransactions } from '../../services/statementService'
+import type { ITransaction } from '../../types/transaction'
 import { listTransactions } from '../../store/transactionSlice'
 import { useAppDispatch, useAppSelector } from '../../../../shared/hooks/slice-hooks'
 import { useSnackbar } from '../../../../shared/contexts/SnackBarContext'
 import { RootState } from '../../../../store'
 import { StatementPreviewTable } from './StatementPreviewTable'
 import type { PreviewRow } from './StatementPreviewTable'
-import { ITransaction } from '../../types/transaction'
 
 const ACCEPTED_FORMATS = '.csv,.xls,.xlsx,.pdf'
 const STEPS = ['Select File', 'Enter Bank Name', 'Preview & Confirm']
@@ -199,6 +199,7 @@ const StatementUpload: React.FC<StatementUploadProps> = ({ open, onClose }) => {
   }
 
   const handleConfirmImport = async (): Promise<void> => {
+    console.log('BANK NAME:', bankName)
     if (!file) return
     setImporting(true)
 
@@ -212,7 +213,19 @@ const StatementUpload: React.FC<StatementUploadProps> = ({ open, onClose }) => {
         return
       }
 
-      await uploadStatementFile(file, bankName.trim())
+      // Convert preview rows to server's expected format
+      const transactionsToImport = rowsToImport.map(row => ({
+        date: row.transactionDate,
+        narration: row.narration,
+        depositAmount: row.isCredit ? row.amount : '',
+        withdrawlAmount: row.isCredit ? '' : row.amount,
+        refNumber: '',
+        valueDate: row.transactionDate,
+        closingBalance: 0,
+        isCash: false,
+      }))
+
+      await importTransactions(transactionsToImport, bankName.trim())
 
       showSuccessSnackbar(`Successfully imported ${rowsToImport.length} transaction(s).`)
 
