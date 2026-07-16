@@ -40,6 +40,7 @@ import Face3Icon from '@mui/icons-material/Face3'
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
 import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom'
 import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew'
+import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee'
 
 export function getExpenseCategories(): ExpenseCategory[] {
   return [
@@ -234,6 +235,12 @@ export function getExpenseCategories(): ExpenseCategory[] {
       icon: PaymentsIcon,
       color: '#1A237E', //Very Dark Blue
       backgroundColor: '#E0E0E0',
+    },
+    {
+      name: 'Refunds & Reversals',
+      icon: CurrencyRupeeIcon,
+      color: '#00796B', // Teal Dark
+      backgroundColor: '#E0F2F1',
     },
     {
       name: 'Other',
