@@ -182,6 +182,11 @@ const TransactionLogs = (): JSX.Element => {
     void dispatch(listTransactions({ ...cleanUpFilters(), page: (parseInt(page) + 1).toString(), limit }))
   }, [dispatch, page, limit, cleanUpFilters])
 
+  // Sync local rowsPerPage with Redux limit
+  useEffect(() => {
+    setRowsPerPage(parseInt(limit) || 50)
+  }, [limit])
+
   // Reset selection when page, filters, or limit change
   useEffect(() => {
     setSelectedIds([])
@@ -272,6 +277,11 @@ const TransactionLogs = (): JSX.Element => {
       setErrors({ ...errors, [name ?? target.name]: '' })
     }
   }
+  // Get uncategorized transaction IDs from the current page
+  const uncategorizedOnPage = transactions
+    .filter(tx => !tx.category || tx.category === '' || tx.category === 'Others')
+    .map(tx => tx._id)
+    .filter((id): id is string => id !== undefined)
 
   const handlePageChange = (newPage: string): void => {
     void dispatch(updatePage(newPage))
@@ -280,6 +290,7 @@ const TransactionLogs = (): JSX.Element => {
   const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     setRowsPerPage(parseInt(event.target.value, 10))
     void dispatch(updateLimit(event.target.value))
+    void dispatch(updatePage('0'))
   }
 
   // --- Bulk action handlers ---
@@ -428,11 +439,11 @@ const TransactionLogs = (): JSX.Element => {
               color='primary'
               startIcon={<AutoAwesomeIcon />}
               onClick={() => setAiSuggestionDialogOpen(true)}
-              disabled={loading}
+              disabled={loading || (selectedIds.length === 0 && uncategorizedOnPage.length === 0)}
             >
               {selectedIds.length > 0
                 ? `AI Categorize (${selectedIds.length} selected)`
-                : 'AI Categorize All Uncategorized'}
+                : `AI Categorize (${uncategorizedOnPage.length} uncategorized)`}
             </Button>
           </Box>
 
@@ -749,8 +760,8 @@ const TransactionLogs = (): JSX.Element => {
       <AISuggestionReviewDialog
         open={aiSuggestionDialogOpen}
         onClose={() => setAiSuggestionDialogOpen(false)}
-        transactionIds={selectedIds.length > 0 ? selectedIds : undefined}
-        categorizeAll={selectedIds.length === 0}
+        transactionIds={selectedIds.length > 0 ? selectedIds : uncategorizedOnPage}
+        categorizeAll={false}
         onSuccess={() => {
           void dispatch(listTransactions({ ...cleanUpFilters(), page: (parseInt(page) + 1).toString(), limit }))
           setSelectedIds([])
