@@ -13,7 +13,7 @@
 branch=$(git rev-parse --abbrev-ref HEAD)
 
 # Allow protected branches
-if echo "$branch" | grep -qE "^(main|deploy|develop)$"; then
+if echo "$branch" | grep -qE "^(main|master|deploy|develop)$"; then
   exit 0
 fi
 
