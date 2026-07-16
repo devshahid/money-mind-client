@@ -469,6 +469,13 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
               },
             }}
           >
+            <MenuItem
+              key='uncategorized'
+              value='Uncategorized'
+            >
+              <Checkbox checked={filters.category.indexOf('Uncategorized') > -1} />
+              <ListItemText primary='Uncategorized' />
+            </MenuItem>
             {getExpenseCategories().map((category, i) => (
               <MenuItem
                 key={i}
@@ -683,6 +690,13 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
               input={<OutlinedInput label='Category' />}
               renderValue={selected => selected.join(', ')}
             >
+              <MenuItem
+                key='uncategorized'
+                value='Uncategorized'
+              >
+                <Checkbox checked={filters.category.indexOf('Uncategorized') > -1} />
+                <ListItemText primary='Uncategorized' />
+              </MenuItem>
               {getExpenseCategories().map((category, i) => (
                 <MenuItem
                   key={i}
