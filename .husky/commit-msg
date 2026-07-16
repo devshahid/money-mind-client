@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# Conventional Commit Message Validation
+# Format: type(scope?): description
+# Examples:
+#   feat: add AI category suggestions ✅
+#   fix(ai): handle LLM timeout ✅
+#   feat!: breaking change to API ✅
+#   chore: update dependencies ✅
+#   updated stuff ❌
+
+commit_msg=$(cat "$1")
+
+# Allow merge commits
+if echo "$commit_msg" | grep -qE "^Merge "; then
+  exit 0
+fi
+
+# Conventional commit pattern
+pattern="^(feat|fix|docs|chore|refactor|style|test|perf|ci|build|revert)(\([a-z0-9-]+\))?!?: .{2,}"
+
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+  echo ""
+  echo "❌ Invalid commit message format!"
+  echo ""
+  echo "Expected: type(scope?): description"
+  echo ""
+  echo "Valid types: feat, fix, docs, chore, refactor, style, test, perf, ci, build, revert"
+  echo ""
+  echo "Examples:"
+  echo "  feat: add AI category suggestions"
+  echo "  fix(ai): handle LLM timeout on lambda"
+  echo "  feat!: breaking change to auth flow"
+  echo "  chore: update dependencies"
+  echo "  refactor(transactions): simplify batch logic"
+  echo ""
+  exit 1
+fi
