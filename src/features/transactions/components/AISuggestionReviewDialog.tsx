@@ -21,13 +21,26 @@ import {
   IconButton,
   Tooltip,
   LinearProgress,
+  Select,
+  MenuItem,
+  type SelectChangeEvent,
 } from '@mui/material'
-import { AutoAwesome, CheckCircle, Info, ThumbUp, ThumbDown, SelectAll, DeselectOutlined } from '@mui/icons-material'
+import {
+  AutoAwesome,
+  CheckCircle,
+  Info,
+  ThumbUp,
+  ThumbDown,
+  SelectAll,
+  DeselectOutlined,
+  Edit,
+} from '@mui/icons-material'
 import {
   getSuggestedCategories,
   applyCategorySuggestions,
   type CategorySuggestion,
 } from '../../ai-chat/services/aiService'
+import { getExpenseCategories } from '../../../constants'
 
 interface Props {
   open: boolean
@@ -50,6 +63,10 @@ export const AISuggestionReviewDialog: React.FC<Props> = ({
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState<'initial' | 'review' | 'applied'>('initial')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [userOverrides, setUserOverrides] = useState<Set<string>>(new Set())
+
+  const categories = getExpenseCategories()
 
   const handleGetSuggestions = async (): Promise<void> => {
     setLoading(true)
@@ -80,7 +97,8 @@ export const AISuggestionReviewDialog: React.FC<Props> = ({
         .map(s => ({
           transactionId: s.transactionId,
           category: s.suggestedCategory,
-          confidence: s.confidence,
+          confidence: userOverrides.has(s.transactionId) ? 1 : s.confidence,
+          userOverride: userOverrides.has(s.transactionId),
         }))
 
       await applyCategorySuggestions(toApply)
@@ -114,11 +132,23 @@ export const AISuggestionReviewDialog: React.FC<Props> = ({
     setSelectedSuggestions(new Set())
   }
 
+  const handleCategoryChange = (transactionId: string, newCategory: string): void => {
+    setSuggestions(prev =>
+      prev.map(s => (s.transactionId === transactionId ? { ...s, suggestedCategory: newCategory } : s))
+    )
+    setUserOverrides(prev => new Set(prev).add(transactionId))
+    // Auto-select the transaction when user overrides category
+    setSelectedSuggestions(prev => new Set(prev).add(transactionId))
+    setEditingId(null)
+  }
+
   const handleClose = (): void => {
     onClose()
     setTimeout(() => {
       setSuggestions([])
       setSelectedSuggestions(new Set())
+      setUserOverrides(new Set())
+      setEditingId(null)
       setStep('initial')
       setError(null)
     }, 300)
@@ -167,6 +197,7 @@ export const AISuggestionReviewDialog: React.FC<Props> = ({
               <ul>
                 <li>AI analyzes transaction narrations and suggests appropriate categories</li>
                 <li>You can review each suggestion individually</li>
+                <li>Click on a suggested category to change it manually</li>
                 <li>Accept or reject suggestions - apply only what makes sense</li>
                 <li>Transactions with confidence {'>'} 70% are auto-selected</li>
               </ul>
@@ -223,6 +254,7 @@ export const AISuggestionReviewDialog: React.FC<Props> = ({
               sx={{ mb: 2 }}
             >
               {selectedCount} of {totalCount} suggestions selected for application
+              {userOverrides.size > 0 && ` (${userOverrides.size} manually changed)`}
             </Alert>
 
             <TableContainer
@@ -239,7 +271,7 @@ export const AISuggestionReviewDialog: React.FC<Props> = ({
                     <TableCell sx={{ minWidth: 300 }}>Narration</TableCell>
                     <TableCell>Amount</TableCell>
                     <TableCell>Current</TableCell>
-                    <TableCell>→ AI Suggested</TableCell>
+                    <TableCell>→ Category</TableCell>
                     <TableCell>Confidence</TableCell>
                     <TableCell>Reasoning</TableCell>
                   </TableRow>
@@ -247,6 +279,8 @@ export const AISuggestionReviewDialog: React.FC<Props> = ({
                 <TableBody>
                   {suggestions.map(suggestion => {
                     const isSelected = selectedSuggestions.has(suggestion.transactionId)
+                    const isEditing = editingId === suggestion.transactionId
+                    const isOverridden = userOverrides.has(suggestion.transactionId)
                     return (
                       <TableRow
                         key={suggestion.transactionId}
@@ -278,7 +312,14 @@ export const AISuggestionReviewDialog: React.FC<Props> = ({
                             {suggestion.narration}
                           </Typography>
                         </TableCell>
-                        <TableCell>₹{suggestion.amount.toLocaleString('en-IN')}</TableCell>
+                        <TableCell
+                          sx={{
+                            fontWeight: 'bold',
+                            color: suggestion.isCredit ? '#4CAF50' : '#F44336',
+                          }}
+                        >
+                          ₹{suggestion.amount.toLocaleString('en-IN')}
+                        </TableCell>
                         <TableCell>
                           <Chip
                             label={suggestion.currentCategory || 'None'}
@@ -288,23 +329,64 @@ export const AISuggestionReviewDialog: React.FC<Props> = ({
                           />
                         </TableCell>
                         <TableCell>
-                          <Chip
-                            label={suggestion.suggestedCategory}
-                            size='small'
-                            color='primary'
-                          />
+                          {isEditing ? (
+                            <Select
+                              value={suggestion.suggestedCategory}
+                              onChange={(e: SelectChangeEvent) =>
+                                handleCategoryChange(suggestion.transactionId, e.target.value)
+                              }
+                              size='small'
+                              autoFocus
+                              onBlur={() => setEditingId(null)}
+                              sx={{ minWidth: 160 }}
+                              MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
+                            >
+                              {categories.map(cat => (
+                                <MenuItem
+                                  key={cat.name}
+                                  value={cat.name}
+                                >
+                                  {cat.name}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          ) : (
+                            <Chip
+                              label={suggestion.suggestedCategory}
+                              size='small'
+                              color={isOverridden ? 'secondary' : 'primary'}
+                              onClick={() => setEditingId(suggestion.transactionId)}
+                              onDelete={() => setEditingId(suggestion.transactionId)}
+                              deleteIcon={
+                                <Edit
+                                  fontSize='small'
+                                  sx={{ fontSize: '14px !important' }}
+                                />
+                              }
+                              sx={{ cursor: 'pointer' }}
+                            />
+                          )}
                         </TableCell>
                         <TableCell>
-                          <Chip
-                            label={`${Math.round(suggestion.confidence * 100)}%`}
-                            size='small'
-                            color={getConfidenceColor(suggestion.confidence)}
-                            variant='outlined'
-                          />
+                          {isOverridden ? (
+                            <Chip
+                              label='User'
+                              size='small'
+                              color='secondary'
+                              variant='outlined'
+                            />
+                          ) : (
+                            <Chip
+                              label={`${Math.round(suggestion.confidence * 100)}%`}
+                              size='small'
+                              color={getConfidenceColor(suggestion.confidence)}
+                              variant='outlined'
+                            />
+                          )}
                         </TableCell>
                         <TableCell>
                           <Tooltip
-                            title={suggestion.reasoning}
+                            title={isOverridden ? 'Manually changed by you' : suggestion.reasoning}
                             arrow
                           >
                             <IconButton size='small'>
@@ -335,13 +417,15 @@ export const AISuggestionReviewDialog: React.FC<Props> = ({
               variant='body1'
               color='text.secondary'
             >
-              {selectedCount} transactions have been categorized with AI
+              {selectedCount} transactions have been categorized
+              {userOverrides.size > 0 &&
+                ` (${selectedCount - userOverrides.size} by AI, ${userOverrides.size} manually by you)`}
             </Typography>
             <Alert
               severity='success'
               sx={{ mt: 2 }}
             >
-              Transactions are marked as AI-suggested for your records
+              Transactions are marked accordingly in your records
             </Alert>
           </Box>
         )}

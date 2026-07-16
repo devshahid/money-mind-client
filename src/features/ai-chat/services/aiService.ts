@@ -6,6 +6,7 @@ export interface CategorySuggestion {
   transactionId: string
   narration: string
   amount: number
+  isCredit: boolean
   currentCategory: string
   suggestedCategory: string
   confidence: number
@@ -76,7 +77,7 @@ export const getSuggestedCategories = async (
 }
 
 export const applyCategorySuggestions = async (
-  suggestions: Array<{ transactionId: string; category: string; confidence: number }>
+  suggestions: Array<{ transactionId: string; category: string; confidence: number; userOverride?: boolean }>
 ): Promise<{
   message: string
   applied: number
