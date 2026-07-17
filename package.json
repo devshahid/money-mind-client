@@ -12,7 +12,9 @@
     "check-prettier": "prettier src/**/* --check",
     "check-eslint": "eslint \"src/**/*.{js,ts,tsx,jsx}\" --ext .js,.ts,.tsx,.jsx",
     "prepare": "husky",
-    "fix-prettier": "npx prettier . --write"
+    "fix-prettier": "npx prettier . --write",
+    "test": "vitest --run",
+    "test:watch": "vitest"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -75,6 +77,7 @@
     "fast-check": "^4.6.0",
     "globals": "^15.15.0",
     "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
     "lint-staged": "^15.5.1",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.6",

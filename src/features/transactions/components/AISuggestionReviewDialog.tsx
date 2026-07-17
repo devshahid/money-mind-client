@@ -80,8 +80,12 @@ export const AISuggestionReviewDialog: React.FC<Props> = ({
       setSelectedSuggestions(autoSelect)
       setStep('review')
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } }
-      setError(error.response?.data?.message || 'Failed to get AI suggestions')
+      const error = err as { response?: { status?: number; data?: { message?: string } } }
+      if (error.response?.status === 504) {
+        setError('AI took too long to respond. Please try again with fewer transactions.')
+      } else {
+        setError(error.response?.data?.message || 'Failed to get AI suggestions')
+      }
     } finally {
       setLoading(false)
     }
@@ -107,7 +111,7 @@ export const AISuggestionReviewDialog: React.FC<Props> = ({
         onSuccess()
       }
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } }
+      const error = err as { response?: { status?: number; data?: { message?: string } } }
       setError(error.response?.data?.message || 'Failed to apply suggestions')
     } finally {
       setApplying(false)
