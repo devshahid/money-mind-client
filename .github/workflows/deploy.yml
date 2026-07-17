@@ -5,7 +5,6 @@ on:
     branches:
       - deploy
 
-# Show commit message as the workflow run title (like your company setup)
 run-name: '${{ github.event.head_commit.message }}'
 
 concurrency:
@@ -13,8 +12,65 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+  release:
+    name: Semantic Release
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    outputs:
+      new_release: ${{ steps.semantic.outputs.new_release_published }}
+      version: ${{ steps.semantic.outputs.new_release_version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Semantic Release
+        id: semantic
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
   build-and-deploy:
     name: Build & Deploy to Production
+    needs: [test, release]
+    if: always() && needs.test.result == 'success'
     runs-on: ubuntu-latest
 
     steps:
