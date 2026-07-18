@@ -1,6 +1,7 @@
 import React, { useContext, useState } from 'react'
 import {
   Box,
+  Divider,
   List,
   ListItem,
   ListItemButton,
@@ -9,7 +10,6 @@ import {
   Tooltip,
   Typography,
   Avatar,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogActions,
@@ -21,28 +21,23 @@ import {
   TrendingUp,
   Settings,
   PieChart,
-  ArrowBackIosNew,
-  ArrowForwardIos,
   AccountBalance,
   AccountTree,
   AccountCircle,
-  DarkMode,
-  WbSunny,
   Logout,
   SmartToy,
 } from '@mui/icons-material'
 import { NavLink, useNavigate } from 'react-router-dom'
 
 import AppLogo from '../assets/images/money-mind-logo.png'
-import { ColorModeContext } from '../shared/contexts/ThemeContext'
 import { useNavigation } from '../shared/contexts/NavigationContext'
+import { ColorModeContext } from '../shared/contexts/ThemeContext'
 import { colors, spacing } from '../shared/theme'
 
 type NavItem = {
   label: string
   icon: React.ReactNode
   path: string
-  variant?: 'default' | 'danger'
 }
 
 const navItems: NavItem[] = [
@@ -62,8 +57,8 @@ type SidebarContentProps = {
 }
 
 const SidebarContent = ({ onNavItemClick }: SidebarContentProps): React.ReactElement => {
-  const { isCollapsed, toggleCollapse, drawerMode } = useNavigation()
-  const { mode, toggleMode } = useContext(ColorModeContext)
+  const { isCollapsed, drawerMode } = useNavigation()
+  const { mode } = useContext(ColorModeContext)
   const navigate = useNavigate()
   const [openLogout, setOpenLogout] = useState(false)
 
@@ -89,6 +84,7 @@ const SidebarContent = ({ onNavItemClick }: SidebarContentProps): React.ReactEle
         height: '100%',
         background: mode === 'light' ? colors.background.lavender : colors.grayscale.black,
         overflowY: 'auto',
+        overflowX: 'hidden',
         scrollbarWidth: 'none',
         '&::-webkit-scrollbar': { display: 'none' },
       }}
@@ -98,11 +94,13 @@ const SidebarContent = ({ onNavItemClick }: SidebarContentProps): React.ReactEle
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          px: spacing[2],
-          py: spacing[2],
-          borderBottom: `1px solid ${colors.grayscale.lightGray}`,
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          px: spacing[3],
+          py: spacing[3],
           width: '100%',
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+          minHeight: 64,
         }}
       >
         <Box
@@ -110,48 +108,26 @@ const SidebarContent = ({ onNavItemClick }: SidebarContentProps): React.ReactEle
             navigate('/')
             handleNavClick()
           }}
-          sx={{ display: 'flex', gap: spacing[1], alignItems: 'center', cursor: 'pointer' }}
+          sx={{ display: 'flex', gap: spacing[2], alignItems: 'center', cursor: 'pointer', overflow: 'hidden' }}
         >
           <Avatar
             src={AppLogo}
-            sx={{ bgcolor: 'black', width: 40, height: 40 }}
+            sx={{ bgcolor: 'black', width: 36, height: 36, flexShrink: 0 }}
           />
           {!collapsed && (
             <Typography
               variant='h6'
               fontWeight='bold'
-              fontSize='1rem'
+              fontSize='0.95rem'
+              sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
             >
               Money Mind
             </Typography>
           )}
         </Box>
-        {drawerMode === 'permanent' && (
-          <IconButton
-            onClick={toggleCollapse}
-            sx={{
-              border: `1px solid ${colors.grayscale.lightGray}`,
-              background: mode === 'light' ? colors.grayscale.white : colors.grayscale.black,
-              color: mode === 'light' ? colors.grayscale.black : colors.grayscale.white,
-              '&:hover': {
-                backgroundColor: mode === 'light' ? colors.grayscale.background : colors.grayscale.dark,
-              },
-            }}
-          >
-            {collapsed ? (
-              <ArrowForwardIos
-                fontSize='small'
-                sx={{ width: '10px', height: '10px' }}
-              />
-            ) : (
-              <ArrowBackIosNew
-                fontSize='small'
-                sx={{ width: '10px', height: '10px' }}
-              />
-            )}
-          </IconButton>
-        )}
       </Box>
+
+      <Divider sx={{ mx: spacing[2] }} />
 
       {/* Navigation Items */}
       <List
@@ -160,9 +136,8 @@ const SidebarContent = ({ onNavItemClick }: SidebarContentProps): React.ReactEle
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          padding: spacing[1],
-          flex: 1,
+          px: spacing[2],
+          py: spacing[2],
         }}
       >
         {navItems.map((item, index) => (
@@ -173,13 +148,7 @@ const SidebarContent = ({ onNavItemClick }: SidebarContentProps): React.ReactEle
           >
             <ListItem
               disablePadding
-              sx={{
-                mx: 1,
-                my: 0.5,
-                borderRadius: '30px',
-                width: '100%',
-                justifyContent: 'center',
-              }}
+              sx={{ mb: spacing[1] }}
             >
               <NavLink
                 to={item.path}
@@ -191,165 +160,81 @@ const SidebarContent = ({ onNavItemClick }: SidebarContentProps): React.ReactEle
                     : mode === 'light'
                       ? colors.grayscale.black
                       : colors.grayscale.white,
-                  width: collapsed ? 'auto' : '100%',
+                  width: '100%',
                   display: 'flex',
-                  justifyContent: 'center',
-                  borderRadius: '30px',
+                  borderRadius: '12px',
                   backgroundColor: isActive ? colors.accent.purple : 'transparent',
-                  transition: 'background-color 0.3s ease',
+                  transition: 'background-color 0.2s ease',
                 })}
               >
                 <ListItemButton
                   sx={{
-                    minHeight: 48,
+                    height: 44,
                     justifyContent: collapsed ? 'center' : 'flex-start',
-                    px: spacing[2],
-                    gap: collapsed ? 0 : spacing[1],
-                    width: '100%',
-                    borderRadius: '30px',
+                    px: spacing[3],
+                    gap: spacing[2],
+                    borderRadius: '12px',
                     '&:hover': {
-                      backgroundColor: mode === 'light' ? colors.background.purple : 'rgba(71, 71, 78, 0.1)',
+                      backgroundColor: mode === 'light' ? colors.background.purple : 'rgba(71, 71, 78, 0.15)',
                     },
                   }}
                 >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: collapsed ? 0 : 3,
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {item.icon}
-                  </ListItemIcon>
-                  {!collapsed && <ListItemText primary={item.label} />}
+                  <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>{item.icon}</ListItemIcon>
+                  {!collapsed && (
+                    <ListItemText
+                      primary={item.label}
+                      primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap' }}
+                    />
+                  )}
                 </ListItemButton>
               </NavLink>
             </ListItem>
           </Tooltip>
         ))}
+      </List>
 
-        {/* Logout Item — styled like a nav item with error color */}
+      {/* Bottom Section — Logout only */}
+      <Box
+        sx={{
+          mt: 'auto',
+          width: '100%',
+          px: spacing[2],
+          pb: spacing[3],
+        }}
+      >
+        <Divider sx={{ mb: spacing[2] }} />
+
         <Tooltip
           title={collapsed ? 'Logout' : ''}
           placement='right'
         >
-          <ListItem
-            disablePadding
-            sx={{
-              mx: 1,
-              my: 0.5,
-              borderRadius: '30px',
-              width: '100%',
-              justifyContent: 'center',
-            }}
-          >
+          <ListItem disablePadding>
             <ListItemButton
               onClick={() => setOpenLogout(true)}
               sx={{
-                minHeight: 48,
+                height: 44,
                 justifyContent: collapsed ? 'center' : 'flex-start',
-                px: spacing[2],
-                gap: collapsed ? 0 : spacing[1],
-                width: '100%',
-                borderRadius: '30px',
+                px: spacing[3],
+                gap: spacing[2],
+                borderRadius: '12px',
                 color: colors.semantic.error,
                 '&:hover': {
                   backgroundColor: mode === 'light' ? colors.background.red : 'rgba(211, 47, 47, 0.08)',
                 },
               }}
             >
-              <ListItemIcon
-                sx={{
-                  minWidth: 0,
-                  mr: collapsed ? 0 : 3,
-                  justifyContent: 'center',
-                  color: colors.semantic.error,
-                }}
-              >
+              <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center', color: colors.semantic.error }}>
                 <Logout />
               </ListItemIcon>
               {!collapsed && (
                 <ListItemText
                   primary='Logout'
-                  sx={{ color: colors.semantic.error }}
+                  primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500, color: colors.semantic.error }}
                 />
               )}
             </ListItemButton>
           </ListItem>
         </Tooltip>
-      </List>
-
-      {/* Theme Toggle — positioned right after nav list */}
-      <Box
-        sx={{
-          py: spacing[2],
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'center',
-        }}
-      >
-        <Box
-          sx={{
-            border: '1px solid grey',
-            borderRadius: '50px',
-            padding: collapsed ? '4px' : '4px 8px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: collapsed ? 0 : 1,
-            transition: 'all 0.3s ease-in-out',
-          }}
-        >
-          {collapsed ? (
-            <Tooltip
-              title={mode === 'light' ? 'Light mode' : 'Dark mode'}
-              placement='right'
-            >
-              <IconButton
-                size='large'
-                disableRipple
-                onClick={toggleMode}
-                sx={{
-                  backgroundColor: colors.accent.purple,
-                  color: colors.grayscale.white,
-                  '&:hover': { backgroundColor: colors.accent.purple },
-                }}
-              >
-                {mode === 'light' ? <WbSunny /> : <DarkMode />}
-              </IconButton>
-            </Tooltip>
-          ) : (
-            <>
-              <IconButton
-                size='large'
-                disableRipple
-                onClick={() => mode !== 'light' && toggleMode()}
-                sx={{
-                  backgroundColor: mode === 'light' ? colors.accent.purple : 'transparent',
-                  color: mode === 'light' ? colors.grayscale.white : colors.accent.purple,
-                  '&:hover': { backgroundColor: mode === 'light' ? colors.accent.purple : 'transparent' },
-                  transform: mode === 'light' ? 'rotate(0deg)' : 'rotate(-20deg)',
-                  transition: 'all 0.3s ease-in-out',
-                }}
-              >
-                <WbSunny />
-              </IconButton>
-              <IconButton
-                size='large'
-                disableRipple
-                onClick={() => mode !== 'dark' && toggleMode()}
-                sx={{
-                  backgroundColor: mode === 'dark' ? colors.accent.purple : 'transparent',
-                  color: mode === 'dark' ? colors.grayscale.white : colors.accent.purple,
-                  '&:hover': { backgroundColor: mode === 'dark' ? colors.accent.purple : 'transparent' },
-                  transform: mode === 'dark' ? 'rotate(0deg)' : 'rotate(20deg)',
-                  transition: 'all 0.3s ease-in-out',
-                }}
-              >
-                <DarkMode />
-              </IconButton>
-            </>
-          )}
-        </Box>
       </Box>
 
       {/* Logout Dialog */}

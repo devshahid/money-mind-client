@@ -155,9 +155,9 @@ This plan transforms the Money Mind client from a desktop-only layout into a ful
     - Make message area independently scrollable
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 6. Implement responsive Modals and Page Layouts
+- [x] 6. Implement responsive Modals and Page Layouts
 
-  - [ ] 6.1 Make modals responsive
+  - [x] 6.1 Make modals responsive
 
     - Update modal components (Add Cash Memo, Edit Transaction, Group Dialog, Label Assignment)
     - Mobile: 95% viewport width, max 500px, vertical scroll enabled
@@ -167,7 +167,7 @@ This plan transforms the Money Mind client from a desktop-only layout into a ful
     - Prevent background scrolling when modal open on mobile
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
 
-  - [ ] 6.2 Make Dashboard and Analytics pages responsive
+  - [x] 6.2 Make Dashboard and Analytics pages responsive
 
     - Apply responsive grid: `gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }`
     - Charts at 100% width on mobile, stacking vertically with 16px gap
@@ -176,14 +176,14 @@ This plan transforms the Money Mind client from a desktop-only layout into a ful
     - Skeleton placeholders during loading
     - _Requirements: 10.1, 10.2, 10.4, 10.5, 10.7_
 
-  - [ ] 6.3 Make Budget, Goals, and Debts pages responsive
+  - [x] 6.3 Make Budget, Goals, and Debts pages responsive
     - Budget/Goals: single-column card layout at 100% width on mobile
     - Debts: vertically-stacked cards with key info visible without horizontal scroll
     - Skeleton placeholders matching expected content shape
     - Empty state centered within content area
     - _Requirements: 10.3, 10.6, 10.7, 10.8_
 
-- [ ] 7. Checkpoint - Verify feature components work
+- [x] 7. Checkpoint - Verify feature components work
 
   - Ensure all tests pass, ask the user if questions arise.
 

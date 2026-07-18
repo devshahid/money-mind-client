@@ -14,7 +14,6 @@ const CustomModal = ({ modalOpen, onClose, children }: Props): JSX.Element => {
     <Modal
       open={modalOpen}
       onClose={(_, reason) => onClose(reason)}
-      disableEscapeKeyDown
     >
       <Box
         sx={{
@@ -24,19 +23,20 @@ const CustomModal = ({ modalOpen, onClose, children }: Props): JSX.Element => {
           transform: 'translate(-50%, -50%)',
           bgcolor: 'background.paper',
           boxShadow: 24,
-          p: spacing[4],
-          width: { xs: '90%', md: '600px' },
+          p: { xs: spacing[3], md: spacing[4] },
+          width: { xs: '95%', md: '600px' },
+          maxWidth: { xs: 500, md: 600 },
           maxHeight: '90vh',
           overflowY: 'auto',
           borderRadius: borderRadius.base,
-          // Hide scrollbar while keeping scroll functionality
-          scrollbarWidth: 'none', // Firefox
-          '&::-webkit-scrollbar': { display: 'none' }, // Chrome, Safari, Edge
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
         {/* Close Button */}
         <IconButton
           onClick={() => onClose()}
+          aria-label='Close dialog'
           sx={{
             position: 'absolute',
             top: spacing[1],

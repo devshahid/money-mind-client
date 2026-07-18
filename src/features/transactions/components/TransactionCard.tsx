@@ -75,7 +75,7 @@ const TransactionCard = ({ transaction, isExpanded, onToggle }: TransactionCardP
 
           {/* Category */}
           {transaction.category && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: spacing[1] }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: spacing[3] }}>
               <Typography
                 variant='caption'
                 color='text.secondary'
@@ -112,7 +112,7 @@ const TransactionCard = ({ transaction, isExpanded, onToggle }: TransactionCardP
 
           {/* Notes */}
           {transaction.notes && (
-            <Box sx={{ display: 'flex', gap: 1, mb: spacing[1] }}>
+            <Box sx={{ display: 'flex', gap: 1, mb: spacing[3] }}>
               <Typography
                 variant='caption'
                 color='text.secondary'
@@ -126,7 +126,7 @@ const TransactionCard = ({ transaction, isExpanded, onToggle }: TransactionCardP
 
           {/* Labels */}
           {transaction.label && transaction.label.length > 0 && (
-            <Box sx={{ display: 'flex', gap: 1, mb: spacing[1], flexWrap: 'wrap', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', gap: 1, mb: spacing[3], flexWrap: 'wrap', alignItems: 'center' }}>
               <Typography
                 variant='caption'
                 color='text.secondary'
@@ -149,7 +149,7 @@ const TransactionCard = ({ transaction, isExpanded, onToggle }: TransactionCardP
 
           {/* Bank */}
           {transaction.bankName && (
-            <Box sx={{ display: 'flex', gap: 1, mb: spacing[1] }}>
+            <Box sx={{ display: 'flex', gap: 1, mb: spacing[3] }}>
               <Typography
                 variant='caption'
                 color='text.secondary'

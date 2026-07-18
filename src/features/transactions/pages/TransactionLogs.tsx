@@ -628,11 +628,12 @@ const TransactionLogs = (): JSX.Element => {
               <Box
                 sx={{
                   display: 'flex',
-                  gap: 4,
-                  flexWrap: 'nowrap',
+                  gap: { xs: 2, md: 4 },
+                  flexDirection: { xs: 'column', md: 'row' },
+                  flexWrap: { xs: 'wrap', md: 'nowrap' },
                   mb: 2,
                   justifyContent: 'center',
-                  alignItems: 'center',
+                  alignItems: { xs: 'stretch', md: 'center' },
                 }}
               >
                 <TextField
