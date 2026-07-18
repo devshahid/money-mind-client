@@ -1,21 +1,25 @@
 import React from 'react'
-import { Box, Typography, IconButton, Badge, Avatar, useMediaQuery, useTheme, Stack, Paper } from '@mui/material'
+import { Box, Typography, IconButton, Badge, Avatar, Stack, Paper } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
+import MenuIcon from '@mui/icons-material/Menu'
+
 import { useAppSelector } from '../shared/hooks/slice-hooks'
 import { RootState } from '../store'
 import { stringAvatar } from '../shared/utils/common'
 import { colors, spacing } from '../shared/theme'
+import { useResponsive } from '../shared/hooks/useResponsive'
+import { useNavigation } from '../shared/contexts/NavigationContext'
 
-interface HeaderProps {
+type HeaderProps = {
   heading: string
   subheading: string
   notifications?: number
 }
 
 const Header: React.FC<HeaderProps> = ({ heading, subheading, notifications = 0 }) => {
-  const theme = useTheme()
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'))
+  const { isTouch, isMobile } = useResponsive()
+  const { openDrawer, isDrawerOpen } = useNavigation()
   const { userData } = useAppSelector((state: RootState) => state.auth)
 
   return (
@@ -23,20 +27,41 @@ const Header: React.FC<HeaderProps> = ({ heading, subheading, notifications = 0 
       elevation={0}
       sx={{ p: spacing[2], display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
     >
-      {/* Left: Title and Subtitle */}
-      <Box>
-        <Typography
-          variant='h5'
-          fontWeight='bold'
-        >
-          {heading}
-        </Typography>
-        <Typography
-          variant='body2'
-          color='text.secondary'
-        >
-          {subheading}
-        </Typography>
+      {/* Left: Hamburger + Title */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: spacing[2], minWidth: 0, flex: 1 }}>
+        {isTouch && (
+          <IconButton
+            onClick={openDrawer}
+            aria-label='Open navigation menu'
+            aria-expanded={isDrawerOpen}
+            sx={{ color: colors.grayscale.black }}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
+        <Box sx={{ minWidth: 0 }}>
+          <Typography
+            variant='h5'
+            fontWeight='bold'
+            sx={{
+              ...(isMobile && {
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+            }}
+          >
+            {heading}
+          </Typography>
+          {!isMobile && (
+            <Typography
+              variant='body2'
+              color='text.secondary'
+            >
+              {subheading}
+            </Typography>
+          )}
+        </Box>
       </Box>
 
       {/* Right: Icons and User Info */}
@@ -56,20 +81,20 @@ const Header: React.FC<HeaderProps> = ({ heading, subheading, notifications = 0 
             <NotificationsNoneIcon />
           </Badge>
         </IconButton>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            border: `1px solid ${colors.grayscale.lightGray}`,
-            borderRadius: '999px',
-            p: spacing[1],
-          }}
-        >
-          <Avatar
-            {...stringAvatar(userData.fullName || 'Test User')}
-            sx={{ width: 32, height: 32, mr: 1 }}
-          />
-          {!isSmallScreen && (
+        {!isMobile && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              border: `1px solid ${colors.grayscale.lightGray}`,
+              borderRadius: '999px',
+              p: spacing[1],
+            }}
+          >
+            <Avatar
+              {...stringAvatar(userData.fullName || 'Test User')}
+              sx={{ width: 32, height: 32, mr: 1 }}
+            />
             <Box>
               <Typography
                 variant='body2'
@@ -84,8 +109,8 @@ const Header: React.FC<HeaderProps> = ({ heading, subheading, notifications = 0 
                 {userData.email}
               </Typography>
             </Box>
-          )}
-        </Box>
+          </Box>
+        )}
       </Stack>
     </Paper>
   )
