@@ -93,10 +93,16 @@ const TransactionCard = ({ transaction, isExpanded, onToggle }: TransactionCardP
                     px: spacing[2],
                     py: spacing[1],
                     borderRadius: '12px',
+                    color: '#000',
                   }}
                 >
                   <categoryData.icon style={{ color: categoryData.color, fontSize: 16 }} />
-                  <Typography variant='caption'>{displayCategory}</Typography>
+                  <Typography
+                    variant='caption'
+                    sx={{ color: '#000' }}
+                  >
+                    {displayCategory}
+                  </Typography>
                 </Box>
               ) : (
                 <Typography variant='body2'>{displayCategory}</Typography>

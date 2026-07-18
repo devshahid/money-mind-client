@@ -59,7 +59,7 @@ import { getExpenseCategories } from '../../../constants'
 import { ColorModeContext } from '../../../shared/contexts/ThemeContext'
 import { LayoutContextType } from '../../../layouts/main'
 import { CustomModal as CustomModel } from '../../../shared/components/CustomModal'
-import { CustomTable } from '../components/Table'
+import { TransactionView } from '../components/TransactionView'
 import { BulkActionToolbar } from '../components/BulkActionToolbar'
 import { LabelAssignmentDialog } from '../components/LabelAssignmentDialog'
 import { GroupDialog } from '../components/GroupDialog'
@@ -451,25 +451,25 @@ const TransactionLogs = (): JSX.Element => {
             <EmptyTransactionContainer />
           ) : (
             <Box sx={{ width: '100%', borderRadius: 1.5, border: '1px solid #ccc' }}>
-              <Box sx={{ overflowX: 'auto' }}>
-                <CustomTable
-                  type='full'
-                  editButtonClickEvents={editButtonClickEvents}
-                  selectedIds={selectedIds}
-                  isSelected={isSelected}
-                  handleSelectOne={handleSelectOne}
-                  handleSelectAll={handleSelectAll}
-                  groups={groups}
-                  onGroupBadgeClick={handleGroupBadgeClick}
-                  sx={{
-                    maxHeight: '100vh',
-                    '&::-webkit-scrollbar': {
-                      display: 'none',
-                    },
-                  }}
-                  component={Paper}
-                />
-              </Box>
+              <TransactionView
+                transactions={transactions}
+                loading={loading}
+                type='full'
+                editButtonClickEvents={editButtonClickEvents}
+                selectedIds={selectedIds}
+                isSelected={isSelected}
+                handleSelectOne={handleSelectOne}
+                handleSelectAll={handleSelectAll}
+                groups={groups}
+                onGroupBadgeClick={handleGroupBadgeClick}
+                sx={{
+                  maxHeight: '100vh',
+                  '&::-webkit-scrollbar': {
+                    display: 'none',
+                  },
+                }}
+                component={Paper}
+              />
               <TablePagination
                 component='div'
                 count={totalCount}

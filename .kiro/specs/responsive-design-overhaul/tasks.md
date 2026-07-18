@@ -143,9 +143,9 @@ This plan transforms the Money Mind client from a desktop-only layout into a ful
     - Prevent horizontal overflow by wrapping
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7_
 
-- [ ] 5. Implement responsive AI Chat Panel
+- [x] 5. Implement responsive AI Chat Panel
 
-  - [ ] 5.1 Make `AIChatPanel` responsive
+  - [x] 5.1 Make `AIChatPanel` responsive
     - Modify `src/features/ai-chat/components/AIChatPanel.tsx`
     - Apply responsive padding: `px: { xs: 1, sm: 2 }`
     - Set message bubble `maxWidth`: 85% mobile, 75% tablet, 70% desktop

@@ -10,7 +10,7 @@ type TransactionCompactTableProps = {
   transactions: ITransactionLogs[]
 }
 
-const compactHeadingStyles = (mode: string) => ({
+const compactHeadingStyles = (mode: string): Record<string, unknown> => ({
   fontWeight: 600,
   backgroundColor: mode === 'dark' ? '#222126' : '#F6F5FF',
   whiteSpace: 'nowrap' as const,
@@ -69,10 +69,16 @@ const TransactionCompactTable = ({ transactions }: TransactionCompactTableProps)
                         px: 1,
                         py: 0.5,
                         borderRadius: '8px',
+                        color: '#000',
                       }}
                     >
                       <categoryData.icon style={{ color: categoryData.color, fontSize: 14 }} />
-                      <Typography variant='caption'>{displayCategory}</Typography>
+                      <Typography
+                        variant='caption'
+                        sx={{ color: '#000' }}
+                      >
+                        {displayCategory}
+                      </Typography>
                     </Box>
                   ) : (
                     displayCategory
