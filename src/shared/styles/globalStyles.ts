@@ -50,12 +50,12 @@ export const globalStyles = `
     user-select: none;
   }
 
-  /* Smooth scrolling */
+  /* Smooth scrolling — respects reduced motion preference */
   html {
     scroll-behavior: smooth;
   }
 
-  /* Remove default focus outline and add custom one */
+  /* Focus indicator for keyboard navigation */
   *:focus-visible {
     outline: 2px solid #1976d2;
     outline-offset: 2px;
@@ -64,5 +64,17 @@ export const globalStyles = `
   /* Prevent horizontal scrollbar */
   body {
     overflow-x: hidden;
+  }
+
+  /* Reduced motion: disable animations for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 `

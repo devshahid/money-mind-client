@@ -57,6 +57,7 @@ import { indexDBTransaction } from '../helpers/indexDB/transactionStore'
 import { TableControls } from '../components/TransactionControls'
 import { getExpenseCategories } from '../../../constants'
 import { ColorModeContext } from '../../../shared/contexts/ThemeContext'
+import { spacing } from '../../../shared/theme'
 import { LayoutContextType } from '../../../layouts/main'
 import { CustomModal as CustomModel } from '../../../shared/components/CustomModal'
 import { TransactionView } from '../components/TransactionView'
@@ -402,7 +403,7 @@ const TransactionLogs = (): JSX.Element => {
   }
 
   return (
-    <Box style={{ padding: '10px', backgroundColor: mode === 'dark' ? '#000' : '#fff' }}>
+    <Box sx={{ p: spacing[2], backgroundColor: mode === 'dark' ? 'background.default' : 'background.paper' }}>
       <TableControls
         setActionType={setActionType}
         setEditModalOpen={setEditModalOpen}
@@ -450,7 +451,7 @@ const TransactionLogs = (): JSX.Element => {
           {!loading && transactions.length === 0 ? (
             <EmptyTransactionContainer />
           ) : (
-            <Box sx={{ width: '100%', borderRadius: 1.5, border: '1px solid #ccc' }}>
+            <Box sx={{ width: '100%', borderRadius: 1.5, border: '1px solid', borderColor: 'divider' }}>
               <TransactionView
                 transactions={transactions}
                 loading={loading}
@@ -464,9 +465,8 @@ const TransactionLogs = (): JSX.Element => {
                 onGroupBadgeClick={handleGroupBadgeClick}
                 sx={{
                   maxHeight: '100vh',
-                  '&::-webkit-scrollbar': {
-                    display: 'none',
-                  },
+                  overflowX: 'auto',
+                  overflowY: 'auto',
                 }}
                 component={Paper}
               />

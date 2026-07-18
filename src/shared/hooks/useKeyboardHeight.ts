@@ -15,14 +15,14 @@ export const useKeyboardHeight = (): UseKeyboardHeightReturn => {
       return
     }
 
-    const handleResize = () => {
+    const handleResize = (): void => {
       const heightDiff = window.innerHeight - viewport.height
       setKeyboardHeight(Math.max(0, heightDiff))
     }
 
     viewport.addEventListener('resize', handleResize)
 
-    return () => {
+    return (): void => {
       viewport.removeEventListener('resize', handleResize)
     }
   }, [])

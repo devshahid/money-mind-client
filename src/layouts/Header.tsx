@@ -28,6 +28,7 @@ const Header = ({ heading, subheading, notifications = 0 }: HeaderProps): React.
 
   return (
     <Paper
+      component='header'
       elevation={0}
       sx={{ p: spacing[3], pt: spacing[4], display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
     >

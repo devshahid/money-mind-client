@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type JSX } from 'react'
 import type { ReactNode } from 'react'
 
 import { useResponsive } from '../hooks/useResponsive'
@@ -36,7 +36,7 @@ type NavigationProviderProps = {
   children: ReactNode
 }
 
-export const NavigationProvider = ({ children }: NavigationProviderProps) => {
+export const NavigationProvider = ({ children }: NavigationProviderProps): JSX.Element => {
   const { isDesktop } = useResponsive()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(getPersistedCollapsed)
@@ -79,6 +79,7 @@ export const NavigationProvider = ({ children }: NavigationProviderProps) => {
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useNavigation = (): NavigationContextValue => {
   const context = useContext(NavigationContext)
 

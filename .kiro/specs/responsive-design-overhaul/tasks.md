@@ -187,9 +187,9 @@ This plan transforms the Money Mind client from a desktop-only layout into a ful
 
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Design token enforcement and accessibility
+- [x] 8. Design token enforcement and accessibility
 
-  - [ ] 8.1 Replace hardcoded values with theme tokens
+  - [x] 8.1 Replace hardcoded values with theme tokens
 
     - Audit and replace hardcoded hex colors with `colors.*` or MUI palette references
     - Replace hardcoded spacing with MUI `theme.spacing()` or `spacing.*` scale
@@ -199,7 +199,7 @@ This plan transforms the Money Mind client from a desktop-only layout into a ful
     - Apply consistent hover patterns: bg change for nav, opacity/elevation for cards, color intensity for buttons
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6_
 
-  - [ ] 8.2 Add accessibility attributes and keyboard navigation
+  - [x] 8.2 Add accessibility attributes and keyboard navigation
 
     - Add `aria-label`, `aria-expanded`, `aria-controls`, `aria-hidden`, `role` to sidebar drawer, hamburger, filter drawer, modals, expandable cards
     - Add visible focus indicator (min 2px outline) on all focusable elements
@@ -208,20 +208,20 @@ This plan transforms the Money Mind client from a desktop-only layout into a ful
     - Use semantic HTML (`nav`, `main`, `header`, `button`, `dialog`)
     - _Requirements: 7.1, 7.2, 7.3, 7.5, 7.7_
 
-  - [ ] 8.3 Add `prefers-reduced-motion` support
+  - [x] 8.3 Add `prefers-reduced-motion` support
 
     - Add global CSS media query `@media (prefers-reduced-motion: reduce)` to disable/reduce animations
     - Apply to sidebar transitions, card expand/collapse, drawer animations, layout transitions
     - _Requirements: 7.6_
 
-  - [ ] 8.4 Ensure WCAG AA color contrast compliance
+  - [x] 8.4 Ensure WCAG AA color contrast compliance
     - Verify all text/background pairs in light and dark themes meet 4.5:1 (normal) and 3:1 (large text)
     - Adjust any failing pairs in `colors.ts` or theme configuration
     - _Requirements: 7.4_
 
-- [ ] 9. Property-based and unit tests
+- [x] 9. Property-based and unit tests
 
-  - [ ]\* 9.1 Write property test: Transaction card required fields (Property 1)
+  - [x]\* 9.1 Write property test: Transaction card required fields (Property 1)
 
     - **Property 1: Transaction card summary displays required fields**
     - Generate arbitrary transaction objects with fast-check
@@ -292,13 +292,13 @@ This plan transforms the Money Mind client from a desktop-only layout into a ful
     - Test ARIA attributes on drawer and hamburger
     - _Requirements: 1.1, 1.2, 1.5, 6.3, 6.4, 6.5, 7.3_
 
-- [ ] 10. Checkpoint - Verify all tests pass
+- [x] 10. Checkpoint - Verify all tests pass
 
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. Update steering documentation
+- [x] 11. Update steering documentation
 
-  - [ ] 11.1 Update `.kiro/steering/` with responsive design guidelines
+  - [x] 11.1 Update `.kiro/steering/` with responsive design guidelines
     - Document mobile-first approach and breakpoint definitions (xs/sm/md/lg/xl)
     - Document sidebar behavior per viewport (temporary vs permanent)
     - Document layout patterns (responsive grid, stacking, flex-wrap)
@@ -308,7 +308,7 @@ This plan transforms the Money Mind client from a desktop-only layout into a ful
     - Replace any references to KONE Digital Logbook with Money Mind context
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5_
 
-- [ ] 12. Final checkpoint - Ensure all tests pass
+- [x] 12. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

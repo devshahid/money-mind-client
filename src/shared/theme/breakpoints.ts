@@ -32,7 +32,7 @@ export const mediaQuery = {
     xl: `@media (max-width: ${breakpointValues.xl - 1}px)`,
   },
   // Between queries
-  between: (min: keyof typeof breakpointValues, max: keyof typeof breakpointValues) =>
+  between: (min: keyof typeof breakpointValues, max: keyof typeof breakpointValues): string =>
     `@media (min-width: ${breakpointValues[min]}px) and (max-width: ${breakpointValues[max] - 1}px)`,
 }
 
