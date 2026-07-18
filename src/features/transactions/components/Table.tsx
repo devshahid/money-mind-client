@@ -214,7 +214,7 @@ const CustomTable = ({
                     fontSize: '1rem',
                     width: { xs: '80px', sm: '100px', md: '150px' },
                   }}
-                  style={{ color: tx.isCredit ? '#4CAF50' : '#F44336', textAlign: 'center', fontWeight: 'bold' }}
+                  style={{ color: tx.isCredit ? '#2e7d32' : '#d32f2f', textAlign: 'center', fontWeight: 'bold' }}
                 >
                   ₹ {Number(tx.amount).toFixed(2)}
                 </TableCell>

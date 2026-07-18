@@ -6,7 +6,7 @@ import './Dashboard.css'
 import { useOutletContext } from 'react-router-dom'
 import { LayoutContextType } from '../../../layouts/main'
 import { JSX, useEffect, useMemo } from 'react'
-import { CustomTable } from '../../transactions/components/Table'
+import { TransactionView } from '../../transactions/components/TransactionView'
 import { useAppDispatch, useAppSelector } from '../../../shared/hooks/slice-hooks'
 import { listTransactions } from '../../transactions/store/transactionSlice'
 import { RootState } from '../../../store'
@@ -84,6 +84,12 @@ const DashboardPage = (): JSX.Element => {
         gap={spacing[2]}
         padding={spacing[2]}
         flexWrap='wrap'
+        sx={{
+          '& > *': {
+            flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)', md: '1 1 calc(25% - 12px)' },
+            minWidth: 0,
+          },
+        }}
       >
         <SummaryCard
           icon={Package}
@@ -120,15 +126,15 @@ const DashboardPage = (): JSX.Element => {
         gap={spacing[2]}
         padding={spacing[2]}
       >
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2] }}>
-          <Box sx={{ flex: { xs: '100%', md: '50%' }, minWidth: 0 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, flexWrap: 'wrap', gap: spacing[2] }}>
+          <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 60%' }, minWidth: 0 }}>
             <Card>
               <CardContent>
                 <Typography variant='h6'>Chart Area</Typography>
               </CardContent>
             </Card>
           </Box>
-          <Box sx={{ flex: { xs: '100%', md: '30%' }, minWidth: 0 }}>
+          <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 35%' }, minWidth: 0 }}>
             <Card>
               <CardContent>
                 <Typography variant='h6'>Content Area</Typography>
@@ -144,23 +150,30 @@ const DashboardPage = (): JSX.Element => {
         gap={spacing[2]}
         padding={spacing[2]}
       >
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2] }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, flexWrap: 'wrap', gap: spacing[2] }}>
           <Box
             sx={{
-              flex: { xs: '100%', md: '50%' },
+              flex: { xs: '1 1 100%', md: '1 1 60%' },
               minWidth: 0,
               borderRadius: borderRadius.lg,
               border: '1px solid',
               borderColor: 'divider',
             }}
           >
-            <Typography variant='h4'>Recent Transactions</Typography>
+            <Typography
+              variant='h4'
+              sx={{ p: spacing[2] }}
+            >
+              Recent Transactions
+            </Typography>
             {transactions.length > 0 ? (
-              <CustomTable
+              <TransactionView
+                transactions={transactions}
+                loading={false}
                 type='mini'
                 sx={{
                   overflow: 'auto',
-                  height: '80vh',
+                  maxHeight: '80vh',
                   '&::-webkit-scrollbar': { display: 'none' },
                 }}
               />
@@ -175,7 +188,7 @@ const DashboardPage = (): JSX.Element => {
           </Box>
 
           {/* Active Goals Progress */}
-          <Box sx={{ flex: { xs: '100%', md: '30%' }, minWidth: 0 }}>
+          <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 35%' }, minWidth: 0 }}>
             <Card>
               <CardContent>
                 <Typography

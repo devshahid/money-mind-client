@@ -392,9 +392,10 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
       <Box
         sx={{
           display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
           flexWrap: 'wrap',
           gap: 2,
-          alignItems: 'center',
+          alignItems: { xs: 'stretch', md: 'center' },
           justifyContent: 'space-between',
           mb: 2,
           px: 1,
@@ -405,7 +406,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
           size='small'
           label='Search any transaction'
           variant='outlined'
-          sx={{ flex: '1 1 250px', minWidth: '250px' }}
+          sx={{ flex: { xs: '1 1 100%', md: '1 1 250px' }, minWidth: { xs: '100%', md: '250px' } }}
           onChange={debounce(handleSearch)}
           name='keyword'
         />
@@ -415,7 +416,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
           variant='outlined'
           startIcon={<FilterListIcon />}
           onClick={toggleFilterDrawer}
-          sx={{ flex: '0 0 200px', minWidth: '180px' }}
+          sx={{ flex: { xs: '1 1 100%', md: '0 0 200px' }, minWidth: { xs: '100%', md: '180px' }, minHeight: '44px' }}
         >
           Filter {activeFiltersCount > 0 && `(${activeFiltersCount})`}
         </Button>
@@ -423,7 +424,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
         {/* Transaction Flow Dropdown */}
         <FormControl
           size='small'
-          sx={{ flex: '1 1 160px', minWidth: '140px' }}
+          sx={{ flex: { xs: '1 1 100%', md: '1 1 160px' }, minWidth: { xs: '100%', md: '140px' }, minHeight: '44px' }}
         >
           <InputLabel>Transaction Flow</InputLabel>
           <Select
@@ -440,7 +441,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
 
         <FormControl
           size='small'
-          sx={{ flex: '1 1 160px', minWidth: '140px' }}
+          sx={{ flex: { xs: '1 1 100%', md: '1 1 160px' }, minWidth: { xs: '100%', md: '140px' }, minHeight: '44px' }}
         >
           <InputLabel>Category</InputLabel>
           <Select
@@ -491,7 +492,7 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
         {/* All Transactions Dropdown */}
         <FormControl
           size='small'
-          sx={{ flex: '1 1 160px', minWidth: '140px' }}
+          sx={{ flex: { xs: '1 1 100%', md: '1 1 160px' }, minWidth: { xs: '100%', md: '140px' }, minHeight: '44px' }}
         >
           <InputLabel>All Transactions</InputLabel>
           <Select
@@ -508,63 +509,73 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
         </FormControl>
 
         {/* Upload Button */}
-        <Box
-          onClick={() => setStatementUploadOpen(true)}
-          sx={{ cursor: 'pointer' }}
-        >
-          <Tooltip
-            title='Upload Statement'
-            arrow
-          >
-            <IconButton color='primary'>
-              <CloudUploadIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-        <Box
-          onClick={() => {
-            setActionType('add')
-            setEditModalOpen(true)
-          }}
-          sx={{ cursor: 'pointer' }}
-        >
-          <Tooltip
-            title='Add Cash Memo'
-            arrow
-          >
-            <IconButton color='primary'>
-              <ReceiptLongIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-        {isLocalTransactions && (
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           <Box
-            onClick={() => void handleSyncTransactions()}
+            onClick={() => setStatementUploadOpen(true)}
             sx={{ cursor: 'pointer' }}
           >
             <Tooltip
-              title='Sync to Database'
+              title='Upload Statement'
               arrow
             >
               <IconButton
                 color='primary'
-                sx={
-                  syncTransactionLoader
-                    ? {
-                        animation: 'spinReverse 1s linear infinite',
-                        '@keyframes spinReverse': {
-                          '0%': { transform: 'rotate(0deg)' },
-                          '100%': { transform: 'rotate(-360deg)' },
-                        },
-                      }
-                    : {}
-                }
+                sx={{ minWidth: 44, minHeight: 44 }}
               >
-                <SyncIcon />
+                <CloudUploadIcon />
               </IconButton>
             </Tooltip>
           </Box>
-        )}
+          <Box
+            onClick={() => {
+              setActionType('add')
+              setEditModalOpen(true)
+            }}
+            sx={{ cursor: 'pointer' }}
+          >
+            <Tooltip
+              title='Add Cash Memo'
+              arrow
+            >
+              <IconButton
+                color='primary'
+                sx={{ minWidth: 44, minHeight: 44 }}
+              >
+                <ReceiptLongIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+          {isLocalTransactions && (
+            <Box
+              onClick={() => void handleSyncTransactions()}
+              sx={{ cursor: 'pointer' }}
+            >
+              <Tooltip
+                title='Sync to Database'
+                arrow
+              >
+                <IconButton
+                  color='primary'
+                  sx={{
+                    minWidth: 44,
+                    minHeight: 44,
+                    ...(syncTransactionLoader
+                      ? {
+                          animation: 'spinReverse 1s linear infinite',
+                          '@keyframes spinReverse': {
+                            '0%': { transform: 'rotate(0deg)' },
+                            '100%': { transform: 'rotate(-360deg)' },
+                          },
+                        }
+                      : {}),
+                  }}
+                >
+                  <SyncIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
+        </Box>
       </Box>
 
       {/* Filter Sidebar */}
