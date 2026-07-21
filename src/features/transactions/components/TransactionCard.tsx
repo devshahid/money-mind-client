@@ -71,14 +71,7 @@ const TransactionCard = ({
                 </Typography>
                 <Typography
                   variant='body2'
-                  sx={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    mt: 0.5,
-                  }}
+                  sx={{ mt: 0.5 }}
                 >
                   {transaction.narration || '—'}
                 </Typography>
