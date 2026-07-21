@@ -20,7 +20,6 @@ import {
   Tooltip,
 } from '@mui/material'
 import SyncIcon from '@mui/icons-material/Sync'
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
@@ -409,6 +408,13 @@ const TransactionLogs = (): JSX.Element => {
         setEditModalOpen={setEditModalOpen}
         filters={filters}
         setFilters={setFilters}
+        onAICategorize={() => setAiSuggestionDialogOpen(true)}
+        aiCategorizeDisabled={loading || (selectedIds.length === 0 && uncategorizedOnPage.length === 0)}
+        aiCategorizeLabel={
+          selectedIds.length > 0
+            ? `AI Categorize (${selectedIds.length} selected)`
+            : `AI Categorize (${uncategorizedOnPage.length} uncategorized)`
+        }
       />
 
       <Tabs
@@ -432,21 +438,6 @@ const TransactionLogs = (): JSX.Element => {
               groups={groups}
             />
           )}
-
-          {/* AI Categorize Button */}
-          <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
-            <Button
-              variant='contained'
-              color='primary'
-              startIcon={<AutoAwesomeIcon />}
-              onClick={() => setAiSuggestionDialogOpen(true)}
-              disabled={loading || (selectedIds.length === 0 && uncategorizedOnPage.length === 0)}
-            >
-              {selectedIds.length > 0
-                ? `AI Categorize (${selectedIds.length} selected)`
-                : `AI Categorize (${uncategorizedOnPage.length} uncategorized)`}
-            </Button>
-          </Box>
 
           {!loading && transactions.length === 0 ? (
             <EmptyTransactionContainer />
