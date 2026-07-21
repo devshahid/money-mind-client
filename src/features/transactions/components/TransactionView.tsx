@@ -48,6 +48,11 @@ const TransactionView = ({
         <TransactionCardList
           transactions={transactions}
           loading={loading}
+          selectedIds={selectedIds}
+          isSelected={isSelected}
+          handleSelectOne={handleSelectOne}
+          handleSelectAll={handleSelectAll}
+          editButtonClickEvents={editButtonClickEvents}
         />
       )
     case 'tablet':

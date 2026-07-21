@@ -1,5 +1,6 @@
 import { JSX } from 'react'
-import { Box, Card, CardContent, Chip, Collapse, Divider, Typography } from '@mui/material'
+import { Box, Card, CardContent, Checkbox, Chip, Collapse, Divider, IconButton, Typography } from '@mui/material'
+import EditIcon from '@mui/icons-material/Edit'
 import dayjs from 'dayjs'
 
 import { ITransactionLogs } from '../store/transactionSlice'
@@ -10,9 +11,19 @@ type TransactionCardProps = {
   transaction: ITransactionLogs
   isExpanded: boolean
   onToggle: () => void
+  isSelected?: boolean
+  onSelect?: (id: string) => void
+  onEdit?: (tx: ITransactionLogs) => void
 }
 
-const TransactionCard = ({ transaction, isExpanded, onToggle }: TransactionCardProps): JSX.Element => {
+const TransactionCard = ({
+  transaction,
+  isExpanded,
+  onToggle,
+  isSelected,
+  onSelect,
+  onEdit,
+}: TransactionCardProps): JSX.Element => {
   const categoryData = getExpenseCategories().find(cat => cat.name === transaction.category)
   const displayCategory = transaction.category
     ? transaction.category.charAt(0).toUpperCase() + transaction.category.slice(1)
@@ -21,51 +32,73 @@ const TransactionCard = ({ transaction, isExpanded, onToggle }: TransactionCardP
   return (
     <Card
       elevation={1}
-      onClick={onToggle}
       sx={{
         mb: spacing[2],
         cursor: 'pointer',
         '&:active': { opacity: 0.9 },
+        ...(isSelected && { borderLeft: '3px solid', borderColor: 'primary.main' }),
       }}
     >
       <CardContent sx={{ p: spacing[3], '&:last-child': { pb: spacing[3] } }}>
         {/* Summary Row */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: spacing[2] }}>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography
-              variant='caption'
-              color='text.secondary'
-            >
-              {transaction.transactionDate ? dayjs(transaction.transactionDate).format('DD/MM/YYYY') : '—'}
-            </Typography>
-            <Typography
-              variant='body2'
-              sx={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                mt: 0.5,
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: spacing[1] }}>
+          {/* Checkbox */}
+          {onSelect && (
+            <Checkbox
+              checked={isSelected}
+              onChange={e => {
+                e.stopPropagation()
+                onSelect(transaction._id)
               }}
-            >
-              {transaction.narration || '—'}
-            </Typography>
-          </Box>
-          <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
-            <Typography
-              variant='body1'
-              fontWeight='bold'
-              color={transaction.isCredit ? 'success.main' : 'error.main'}
-            >
-              ₹{Number(transaction.amount || 0).toFixed(2)}
-            </Typography>
-            <Typography
-              variant='caption'
-              color='text.secondary'
-            >
-              {transaction.isCredit ? 'Credit' : 'Debit'}
-            </Typography>
+              onClick={e => e.stopPropagation()}
+              size='small'
+              sx={{ mt: -0.5, flexShrink: 0 }}
+            />
+          )}
+
+          {/* Content - tappable to expand */}
+          <Box
+            sx={{ flex: 1, minWidth: 0 }}
+            onClick={onToggle}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: spacing[2] }}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                >
+                  {transaction.transactionDate ? dayjs(transaction.transactionDate).format('DD/MM/YYYY') : '—'}
+                </Typography>
+                <Typography
+                  variant='body2'
+                  sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    mt: 0.5,
+                  }}
+                >
+                  {transaction.narration || '—'}
+                </Typography>
+              </Box>
+              <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
+                <Typography
+                  variant='body1'
+                  fontWeight='bold'
+                  color={transaction.isCredit ? 'success.main' : 'error.main'}
+                >
+                  ₹{Number(transaction.amount || 0).toFixed(2)}
+                </Typography>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                >
+                  {transaction.isCredit ? 'Credit' : 'Debit'}
+                </Typography>
+              </Box>
+            </Box>
           </Box>
         </Box>
 
@@ -158,6 +191,23 @@ const TransactionCard = ({ transaction, isExpanded, onToggle }: TransactionCardP
                 Bank:
               </Typography>
               <Typography variant='body2'>{transaction.bankName}</Typography>
+            </Box>
+          )}
+
+          {/* Edit button */}
+          {onEdit && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: spacing[1] }}>
+              <IconButton
+                color='primary'
+                onClick={e => {
+                  e.stopPropagation()
+                  onEdit(transaction)
+                }}
+                sx={{ minWidth: 44, minHeight: 44 }}
+                aria-label='Edit transaction'
+              >
+                <EditIcon />
+              </IconButton>
             </Box>
           )}
         </Collapse>
