@@ -20,7 +20,6 @@ import {
   Tooltip,
 } from '@mui/material'
 import SyncIcon from '@mui/icons-material/Sync'
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
@@ -57,9 +56,10 @@ import { indexDBTransaction } from '../helpers/indexDB/transactionStore'
 import { TableControls } from '../components/TransactionControls'
 import { getExpenseCategories } from '../../../constants'
 import { ColorModeContext } from '../../../shared/contexts/ThemeContext'
+import { spacing } from '../../../shared/theme'
 import { LayoutContextType } from '../../../layouts/main'
 import { CustomModal as CustomModel } from '../../../shared/components/CustomModal'
-import { CustomTable } from '../components/Table'
+import { TransactionView } from '../components/TransactionView'
 import { BulkActionToolbar } from '../components/BulkActionToolbar'
 import { LabelAssignmentDialog } from '../components/LabelAssignmentDialog'
 import { GroupDialog } from '../components/GroupDialog'
@@ -402,12 +402,19 @@ const TransactionLogs = (): JSX.Element => {
   }
 
   return (
-    <Box style={{ padding: '10px', backgroundColor: mode === 'dark' ? '#000' : '#fff' }}>
+    <Box sx={{ p: spacing[2], backgroundColor: mode === 'dark' ? 'background.default' : 'background.paper' }}>
       <TableControls
         setActionType={setActionType}
         setEditModalOpen={setEditModalOpen}
         filters={filters}
         setFilters={setFilters}
+        onAICategorize={() => setAiSuggestionDialogOpen(true)}
+        aiCategorizeDisabled={loading || (selectedIds.length === 0 && uncategorizedOnPage.length === 0)}
+        aiCategorizeLabel={
+          selectedIds.length > 0
+            ? `AI Categorize (${selectedIds.length} selected)`
+            : `AI Categorize (${uncategorizedOnPage.length} uncategorized)`
+        }
       />
 
       <Tabs
@@ -432,44 +439,28 @@ const TransactionLogs = (): JSX.Element => {
             />
           )}
 
-          {/* AI Categorize Button */}
-          <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
-            <Button
-              variant='contained'
-              color='primary'
-              startIcon={<AutoAwesomeIcon />}
-              onClick={() => setAiSuggestionDialogOpen(true)}
-              disabled={loading || (selectedIds.length === 0 && uncategorizedOnPage.length === 0)}
-            >
-              {selectedIds.length > 0
-                ? `AI Categorize (${selectedIds.length} selected)`
-                : `AI Categorize (${uncategorizedOnPage.length} uncategorized)`}
-            </Button>
-          </Box>
-
           {!loading && transactions.length === 0 ? (
             <EmptyTransactionContainer />
           ) : (
-            <Box sx={{ width: '100%', borderRadius: 1.5, border: '1px solid #ccc' }}>
-              <Box sx={{ overflowX: 'auto' }}>
-                <CustomTable
-                  type='full'
-                  editButtonClickEvents={editButtonClickEvents}
-                  selectedIds={selectedIds}
-                  isSelected={isSelected}
-                  handleSelectOne={handleSelectOne}
-                  handleSelectAll={handleSelectAll}
-                  groups={groups}
-                  onGroupBadgeClick={handleGroupBadgeClick}
-                  sx={{
-                    maxHeight: '100vh',
-                    '&::-webkit-scrollbar': {
-                      display: 'none',
-                    },
-                  }}
-                  component={Paper}
-                />
-              </Box>
+            <Box sx={{ width: '100%', borderRadius: 1.5, border: '1px solid', borderColor: 'divider' }}>
+              <TransactionView
+                transactions={transactions}
+                loading={loading}
+                type='full'
+                editButtonClickEvents={editButtonClickEvents}
+                selectedIds={selectedIds}
+                isSelected={isSelected}
+                handleSelectOne={handleSelectOne}
+                handleSelectAll={handleSelectAll}
+                groups={groups}
+                onGroupBadgeClick={handleGroupBadgeClick}
+                sx={{
+                  maxHeight: '100vh',
+                  overflowX: 'auto',
+                  overflowY: 'auto',
+                }}
+                component={Paper}
+              />
               <TablePagination
                 component='div'
                 count={totalCount}
@@ -628,11 +619,12 @@ const TransactionLogs = (): JSX.Element => {
               <Box
                 sx={{
                   display: 'flex',
-                  gap: 4,
-                  flexWrap: 'nowrap',
+                  gap: { xs: 2, md: 4 },
+                  flexDirection: { xs: 'column', md: 'row' },
+                  flexWrap: { xs: 'wrap', md: 'nowrap' },
                   mb: 2,
                   justifyContent: 'center',
-                  alignItems: 'center',
+                  alignItems: { xs: 'stretch', md: 'center' },
                 }}
               >
                 <TextField
