@@ -1,3 +1,13 @@
+# [1.1.0](https://github.com/devshahid/money-mind-client/compare/v1.0.0...v1.1.0) (2026-07-21)
+
+### Features
+
+- added ai icon, ai suggested responsive table for mobile view and other responsiveness changes ([4ba5975](https://github.com/devshahid/money-mind-client/commit/4ba5975f52419eb776a3a149ef0d160c7eda916b))
+- added design-auditor agent ([f9f02ca](https://github.com/devshahid/money-mind-client/commit/f9f02cabb994b81a2ccda471af8b900d1389e77f))
+- added responsiveness tests ([aa364ff](https://github.com/devshahid/money-mind-client/commit/aa364ff7f832ef18e4ca2bc4ccaf7874f2cba28c))
+- synced desktop features with mobile view ([f051087](https://github.com/devshahid/money-mind-client/commit/f05108711e1fa2ad10452a739f7dd9a404c6b852))
+- ui responsiveness and additional changes ([#7](https://github.com/devshahid/money-mind-client/issues/7)) ([5fcfb86](https://github.com/devshahid/money-mind-client/commit/5fcfb86ece0db4982cfa49b4877b430de9bb27dc))
+
 # 1.0.0 (2026-07-17)
 
 ### Bug Fixes
