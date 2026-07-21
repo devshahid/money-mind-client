@@ -71,7 +71,7 @@ const TransactionCard = ({
                 </Typography>
                 <Typography
                   variant='body2'
-                  sx={{ mt: 0.5 }}
+                  sx={{ mt: 0.5, wordBreak: 'break-word' }}
                 >
                   {transaction.narration || '—'}
                 </Typography>
