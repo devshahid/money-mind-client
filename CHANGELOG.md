@@ -1,3 +1,9 @@
+## [1.1.2](https://github.com/devshahid/money-mind-client/compare/v1.1.1...v1.1.2) (2026-07-21)
+
+### Bug Fixes
+
+- fixed transaction list narration responsiveness ([38a1c5e](https://github.com/devshahid/money-mind-client/commit/38a1c5e21ed73a9e0f96a0861dd863c5de983279))
+
 ## [1.1.1](https://github.com/devshahid/money-mind-client/compare/v1.1.0...v1.1.1) (2026-07-21)
 
 ### Bug Fixes
