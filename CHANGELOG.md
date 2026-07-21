@@ -1,3 +1,9 @@
+## [1.1.1](https://github.com/devshahid/money-mind-client/compare/v1.1.0...v1.1.1) (2026-07-21)
+
+### Bug Fixes
+
+- fixed AI suggestion narration responsiveness ([2882d8b](https://github.com/devshahid/money-mind-client/commit/2882d8b0dc8dc0d91916a983acc210284460e0fe))
+
 # [1.1.0](https://github.com/devshahid/money-mind-client/compare/v1.0.0...v1.1.0) (2026-07-21)
 
 ### Features
