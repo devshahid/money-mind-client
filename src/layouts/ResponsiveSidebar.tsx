@@ -61,7 +61,7 @@ const ResponsiveSidebar = (): React.ReactElement => {
           position: 'fixed',
           top: 20,
           left: drawerWidth - 14,
-          zIndex: theme => theme.zIndex.drawer + 1,
+          zIndex: 1051,
           width: 28,
           height: 28,
           border: `1px solid ${colors.grayscale.lightGray}`,

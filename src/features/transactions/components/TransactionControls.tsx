@@ -38,6 +38,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong'
 import SyncIcon from '@mui/icons-material/Sync'
 import CancelIcon from '@mui/icons-material/Cancel'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 
 import { axiosClient } from '../../../shared/services/axiosClient'
 import { getExpenseCategories } from '../../../constants'
@@ -61,9 +62,20 @@ type Props = {
   setEditModalOpen: (x: boolean) => void
   filters: ITransactionFilters
   setFilters: (x: ITransactionFilters) => void
+  onAICategorize?: () => void
+  aiCategorizeDisabled?: boolean
+  aiCategorizeLabel?: string
 }
 
-const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }: Props): JSX.Element => {
+const TableControls = ({
+  setActionType,
+  setEditModalOpen,
+  filters,
+  setFilters,
+  onAICategorize,
+  aiCategorizeDisabled,
+  aiCategorizeLabel,
+}: Props): JSX.Element => {
   const { headerHeight } = useLayout()
   const { showErrorSnackbar, showSuccessSnackbar } = useSnackbar()
 
@@ -574,6 +586,23 @@ const TableControls = ({ setActionType, setEditModalOpen, filters, setFilters }:
                 </IconButton>
               </Tooltip>
             </Box>
+          )}
+          {onAICategorize && (
+            <Tooltip
+              title={aiCategorizeLabel || 'AI Categorize'}
+              arrow
+            >
+              <span>
+                <IconButton
+                  color='primary'
+                  onClick={onAICategorize}
+                  disabled={aiCategorizeDisabled}
+                  sx={{ minWidth: 44, minHeight: 44 }}
+                >
+                  <AutoAwesomeIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
           )}
         </Box>
       </Box>

@@ -160,6 +160,9 @@ This document defines the requirements for overhauling the Money Mind personal f
 6. WHILE the viewport is a Mobile_Viewport, THE Debts page SHALL render debt entries as vertically-stacked cards with key information (name, amount, status) visible without horizontal scrolling
 7. WHILE data is loading on a Mobile_Viewport, THE responsive layouts (cards, stacked controls, single-column grids) SHALL display skeleton placeholders matching the shape of the expected content (skeleton cards for card layouts, skeleton rows for compact tables) rather than a single centered spinner
 8. WHILE no data is available on a Mobile_Viewport, THE application pages SHALL render an empty state illustration or message centered within the content area at full width, without layout shift when data eventually loads
+9. WHILE the viewport is a Mobile_Viewport, THE AI Suggestion Review Dialog SHALL display suggestions in a card-based layout showing narration (2-line clamp), amount (color-coded), suggested category chip, and confidence indicator per card, with a checkbox/toggle to accept or reject each suggestion
+10. WHILE the viewport is a Desktop_Viewport, THE AI Suggestion Review Dialog SHALL display suggestions in the existing multi-column table format with all columns visible
+11. WHILE the viewport is a Mobile_Viewport, THE AI Suggestion Review Dialog action buttons (Select All, Deselect All) SHALL stack vertically below the title with full width, and the category edit dropdown SHALL render as a full-width select below the suggestion card when editing
 
 ### Requirement 11: Steering Documentation Update
 
