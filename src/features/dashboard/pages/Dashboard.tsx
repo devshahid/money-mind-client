@@ -1,5 +1,5 @@
 import { Box, Stack, Card, CardContent, Typography, LinearProgress } from '@mui/material'
-import { CreditCard, DollarSign, Package, Target } from 'lucide-react'
+import { CreditCard, IndianRupee, Package, Target } from 'lucide-react'
 import dayjs from 'dayjs'
 
 import './Dashboard.css'
@@ -98,7 +98,7 @@ const DashboardPage = (): JSX.Element => {
           color={colors.primary.blue}
         />
         <SummaryCard
-          icon={DollarSign}
+          icon={IndianRupee}
           title='Income'
           value={fmt(monthlyIncome)}
           color={colors.semantic.success}
