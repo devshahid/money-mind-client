@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext } from 'react'
 import {
   Box,
   Divider,
@@ -10,10 +10,6 @@ import {
   Tooltip,
   Typography,
   Avatar,
-  Dialog,
-  DialogTitle,
-  DialogActions,
-  Button,
 } from '@mui/material'
 import {
   Dashboard,
@@ -23,8 +19,6 @@ import {
   PieChart,
   AccountBalance,
   AccountTree,
-  AccountCircle,
-  Logout,
   SmartToy,
 } from '@mui/icons-material'
 import { NavLink, useNavigate } from 'react-router-dom'
@@ -49,7 +43,6 @@ const navItems: NavItem[] = [
   { label: 'Analytics', icon: <PieChart />, path: '/analytics' },
   { label: 'AI Assistant', icon: <SmartToy />, path: '/ai-chat' },
   { label: 'Settings', icon: <Settings />, path: '/settings' },
-  { label: 'Account', icon: <AccountCircle />, path: '/account' },
 ]
 
 type SidebarContentProps = {
@@ -60,15 +53,8 @@ const SidebarContent = ({ onNavItemClick }: SidebarContentProps): React.ReactEle
   const { isCollapsed, drawerMode } = useNavigation()
   const { mode } = useContext(ColorModeContext)
   const navigate = useNavigate()
-  const [openLogout, setOpenLogout] = useState(false)
 
   const collapsed = drawerMode === 'permanent' && isCollapsed
-
-  const handleLogout = (): void => {
-    localStorage.clear()
-    setOpenLogout(false)
-    navigate('/login')
-  }
 
   const handleNavClick = (): void => {
     if (onNavItemClick) {
@@ -192,68 +178,6 @@ const SidebarContent = ({ onNavItemClick }: SidebarContentProps): React.ReactEle
           </Tooltip>
         ))}
       </List>
-
-      {/* Bottom Section — Logout only */}
-      <Box
-        sx={{
-          mt: 'auto',
-          width: '100%',
-          px: spacing[2],
-          pb: spacing[3],
-        }}
-      >
-        <Divider sx={{ mb: spacing[2] }} />
-
-        <Tooltip
-          title={collapsed ? 'Logout' : ''}
-          placement='right'
-        >
-          <ListItem disablePadding>
-            <ListItemButton
-              onClick={() => setOpenLogout(true)}
-              sx={{
-                height: 44,
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                px: spacing[3],
-                gap: spacing[2],
-                borderRadius: '12px',
-                color: colors.semantic.error,
-                '&:hover': {
-                  backgroundColor: mode === 'light' ? colors.background.red : 'rgba(211, 47, 47, 0.08)',
-                },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center', color: colors.semantic.error }}>
-                <Logout />
-              </ListItemIcon>
-              {!collapsed && (
-                <ListItemText
-                  primary='Logout'
-                  primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500, color: colors.semantic.error }}
-                />
-              )}
-            </ListItemButton>
-          </ListItem>
-        </Tooltip>
-      </Box>
-
-      {/* Logout Dialog */}
-      <Dialog
-        open={openLogout}
-        onClose={() => setOpenLogout(false)}
-      >
-        <DialogTitle>Are you sure you want to logout?</DialogTitle>
-        <DialogActions>
-          <Button onClick={() => setOpenLogout(false)}>Cancel</Button>
-          <Button
-            onClick={handleLogout}
-            color='error'
-            variant='contained'
-          >
-            Logout
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   )
 }
