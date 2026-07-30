@@ -1,4 +1,4 @@
-import React, { JSX, useEffect, useState } from 'react'
+import React, { JSX, useEffect, useRef, useState } from 'react'
 import {
   Box,
   Button,
@@ -43,7 +43,13 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { axiosClient } from '../../../shared/services/axiosClient'
 import { getExpenseCategories } from '../../../constants'
 
-import { listTransactions, resetSyncStatus, setIsLocalTransactions, syncTransactions } from '../store/transactionSlice'
+import {
+  listTransactions,
+  resetSyncStatus,
+  setIsLocalTransactions,
+  syncTransactions,
+  updatePage,
+} from '../store/transactionSlice'
 import { useAppDispatch, useAppSelector } from '../../../shared/hooks/slice-hooks'
 import { useLayout } from '../../../shared/contexts/LayoutContext'
 import { useSnackbar } from '../../../shared/contexts/SnackBarContext'
@@ -65,6 +71,8 @@ type Props = {
   onAICategorize?: () => void
   aiCategorizeDisabled?: boolean
   aiCategorizeLabel?: string
+  keyword: string
+  setKeyword: (x: string) => void
 }
 
 const TableControls = ({
@@ -75,6 +83,8 @@ const TableControls = ({
   onAICategorize,
   aiCategorizeDisabled,
   aiCategorizeLabel,
+  keyword,
+  setKeyword,
 }: Props): JSX.Element => {
   const { headerHeight } = useLayout()
   const { showErrorSnackbar, showSuccessSnackbar } = useSnackbar()
@@ -93,6 +103,15 @@ const TableControls = ({
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(50)
   const [syncTransactionLoader, setSyncTransactionLoader] = useState(false)
+
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Clear the search input when keyword is reset externally (e.g., from filter reset)
+  useEffect(() => {
+    if (keyword === '' && searchInputRef.current && searchInputRef.current.value !== '') {
+      searchInputRef.current.value = ''
+    }
+  }, [keyword])
 
   const handlePageChange = (newPage: number): void => setPage(newPage)
 
@@ -153,27 +172,46 @@ const TableControls = ({
 
   const toggleFilterDrawer = (): void => setFilterOpen(!filterOpen)
 
-  const cleanUpFilters = React.useCallback(() => {
-    // Only send non-empty filters
-    const updatedFilters = Object.entries(filters).reduce(
-      (acc, [key, value]: [string, string | string[]]) => {
-        // Skip empty strings and empty arrays
-        if (Array.isArray(value)) {
-          if (value.length > 0) acc[key] = value
-        } else if (typeof value === 'string') {
-          if (value.trim().length > 0) acc[key] = value
-        } else if (value != null) {
-          acc[key] = value
-        }
-        return acc
-      },
-      {} as Record<string, string | string[]>
+  // Builds the cleaned filter payload (strips empty and 'all' values)
+  const buildFilterPayload = (overrides?: Partial<ITransactionFilters>): Record<string, string | string[]> => {
+    const source = overrides ? { ...filters, ...overrides } : filters
+    const cleaned: Record<string, string | string[]> = {}
+    Object.entries(source).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        if (value.length > 0) cleaned[key] = value
+      } else if (typeof value === 'string' && value.trim().length > 0 && value !== 'all') {
+        cleaned[key] = value
+      }
+    })
+    if (keyword.trim().length > 0) {
+      cleaned.keyword = keyword
+    }
+    return cleaned
+  }
+
+  // Top-bar filter changes apply immediately
+  const handleTopBarFilterChange = (key: keyof ITransactionFilters, value: string | string[]): void => {
+    const updated = { ...filters, [key]: value }
+    setFilters(updated)
+    void dispatch(updatePage('0'))
+    void dispatch(
+      listTransactions({ ...buildFilterPayload({ [key]: value } as Partial<ITransactionFilters>), page: '1', limit })
     )
-    return updatedFilters
-  }, [filters])
+  }
+
+  // Top-bar multi-select change — applies immediately
+  const handleTopBarMultiChange = (event: SelectChangeEvent<string[]>, type: 'category' | 'labels'): void => {
+    const {
+      target: { value },
+    } = event
+    const newValue = typeof value === 'string' ? value.split(',') : value
+    handleTopBarFilterChange(type, newValue)
+  }
 
   const handleApplyFilter = (): void => {
-    void dispatch(listTransactions({ ...cleanUpFilters() }))
+    // Commit the sidebar filters — dispatch API call
+    void dispatch(updatePage('0'))
+    void dispatch(listTransactions({ ...buildFilterPayload(), page: '1', limit }))
     setFilterOpen(false)
   }
 
@@ -195,9 +233,11 @@ const TableControls = ({
       labels: [],
       type: '',
     })
-    // setSelectedLabels([]);
+    setKeyword('')
     setActiveFiltersCount(0)
     setFilterOpen(false)
+    void dispatch(updatePage('0'))
+    void dispatch(listTransactions({ page: '1', limit }))
   }
 
   // Debounce function: delays execution until user stops typing for 1s
@@ -212,10 +252,11 @@ const TableControls = ({
     }
   }
 
-  // Actual search logic
+  // Actual search logic — updates the keyword which triggers re-fetch via parent effect
   const handleSearch = (searchTerm: string): void => {
-    console.log('Searching for:', searchTerm)
-    void dispatch(listTransactions({ ...cleanUpFilters(), keyword: searchTerm }))
+    setKeyword(searchTerm)
+    // Reset to first page when searching
+    void dispatch(updatePage('0'))
   }
 
   const validateHeaders = (headers: string[]): { valid: boolean; missing: string[] } => {
@@ -421,6 +462,7 @@ const TableControls = ({
           sx={{ flex: { xs: '1 1 100%', md: '1 1 250px' }, minWidth: { xs: '100%', md: '250px' } }}
           onChange={debounce(handleSearch)}
           name='keyword'
+          inputRef={searchInputRef}
         />
 
         {/* Filter Button */}
@@ -442,7 +484,7 @@ const TableControls = ({
           <Select
             label='Transaction Flow'
             defaultValue='all'
-            onChange={e => setFilters({ ...filters, type: e.target.value })}
+            onChange={e => handleTopBarFilterChange('type', e.target.value)}
             value={filters.type}
           >
             <MenuItem value='all'>All</MenuItem>
@@ -460,7 +502,7 @@ const TableControls = ({
             label='Category'
             multiple
             value={filters.category}
-            onChange={e => handleMultiChange(e, 'category')}
+            onChange={e => handleTopBarMultiChange(e, 'category')}
             input={<OutlinedInput label='Category' />}
             renderValue={selected => selected.join(', ')}
             MenuProps={{
@@ -511,8 +553,8 @@ const TableControls = ({
             label='All Transactions'
             defaultValue='all'
             name='transactionType'
-            onChange={e => setFilters({ ...filters, transactionType: e.target.value })}
-            value={filters.transactionType} // show default value or else selected value
+            onChange={e => handleTopBarFilterChange('transactionType', e.target.value)}
+            value={filters.transactionType}
           >
             <MenuItem value='all'>All</MenuItem>
             <MenuItem value='online'>Online</MenuItem>

@@ -97,6 +97,7 @@ const TransactionLogs = (): JSX.Element => {
   })
   const [rowsPerPage, setRowsPerPage] = useState(50)
   const [activeTab, setActiveTab] = useState(0)
+  const [keyword, setKeyword] = useState('')
 
   // Dialog states
   const [labelDialogOpen, setLabelDialogOpen] = useState(false)
@@ -130,13 +131,13 @@ const TransactionLogs = (): JSX.Element => {
     (state: RootState) => (state as { groups: { isLocalGroups: boolean } }).groups.isLocalGroups
   )
 
-  // Clean up filters - only send non-empty values
+  // Clean up filters - only send non-empty values, strip 'all' selections
   const cleanUpFilters = React.useCallback(() => {
     const cleaned: Record<string, string | string[]> = {}
     Object.entries(filters).forEach(([key, value]) => {
       if (Array.isArray(value)) {
         if (value.length > 0) cleaned[key] = value
-      } else if (typeof value === 'string' && value.trim().length > 0) {
+      } else if (typeof value === 'string' && value.trim().length > 0 && value !== 'all') {
         cleaned[key] = value
       }
     })
@@ -179,8 +180,17 @@ const TransactionLogs = (): JSX.Element => {
   }, [setHeader])
 
   useEffect(() => {
-    void dispatch(listTransactions({ ...cleanUpFilters(), page: (parseInt(page) + 1).toString(), limit }))
-  }, [dispatch, page, limit, cleanUpFilters])
+    const payload: Record<string, string | string[]> = {
+      ...cleanUpFilters(),
+      page: (parseInt(page) + 1).toString(),
+      limit,
+    }
+    if (keyword.trim().length > 0) {
+      payload.keyword = keyword
+    }
+    void dispatch(listTransactions(payload))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, page, limit, keyword])
 
   // Sync local rowsPerPage with Redux limit
   useEffect(() => {
@@ -408,6 +418,8 @@ const TransactionLogs = (): JSX.Element => {
         setEditModalOpen={setEditModalOpen}
         filters={filters}
         setFilters={setFilters}
+        keyword={keyword}
+        setKeyword={setKeyword}
         onAICategorize={() => setAiSuggestionDialogOpen(true)}
         aiCategorizeDisabled={loading || (selectedIds.length === 0 && uncategorizedOnPage.length === 0)}
         aiCategorizeLabel={

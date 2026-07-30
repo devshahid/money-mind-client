@@ -7,9 +7,17 @@ import typescriptPlugin from '@typescript-eslint/eslint-plugin'
 import typescriptParser from '@typescript-eslint/parser'
 
 export default [
-  { ignores: ['dist', 'vite.config.ts', 'node_modules', 'eslint.config.js', '**/*.test.ts'] },
+  { ignores: ['dist', 'vite.config.ts', 'node_modules', 'eslint.config.js'] },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
+    ignores: [
+      '**/__tests__/*.ts',
+      '**/__tests__/*.tsx',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/*.spec.ts',
+      '**/*.spec.tsx',
+    ],
     languageOptions: {
       ecmaVersion: 2020,
       globals: {
@@ -40,6 +48,34 @@ export default [
       'react/jsx-no-target-blank': 'off',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       '@typescript-eslint/explicit-function-return-type': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
+    },
+  },
+  {
+    files: ['**/__tests__/*.{ts,tsx}', '**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.browser,
+      },
+      parser: typescriptParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+        project: './tsconfig.test.json',
+      },
+    },
+    settings: { react: { version: 'detect' } },
+    plugins: {
+      react,
+      'react-hooks': reactHooks,
+      '@typescript-eslint': typescriptPlugin,
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...typescriptPlugin.configs.recommended.rules,
+      ...typescriptPlugin.configs['recommended-type-checked'].rules,
       '@typescript-eslint/no-unused-vars': 'warn',
     },
   },
