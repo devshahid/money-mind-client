@@ -44,6 +44,7 @@ export const API_ROUTES = {
     clearChatHistory: (sessionId?: string) => `/ai/chat-history${sessionId ? `/${sessionId}` : ''}`,
     annotate: '/ai/annotate',
     suggestCategories: '/ai/suggest-categories',
+    categorizationJobStatus: (jobId: string) => `/ai/suggest-categories/status/${jobId}`,
     applySuggestions: '/ai/apply-suggestions',
     rejectSuggestions: '/ai/reject-suggestions',
     debtStrategy: '/ai/debt-strategy',

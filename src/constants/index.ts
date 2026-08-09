@@ -41,6 +41,8 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
 import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom'
 import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew'
 import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee'
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
+import TrendingUpIcon from '@mui/icons-material/TrendingUp'
 
 export function getExpenseCategories(): ExpenseCategory[] {
   return [
@@ -240,6 +242,18 @@ export function getExpenseCategories(): ExpenseCategory[] {
       name: 'Refunds & Reversals',
       icon: CurrencyRupeeIcon,
       color: '#00796B', // Teal Dark
+      backgroundColor: '#E0F2F1',
+    },
+    {
+      name: 'Transfer',
+      icon: SwapHorizIcon,
+      color: '#5C6BC0', // Indigo
+      backgroundColor: '#E8EAF6',
+    },
+    {
+      name: 'Investments',
+      icon: TrendingUpIcon,
+      color: '#00897B', // Teal
       backgroundColor: '#E0F2F1',
     },
     {

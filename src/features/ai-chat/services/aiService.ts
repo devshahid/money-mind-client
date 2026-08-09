@@ -11,6 +11,8 @@ export interface CategorySuggestion {
   suggestedCategory: string
   confidence: number
   reasoning: string
+  transactionDate: string | null
+  bankName: string
 }
 
 export interface CategorizationResult {
@@ -65,15 +67,84 @@ export const getSuggestedCategories = async (
   total: number
   suggestions: CategorySuggestion[]
 }> => {
-  const response = await axiosClient.post<{
+  // Step 1: Start the categorization job
+  const startResponse = await axiosClient.post<{
     status: boolean
     output: {
       message: string
-      total: number
-      suggestions: CategorySuggestion[]
+      jobId: string | null
+      status: string
+      progress?: { total: number; processed: number }
+      suggestions?: CategorySuggestion[]
     }
   }>(API_ROUTES.ai.suggestCategories, transactionIds ? { transactionIds } : { all })
-  return response.data.output
+
+  const { jobId, status: jobStatus, suggestions } = startResponse.data.output
+
+  // No transactions to categorize or immediate result
+  if (!jobId || jobStatus === 'completed') {
+    return {
+      message: startResponse.data.output.message,
+      total: suggestions?.length || 0,
+      suggestions: suggestions || [],
+    }
+  }
+
+  // Step 2: Poll for results
+  return pollCategorizationJob(jobId)
+}
+
+/**
+ * Poll a categorization job until completion or failure.
+ * Uses exponential backoff starting at 3s, capped at 10s.
+ */
+const pollCategorizationJob = async (
+  jobId: string,
+  maxAttempts = 60
+): Promise<{
+  message: string
+  total: number
+  suggestions: CategorySuggestion[]
+}> => {
+  let attempts = 0
+  let delay = 3000 // Start at 3s
+
+  while (attempts < maxAttempts) {
+    await new Promise(resolve => setTimeout(resolve, delay))
+    attempts++
+
+    const response = await axiosClient.get<{
+      status: boolean
+      output: {
+        jobId: string
+        status: string
+        progress: { total: number; processed: number }
+        message?: string
+        total?: number
+        suggestions?: CategorySuggestion[]
+        error?: string
+      }
+    }>(API_ROUTES.ai.categorizationJobStatus(jobId))
+
+    const { status: jobStatus, suggestions, message, total, error } = response.data.output
+
+    if (jobStatus === 'completed') {
+      return {
+        message: message || 'Categorization complete',
+        total: total || suggestions?.length || 0,
+        suggestions: suggestions || [],
+      }
+    }
+
+    if (jobStatus === 'failed') {
+      throw new Error(error || 'Categorization job failed')
+    }
+
+    // Increase delay with cap (3s → 5s → 7s → 10s max)
+    delay = Math.min(delay + 2000, 10000)
+  }
+
+  throw new Error('Categorization job timed out — please try again')
 }
 
 export const applyCategorySuggestions = async (

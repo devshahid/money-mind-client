@@ -211,13 +211,35 @@ const AISuggestionReviewDialog = ({
                   >
                     {suggestion.narration}
                   </Typography>
-                  <Typography
-                    variant='body1'
-                    fontWeight='bold'
-                    color={suggestion.isCredit ? 'success.main' : 'error.main'}
-                  >
-                    ₹{suggestion.amount.toLocaleString('en-IN')}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: spacing[2], flexWrap: 'wrap' }}>
+                    <Typography
+                      variant='body1'
+                      fontWeight='bold'
+                      color={suggestion.isCredit ? 'success.main' : 'error.main'}
+                    >
+                      ₹{suggestion.amount.toLocaleString('en-IN')}
+                    </Typography>
+                    {suggestion.transactionDate && (
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                      >
+                        {new Date(suggestion.transactionDate).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </Typography>
+                    )}
+                    {suggestion.bankName && (
+                      <Chip
+                        label={suggestion.bankName}
+                        size='small'
+                        variant='outlined'
+                        sx={{ fontSize: '0.7rem', height: 20 }}
+                      />
+                    )}
+                  </Box>
                 </Box>
               </Box>
 
@@ -241,8 +263,12 @@ const AISuggestionReviewDialog = ({
                       size='small'
                       fullWidth
                       autoFocus
-                      onBlur={() => setEditingId(null)}
-                      MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
+                      open
+                      onClose={() => setEditingId(null)}
+                      MenuProps={{
+                        PaperProps: { sx: { maxHeight: 300 } },
+                        sx: { zIndex: 1400 },
+                      }}
                     >
                       {categories.map(cat => (
                         <MenuItem
@@ -315,6 +341,8 @@ const AISuggestionReviewDialog = ({
           <TableRow>
             <TableCell padding='checkbox'>Apply</TableCell>
             <TableCell sx={{ minWidth: 300 }}>Narration</TableCell>
+            <TableCell>Date</TableCell>
+            <TableCell>Bank</TableCell>
             <TableCell>Amount</TableCell>
             <TableCell>Current</TableCell>
             <TableCell>→ Category</TableCell>
@@ -358,6 +386,30 @@ const AISuggestionReviewDialog = ({
                     {suggestion.narration}
                   </Typography>
                 </TableCell>
+                <TableCell>
+                  <Typography
+                    variant='caption'
+                    color='text.secondary'
+                    sx={{ whiteSpace: 'nowrap' }}
+                  >
+                    {suggestion.transactionDate
+                      ? new Date(suggestion.transactionDate).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })
+                      : '—'}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography
+                    variant='caption'
+                    color='text.secondary'
+                    sx={{ whiteSpace: 'nowrap' }}
+                  >
+                    {suggestion.bankName || '—'}
+                  </Typography>
+                </TableCell>
                 <TableCell sx={{ fontWeight: 'bold', color: suggestion.isCredit ? 'success.main' : 'error.main' }}>
                   ₹{suggestion.amount.toLocaleString('en-IN')}
                 </TableCell>
@@ -378,9 +430,13 @@ const AISuggestionReviewDialog = ({
                       }
                       size='small'
                       autoFocus
-                      onBlur={() => setEditingId(null)}
+                      open
+                      onClose={() => setEditingId(null)}
                       sx={{ minWidth: 160 }}
-                      MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
+                      MenuProps={{
+                        PaperProps: { sx: { maxHeight: 300 } },
+                        sx: { zIndex: 1400 },
+                      }}
                     >
                       {categories.map(cat => (
                         <MenuItem
@@ -427,11 +483,22 @@ const AISuggestionReviewDialog = ({
                 </TableCell>
                 <TableCell>
                   <Tooltip
-                    title={isOverridden ? 'Manually changed by you' : suggestion.reasoning}
+                    title={isOverridden ? 'Manually changed by you' : suggestion.reasoning || 'No reasoning available'}
                     arrow
+                    enterDelay={200}
+                    leaveDelay={200}
+                    PopperProps={{ sx: { zIndex: 1400 } }}
+                    slotProps={{
+                      tooltip: {
+                        sx: { maxWidth: 350, whiteSpace: 'pre-wrap', fontSize: '0.8rem' },
+                      },
+                    }}
                   >
                     <IconButton size='small'>
-                      <Info fontSize='small' />
+                      <Info
+                        fontSize='small'
+                        color={suggestion.reasoning ? 'primary' : 'disabled'}
+                      />
                     </IconButton>
                   </Tooltip>
                 </TableCell>
