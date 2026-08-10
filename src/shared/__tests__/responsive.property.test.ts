@@ -50,7 +50,9 @@ describe('Property 1: Transaction card summary displays required fields', () => 
   it('for any valid transaction, all four required fields are representable', () => {
     const transactionArb = fc.record({
       _id: fc.string({ minLength: 1 }),
-      transactionDate: fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }).map(d => d.toISOString()),
+      transactionDate: fc
+        .integer({ min: new Date('2020-01-01').getTime(), max: new Date('2030-12-31').getTime() })
+        .map(ts => new Date(ts).toISOString()),
       narration: fc.string({ minLength: 1, maxLength: 200 }),
       amount: fc.integer({ min: 1, max: 999999 }).map(n => (n / 100).toFixed(2)),
       isCredit: fc.boolean(),
