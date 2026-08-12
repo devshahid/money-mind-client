@@ -24,6 +24,7 @@ type TransactionViewProps = {
   component?: OverridableComponent<PaperTypeMap<object, 'div'>>
   groups?: ITransactionGroup[]
   onGroupBadgeClick?: (groupId: string) => void
+  onLedgerBadgeClick?: (ledgerId: string) => void
 }
 
 const TransactionView = ({
@@ -39,6 +40,7 @@ const TransactionView = ({
   component,
   groups,
   onGroupBadgeClick,
+  onLedgerBadgeClick,
 }: TransactionViewProps): JSX.Element => {
   const { tier } = useResponsive()
 
@@ -70,6 +72,7 @@ const TransactionView = ({
           component={component}
           groups={groups}
           onGroupBadgeClick={onGroupBadgeClick}
+          onLedgerBadgeClick={onLedgerBadgeClick}
         />
       )
   }

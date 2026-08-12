@@ -283,6 +283,5 @@ export const commonTableHeadingStyles = (mode: string): { [key: string]: string 
     backgroundColor: mode === 'dark' ? '#222126' : '#F6F5FF',
     color: '#8578e5',
     whiteSpace: 'nowrap',
-    textAlign: 'center',
   }
 }

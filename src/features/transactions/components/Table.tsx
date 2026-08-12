@@ -21,6 +21,7 @@ import { ColorModeContext } from '../../../shared/contexts/ThemeContext'
 import { columnHeaderOptions, commonTableHeadingStyles, getExpenseCategories } from '../../../constants'
 import { ITransactionLogs } from '../store/transactionSlice'
 import { ITransactionGroup, selectTransactionGroupMap } from '../store/groupSlice'
+import { selectTransactionLedgerMap } from '../store/ledgerSlice'
 import { computeGroupSummary } from '../utils/groupUtils'
 import EditIcon from '@mui/icons-material/Edit'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
@@ -41,6 +42,7 @@ type Props = {
   groups?: ITransactionGroup[]
   onGroupBadgeClick?: (groupId: string) => void
   onGroupInfoClick?: (event: React.MouseEvent, transactionId: string) => void
+  onLedgerBadgeClick?: (ledgerId: string) => void
 }
 
 const CustomTable = ({
@@ -54,11 +56,14 @@ const CustomTable = ({
   component,
   groups,
   onGroupBadgeClick,
+  onLedgerBadgeClick,
 }: Props): JSX.Element => {
   const { mode } = useContext(ColorModeContext)
 
   const { transactions } = useAppSelector((state: RootState) => state.transactions)
   const transactionGroupMap = useAppSelector(selectTransactionGroupMap)
+  const transactionLedgerMap = useAppSelector((state: RootState) => selectTransactionLedgerMap(state))
+  const ledgers = useAppSelector((state: RootState) => state.ledgers.ledgers)
 
   const [infoAnchorEl, setInfoAnchorEl] = useState<HTMLElement | null>(null)
   const [infoTxId, setInfoTxId] = useState<string | null>(null)
@@ -221,6 +226,7 @@ const CustomTable = ({
                 {showGroupColumn && (
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                      {/* Group Badges */}
                       {(transactionGroupMap[tx._id] ?? []).slice(0, 2).map(g => (
                         <Chip
                           key={g.id}
@@ -236,6 +242,29 @@ const CustomTable = ({
                           }}
                         />
                       ))}
+
+                      {/* Ledger Badge */}
+                      {transactionLedgerMap.has(tx._id) && (() => {
+                        const ledgerId = transactionLedgerMap.get(tx._id)
+                        const ledger = ledgerId ? ledgers.find(l => l.id === ledgerId) : null
+                        return ledger ? (
+                          <Chip
+                            key={ledger.id}
+                            label={ledger.partyName}
+                            size='small'
+                            onClick={() => onLedgerBadgeClick?.(ledger.id)}
+                            sx={{
+                              backgroundColor: '#F3E5F5',
+                              color: '#7B1FA2',
+                              cursor: 'pointer',
+                              fontWeight: 500,
+                              '&:hover': { backgroundColor: '#E1BEE7' },
+                            }}
+                          />
+                        ) : null
+                      })()}
+
+                      {/* Overflow indicator for groups */}
                       {(transactionGroupMap[tx._id] ?? []).length > 2 && (
                         <Typography
                           variant='body2'
@@ -244,6 +273,8 @@ const CustomTable = ({
                           +{(transactionGroupMap[tx._id] ?? []).length - 2}
                         </Typography>
                       )}
+
+                      {/* Info button */}
                       {(transactionGroupMap[tx._id] ?? []).length > 0 && (
                         <IconButton
                           size='small'
