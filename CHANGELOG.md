@@ -1,3 +1,9 @@
+## [1.3.2](https://github.com/devshahid/money-mind-client/compare/v1.3.1...v1.3.2) (2026-08-25)
+
+### Bug Fixes
+
+- **ci:** pin conventionalcommits preset to v8 for semantic-release compatibility ([#22](https://github.com/devshahid/money-mind-client/issues/22)) ([30115db](https://github.com/devshahid/money-mind-client/commit/30115dba23c14a0dc6c12f242783bf0530eb2f2c))
+
 ## [1.3.1](https://github.com/devshahid/money-mind-client/compare/v1.3.0...v1.3.1) (2026-08-25)
 
 ### Bug Fixes
