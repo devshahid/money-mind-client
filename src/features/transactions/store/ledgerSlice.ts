@@ -59,13 +59,15 @@ export const loadLedgers = createAsyncThunk<
   try {
     // Load from IndexedDB first
     const localLedgers = await ledgerStore.getAllLedgers()
-    const allEntries: ILedgerEntry[] = []
 
-    // Collect all entries from local ledgers
-    for (const ledger of localLedgers) {
-      const entries = await ledgerStore.getEntriesByLedgerId(ledger.id)
-      allEntries.push(...entries)
-    }
+    // Load ALL persisted entries, not just those attached to a ledger that
+    // currently exists in the local IndexedDB. A ledger can be present on the
+    // server but absent locally (created on another device, synced-down-only,
+    // or after the local store was cleared). Entries linked to such a ledger
+    // are still saved to IndexedDB keyed by that ledger's id, so collecting
+    // entries per-local-ledger would silently drop them and the ledger view
+    // would render empty even though the link succeeded.
+    const allEntries: ILedgerEntry[] = await ledgerStore.getAllEntries()
 
     // Try to fetch from server and merge
     try {
