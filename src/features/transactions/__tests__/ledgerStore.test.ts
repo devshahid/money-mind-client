@@ -1,36 +1,29 @@
 /**
  * IndexedDB Ledger Store Tests
- * 
+ *
  * Tests for offline-first persistence layer with IndexedDB
  */
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 
 import 'fake-indexeddb/auto'
-import { IDBDatabase } from 'fake-indexeddb'
+import { IDBFactory } from 'fake-indexeddb'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ILedger, ILedgerEntry } from '../types/ledger'
-import * as ledgerStore from '../helpers/indexDB/ledgerStore'
+
+// The module memoizes its db connection in module scope (initDB caches
+// dbPromise). Resetting the fake IndexedDB factory AND resetting modules +
+// re-importing per test guarantees a fresh, empty database each run without
+// relying on deleteDatabase (which blocks while a memoized connection is still
+// open and can hang the suite).
+type LedgerStoreModule = typeof import('../helpers/indexDB/ledgerStore')
+let ledgerStore: LedgerStoreModule['ledgerStore']
 
 describe('LedgerStore (IndexedDB Tests)', () => {
-  let db: IDBDatabase
-
   beforeEach(async () => {
-    // Clear all stores before each test
-    const dbRequest = indexedDB.deleteDatabase('money-mind')
-    
-    return new Promise<void>((resolve) => {
-      dbRequest.onsuccess = () => {
-        resolve()
-      }
-      dbRequest.onerror = () => {
-        resolve()
-      }
-    })
-  })
-
-  afterEach(() => {
-    if (db) {
-      db.close()
-    }
+    // Swap in a brand-new fake IndexedDB so no state leaks between tests.
+    globalThis.indexedDB = new IDBFactory()
+    vi.resetModules()
+    const mod = await import('../helpers/indexDB/ledgerStore')
+    ledgerStore = mod.ledgerStore
   })
 
   describe('saveLedger', () => {
@@ -111,9 +104,9 @@ describe('LedgerStore (IndexedDB Tests)', () => {
       expect(retrieved).toEqual(ledger)
     })
 
-    it('should return null for non-existent ledger', async () => {
+    it('should return undefined for non-existent ledger', async () => {
       const retrieved = await ledgerStore.getLedger('non-existent')
-      expect(retrieved).toBeNull()
+      expect(retrieved).toBeUndefined()
     })
   })
 
@@ -167,7 +160,7 @@ describe('LedgerStore (IndexedDB Tests)', () => {
       await ledgerStore.deleteLedger('ledger-1')
 
       const after = await ledgerStore.getLedger('ledger-1')
-      expect(after).toBeNull()
+      expect(after).toBeUndefined()
     })
 
     it('should silently handle deletion of non-existent ledger', async () => {
@@ -184,7 +177,6 @@ describe('LedgerStore (IndexedDB Tests)', () => {
         transactionId: 'tx-1',
         direction: 'i_paid',
         amount: 100,
-        isSettlement: false,
         createdAt: new Date().toISOString(),
       }
 
@@ -202,7 +194,6 @@ describe('LedgerStore (IndexedDB Tests)', () => {
         transactionId: 'tx-1',
         direction: 'i_paid',
         amount: 100,
-        isSettlement: false,
         createdAt: new Date().toISOString(),
       }
 
@@ -230,7 +221,6 @@ describe('LedgerStore (IndexedDB Tests)', () => {
           transactionId: 'tx-1',
           direction: 'i_paid',
           amount: 100,
-          isSettlement: false,
           createdAt: new Date().toISOString(),
         },
         {
@@ -239,7 +229,6 @@ describe('LedgerStore (IndexedDB Tests)', () => {
           transactionId: 'tx-2',
           direction: 'they_paid',
           amount: 50,
-          isSettlement: false,
           createdAt: new Date().toISOString(),
         },
       ]
@@ -264,7 +253,6 @@ describe('LedgerStore (IndexedDB Tests)', () => {
         transactionId: 'tx-1',
         direction: 'i_paid',
         amount: 100,
-        isSettlement: false,
         createdAt: new Date().toISOString(),
       }
 
@@ -274,7 +262,6 @@ describe('LedgerStore (IndexedDB Tests)', () => {
         transactionId: 'tx-2',
         direction: 'they_paid',
         amount: 50,
-        isSettlement: false,
         createdAt: new Date().toISOString(),
       }
 
@@ -386,7 +373,6 @@ describe('LedgerStore (IndexedDB Tests)', () => {
         transactionId: 'tx-1',
         direction: 'i_paid',
         amount: 100,
-        isSettlement: false,
         createdAt: new Date().toISOString(),
       }
 
@@ -422,7 +408,6 @@ describe('LedgerStore (IndexedDB Tests)', () => {
         transactionId: 'tx-1',
         direction: 'i_paid',
         amount: 999999999.99,
-        isSettlement: false,
         createdAt: new Date().toISOString(),
       }
 
@@ -435,7 +420,7 @@ describe('LedgerStore (IndexedDB Tests)', () => {
     it('should handle special characters in party name', async () => {
       const ledger: ILedger = {
         id: 'ledger-1',
-        partyName: 'John O\'Brien & Co. (Pvt) Ltd.',
+        partyName: "John O'Brien & Co. (Pvt) Ltd.",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
@@ -443,7 +428,7 @@ describe('LedgerStore (IndexedDB Tests)', () => {
       await ledgerStore.saveLedger(ledger)
 
       const saved = await ledgerStore.getLedger('ledger-1')
-      expect(saved?.partyName).toBe('John O\'Brien & Co. (Pvt) Ltd.')
+      expect(saved?.partyName).toBe("John O'Brien & Co. (Pvt) Ltd.")
     })
   })
 })

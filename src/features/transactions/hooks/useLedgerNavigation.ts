@@ -9,8 +9,6 @@ import { useCallback } from 'react'
 import { useAppSelector, useAppDispatch } from '@/shared/hooks/slice-hooks'
 import { RootState } from '@/store'
 import { selectTransactionLedgerMap, selectLedgerById, selectLedger } from '../store/ledgerSlice'
-import type { ITransaction } from '../types/ledger'
-import type { ILedger } from '../types/ledger'
 
 /**
  * Hook for ledger navigation

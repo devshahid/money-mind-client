@@ -1,6 +1,6 @@
 /**
  * Ledger API service
- * 
+ *
  * Provides API client functions for ledger operations
  */
 
@@ -39,14 +39,8 @@ export const getLedgerDetail = async (id: string): Promise<ILedger & { entries: 
 /**
  * Update a ledger
  */
-export const updateLedger = async (
-  id: string,
-  data: Partial<ILedger>
-): Promise<ILedger> => {
-  const response = await axiosClient.put<{ output: ILedger }>(
-    API_ROUTES.ledgers.update(id),
-    data
-  )
+export const updateLedger = async (id: string, data: Partial<ILedger>): Promise<ILedger> => {
+  const response = await axiosClient.put<{ output: ILedger }>(API_ROUTES.ledgers.update(id), data)
   return response.data.output
 }
 
@@ -65,13 +59,10 @@ export const addEntry = async (
   transactionId: string,
   direction: MoneyDirection
 ): Promise<ILedgerEntry> => {
-  const response = await axiosClient.post<{ output: ILedgerEntry }>(
-    API_ROUTES.ledgers.addEntry(ledgerId),
-    {
-      transactionId,
-      direction,
-    }
-  )
+  const response = await axiosClient.post<{ output: ILedgerEntry }>(API_ROUTES.ledgers.addEntry(ledgerId), {
+    transactionId,
+    direction,
+  })
   return response.data.output
 }
 
@@ -90,31 +81,10 @@ export const linkTransaction = async (
   transactionId: string,
   direction: MoneyDirection
 ): Promise<ILedgerEntry> => {
-  const response = await axiosClient.post<{ output: ILedgerEntry }>(
-    API_ROUTES.ledgers.linkTransaction(ledgerId),
-    {
-      transactionId,
-      direction,
-    }
-  )
-  return response.data.output
-}
-
-/**
- * Record a settlement for a ledger
- */
-export const settle = async (
-  ledgerId: string,
-  transactionId: string,
-  amount: number
-): Promise<ILedgerEntry> => {
-  const response = await axiosClient.post<{ output: ILedgerEntry }>(
-    API_ROUTES.ledgers.settle(ledgerId),
-    {
-      transactionId,
-      amount,
-    }
-  )
+  const response = await axiosClient.post<{ output: ILedgerEntry }>(API_ROUTES.ledgers.linkTransaction(ledgerId), {
+    transactionId,
+    direction,
+  })
   return response.data.output
 }
 

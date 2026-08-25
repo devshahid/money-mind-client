@@ -31,18 +31,15 @@ interface StatCardProps {
   currency?: string
 }
 
-const SummaryStatCard = ({
-  label,
-  value,
-  icon: Icon,
-  color,
-  currency = '₹',
-}: StatCardProps): JSX.Element => (
+const SummaryStatCard = ({ label, value, icon: Icon, color, currency = '₹' }: StatCardProps): JSX.Element => (
   <Card sx={{ flex: 1, minWidth: { xs: '100%', sm: 150 } }}>
     <CardContent sx={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
       <Icon sx={{ fontSize: fontSize.xl, color }} />
       <Box>
-        <Typography variant='caption' color='text.secondary'>
+        <Typography
+          variant='caption'
+          color='text.secondary'
+        >
           {label}
         </Typography>
         <Typography
@@ -63,16 +60,16 @@ const SummaryStatCard = ({
 /**
  * LedgerSummaryTotals - Display aggregate ledger statistics
  */
-export const LedgerSummaryTotals = ({
-  ledgers,
-  currency = '₹',
-}: LedgerSummaryTotalsProps): JSX.Element => {
+export const LedgerSummaryTotals = ({ ledgers, currency = '₹' }: LedgerSummaryTotalsProps): JSX.Element => {
   const totals = useMemo(() => calculateSummaryTotals(ledgers), [ledgers])
 
   if (ledgers.length === 0) {
     return (
       <Box sx={{ textAlign: 'center', py: spacing[3] }}>
-        <Typography variant='body2' color='text.secondary'>
+        <Typography
+          variant='body2'
+          color='text.secondary'
+        >
           No ledgers to display
         </Typography>
       </Box>
@@ -123,7 +120,10 @@ export const LedgerSummaryTotals = ({
         <Card>
           <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box>
-              <Typography variant='caption' color='text.secondary'>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+              >
                 Net Balance
               </Typography>
               <Typography
@@ -135,19 +135,18 @@ export const LedgerSummaryTotals = ({
                       ? colors.semantic.success
                       : totals.netBalance < 0
                         ? colors.semantic.error
-                        : colors.grayscale[500],
+                        : colors.grayscale.medium,
                 }}
               >
                 {currency}
                 {Math.abs(totals.netBalance).toFixed(2)}
               </Typography>
             </Box>
-            <Typography variant='caption' color='text.secondary'>
-              {totals.netBalance > 0
-                ? 'They owe you'
-                : totals.netBalance < 0
-                  ? 'You owe them'
-                  : 'Settled'}
+            <Typography
+              variant='caption'
+              color='text.secondary'
+            >
+              {totals.netBalance > 0 ? 'They owe you' : totals.netBalance < 0 ? 'You owe them' : 'Settled'}
             </Typography>
           </CardContent>
         </Card>

@@ -34,7 +34,7 @@ import type { ILedger } from '../types/ledger'
 import { calculateBalance, getBalanceDirection } from '../utils/ledgerBalance'
 import { useAppSelector, useAppDispatch } from '@/shared/hooks/slice-hooks'
 import { RootState } from '@/store'
-import { selectEntriesByLedgerId, selectHasLocalChanges, syncLedgers } from '../store/ledgerSlice'
+import { selectHasLocalChanges, syncLedgers } from '../store/ledgerSlice'
 import { spacing, colors } from '@/shared/theme'
 import { LedgerSummaryTotals } from './LedgerSummaryTotals'
 import { commonTableHeadingStyles } from '@/constants'
@@ -62,16 +62,15 @@ const formatDate = (dateString: string): string => {
 /**
  * Get balance direction badge color and label
  */
-const getBalanceBadgeProps = (balance: number) => {
+const getBalanceBadgeProps = (balance: number): { color: 'success' | 'error' | 'default'; label: string } => {
   const direction = getBalanceDirection(balance)
-  switch (direction) {
-    case 'they_owe':
-      return { color: 'success', label: 'They owe you' }
-    case 'you_owe':
-      return { color: 'error', label: 'You owe them' }
-    case 'settled':
-      return { color: 'default', label: 'Settled' }
+  if (direction === 'they_owe') {
+    return { color: 'success', label: 'They owe you' }
   }
+  if (direction === 'you_owe') {
+    return { color: 'error', label: 'You owe them' }
+  }
+  return { color: 'default', label: 'Settled' }
 }
 
 /**
@@ -100,13 +99,16 @@ const LedgerTableRow = ({
       </TableCell>
       <TableCell align='right'>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: spacing[1] }}>
-          <Typography variant='body2' sx={{ fontWeight: 500 }}>
+          <Typography
+            variant='body2'
+            sx={{ fontWeight: 500 }}
+          >
             ₹{Math.abs(balance).toFixed(2)}
           </Typography>
           <Chip
             label={badgeProps.label}
             size='small'
-            color={badgeProps.color as 'success' | 'error' | 'default'}
+            color={badgeProps.color}
             variant='outlined'
           />
         </Box>
@@ -115,7 +117,10 @@ const LedgerTableRow = ({
         <Typography variant='body2'>{entryCount}</Typography>
       </TableCell>
       <TableCell align='right'>
-        <Typography variant='caption' color='text.secondary'>
+        <Typography
+          variant='caption'
+          color='text.secondary'
+        >
           {formatDate(ledger.createdAt)}
         </Typography>
       </TableCell>
@@ -176,14 +181,14 @@ const LedgerCard = ({
           <Box sx={{ textAlign: 'right' }}>
             <Typography
               variant='h6'
-              sx={{ fontWeight: 600, color: colors.primary.green }}
+              sx={{ fontWeight: 600, color: colors.semantic.success }}
             >
               ₹{Math.abs(balance).toFixed(2)}
             </Typography>
             <Chip
               label={badgeProps.label}
               size='small'
-              color={badgeProps.color as any}
+              color={badgeProps.color}
               variant='outlined'
               sx={{ mt: spacing[1] }}
             />
@@ -263,7 +268,10 @@ export const LedgerList = ({
   if (ledgersWithBalances.length === 0) {
     return (
       <Box sx={{ textAlign: 'center', py: spacing[4] }}>
-        <Typography color='text.secondary' sx={{ mb: spacing[2] }}>
+        <Typography
+          color='text.secondary'
+          sx={{ mb: spacing[2] }}
+        >
           {searchText
             ? `No ledgers found matching “${searchText}”`
             : 'No ledgers yet. Create your first ledger to get started!'}
@@ -276,8 +284,15 @@ export const LedgerList = ({
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
       {/* Sync button - only show when there are local changes */}
       {hasLocalChanges && (
-        <Stack direction='row' gap={spacing[2]} sx={{ alignItems: 'center' }}>
-          <Alert severity='info' sx={{ flex: 1 }}>
+        <Stack
+          direction='row'
+          gap={spacing[2]}
+          sx={{ alignItems: 'center' }}
+        >
+          <Alert
+            severity='info'
+            sx={{ flex: 1 }}
+          >
             You have unsaved changes. Click “Sync to Server” to save them.
           </Alert>
           <Button
@@ -321,9 +336,24 @@ export const LedgerList = ({
             <TableHead>
               <TableRow>
                 <TableCell sx={{ ...commonTableHeadingStyles(mode) }}>Party Name</TableCell>
-                <TableCell align='right' sx={{ ...commonTableHeadingStyles(mode) }}>Outstanding Balance</TableCell>
-                <TableCell align='center' sx={{ ...commonTableHeadingStyles(mode) }}>Transactions</TableCell>
-                <TableCell align='right' sx={{ ...commonTableHeadingStyles(mode) }}>Created Date</TableCell>
+                <TableCell
+                  align='right'
+                  sx={{ ...commonTableHeadingStyles(mode) }}
+                >
+                  Outstanding Balance
+                </TableCell>
+                <TableCell
+                  align='center'
+                  sx={{ ...commonTableHeadingStyles(mode) }}
+                >
+                  Transactions
+                </TableCell>
+                <TableCell
+                  align='right'
+                  sx={{ ...commonTableHeadingStyles(mode) }}
+                >
+                  Created Date
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -348,7 +378,10 @@ export const LedgerList = ({
         onClose={() => setSyncStatus('idle')}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert severity={syncStatus === 'success' ? 'success' : 'error'} sx={{ width: '100%' }}>
+        <Alert
+          severity={syncStatus === 'success' ? 'success' : 'error'}
+          sx={{ width: '100%' }}
+        >
           {syncMessage}
         </Alert>
       </Snackbar>

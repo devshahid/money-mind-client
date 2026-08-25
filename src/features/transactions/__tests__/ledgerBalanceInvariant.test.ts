@@ -19,13 +19,13 @@ describe('Balance Invariant - Property-Based Tests', () => {
   describe('Adding Entry Invariant - i_paid direction', () => {
     it('should increase balance by entry amount when adding i_paid entry', () => {
       const initialEntries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'they_paid' } as Partial<ILedgerEntry>,
       ]
 
       const initialBalance = calculateBalance(initialEntries as ILedgerEntry[])
 
-      const newEntry = { amount: 75, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>
+      const newEntry = { amount: 75, direction: 'i_paid' } as Partial<ILedgerEntry>
       const updatedEntries = [...(initialEntries as ILedgerEntry[]), newEntry as ILedgerEntry]
       const updatedBalance = calculateBalance(updatedEntries)
 
@@ -40,9 +40,9 @@ describe('Balance Invariant - Property-Based Tests', () => {
       let expectedBalance = 0
 
       const entriesToAdd = [
-        { amount: 100, direction: 'i_paid' as const, isSettlement: false },
-        { amount: 50, direction: 'i_paid' as const, isSettlement: false },
-        { amount: 75, direction: 'i_paid' as const, isSettlement: false },
+        { amount: 100, direction: 'i_paid' as const },
+        { amount: 50, direction: 'i_paid' as const },
+        { amount: 75, direction: 'i_paid' as const },
       ]
 
       entriesToAdd.forEach(entry => {
@@ -62,13 +62,13 @@ describe('Balance Invariant - Property-Based Tests', () => {
   describe('Adding Entry Invariant - they_paid direction', () => {
     it('should decrease balance by entry amount when adding they_paid entry', () => {
       const initialEntries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'they_paid' } as Partial<ILedgerEntry>,
       ]
 
       const initialBalance = calculateBalance(initialEntries as ILedgerEntry[])
 
-      const newEntry = { amount: 75, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>
+      const newEntry = { amount: 75, direction: 'they_paid' } as Partial<ILedgerEntry>
       const updatedEntries = [...(initialEntries as ILedgerEntry[]), newEntry as ILedgerEntry]
       const updatedBalance = calculateBalance(updatedEntries)
 
@@ -79,15 +79,13 @@ describe('Balance Invariant - Property-Based Tests', () => {
     })
 
     it('should maintain invariant with multiple sequential additions', () => {
-      let entries: ILedgerEntry[] = [
-        { amount: 200, direction: 'i_paid', isSettlement: false } as unknown as ILedgerEntry,
-      ]
+      let entries: ILedgerEntry[] = [{ amount: 200, direction: 'i_paid' } as unknown as ILedgerEntry]
       let expectedBalance = 200
 
       const entriesToAdd = [
-        { amount: 50, direction: 'they_paid' as const, isSettlement: false },
-        { amount: 75, direction: 'they_paid' as const, isSettlement: false },
-        { amount: 25, direction: 'they_paid' as const, isSettlement: false },
+        { amount: 50, direction: 'they_paid' as const },
+        { amount: 75, direction: 'they_paid' as const },
+        { amount: 25, direction: 'they_paid' as const },
       ]
 
       entriesToAdd.forEach(entry => {
@@ -108,9 +106,9 @@ describe('Balance Invariant - Property-Based Tests', () => {
   describe('Removing Entry Invariant', () => {
     it('should reverse balance change when removing i_paid entry', () => {
       const fullEntries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 75, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'they_paid' } as Partial<ILedgerEntry>,
+        { amount: 75, direction: 'i_paid' } as Partial<ILedgerEntry>,
       ]
 
       const fullBalance = calculateBalance(fullEntries as ILedgerEntry[])
@@ -127,9 +125,9 @@ describe('Balance Invariant - Property-Based Tests', () => {
 
     it('should reverse balance change when removing they_paid entry', () => {
       const fullEntries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 75, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'they_paid' } as Partial<ILedgerEntry>,
+        { amount: 75, direction: 'i_paid' } as Partial<ILedgerEntry>,
       ]
 
       const fullBalance = calculateBalance(fullEntries as ILedgerEntry[])
@@ -152,9 +150,9 @@ describe('Balance Invariant - Property-Based Tests', () => {
   describe('Determinism Invariant', () => {
     it('should produce identical balance for identical entry sets', () => {
       const entries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 75, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'they_paid' } as Partial<ILedgerEntry>,
+        { amount: 75, direction: 'i_paid' } as Partial<ILedgerEntry>,
       ]
 
       const balance1 = calculateBalance(entries as ILedgerEntry[])
@@ -174,13 +172,13 @@ describe('Balance Invariant - Property-Based Tests', () => {
   describe('Additivity Invariant', () => {
     it('should satisfy additivity property for non-overlapping entry sets', () => {
       const entriesA = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 30, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 30, direction: 'they_paid' } as Partial<ILedgerEntry>,
       ]
 
       const entriesB = [
-        { amount: 50, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 20, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 20, direction: 'they_paid' } as Partial<ILedgerEntry>,
       ]
 
       const balanceA = calculateBalance(entriesA as ILedgerEntry[])
@@ -193,14 +191,10 @@ describe('Balance Invariant - Property-Based Tests', () => {
       expect(balanceAB).toBe(100)
     })
 
-    it('should satisfy additivity with settlement entries', () => {
-      const entriesA = [
-        { amount: 100, direction: 'i_paid', isSettlement: true } as Partial<ILedgerEntry>,
-      ]
+    it('should satisfy additivity across mixed-direction entry sets', () => {
+      const entriesA = [{ amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>]
 
-      const entriesB = [
-        { amount: 40, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-      ]
+      const entriesB = [{ amount: 40, direction: 'they_paid' } as Partial<ILedgerEntry>]
 
       const balanceA = calculateBalance(entriesA as ILedgerEntry[])
       const balanceB = calculateBalance(entriesB as ILedgerEntry[])
@@ -219,9 +213,9 @@ describe('Balance Invariant - Property-Based Tests', () => {
   describe('Single Entry Removal Invariant', () => {
     it('should calculate correct balance after removing single entry from set', () => {
       const allEntries = [
-        { _id: '1', amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { _id: '2', amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { _id: '3', amount: 75, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { _id: '1', amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { _id: '2', amount: 50, direction: 'they_paid' } as Partial<ILedgerEntry>,
+        { _id: '3', amount: 75, direction: 'i_paid' } as Partial<ILedgerEntry>,
       ]
 
       const initialBalance = calculateBalance(allEntries as ILedgerEntry[])
@@ -233,7 +227,7 @@ describe('Balance Invariant - Property-Based Tests', () => {
       // Invariant: We know entry '2' had direction 'they_paid' and amount 50
       // So balanceAfterRemoval = initialBalance - (-50) = initialBalance + 50
       expect(balanceAfterRemoval).toBe(initialBalance + 50)
-      expect(balanceAfterRemoval).toBe(225)
+      expect(balanceAfterRemoval).toBe(175)
     })
   })
 
@@ -244,17 +238,20 @@ describe('Balance Invariant - Property-Based Tests', () => {
   describe('Negation Invariant', () => {
     it('should satisfy negation property', () => {
       const entries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 75, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'they_paid' } as Partial<ILedgerEntry>,
+        { amount: 75, direction: 'i_paid' } as Partial<ILedgerEntry>,
       ]
 
       const balance = calculateBalance(entries as ILedgerEntry[])
 
-      const negatedEntries = entries.map(e => ({
-        ...e,
-        direction: e.direction === 'i_paid' ? 'they_paid' : 'i_paid',
-      } as Partial<ILedgerEntry>))
+      const negatedEntries = entries.map(
+        e =>
+          ({
+            ...e,
+            direction: e.direction === 'i_paid' ? 'they_paid' : 'i_paid',
+          }) as Partial<ILedgerEntry>
+      )
 
       const negatedBalance = calculateBalance(negatedEntries as ILedgerEntry[])
 
@@ -262,32 +259,6 @@ describe('Balance Invariant - Property-Based Tests', () => {
       expect(negatedBalance).toBe(-balance)
       expect(balance).toBe(125)
       expect(negatedBalance).toBe(-125)
-    })
-  })
-
-  /**
-   * Invariant 8: Settlement entry type doesn't affect calculation
-   * Property: balance(..., {amount: X, direction: 'i_paid', isSettlement: false}) 
-   *        == balance(..., {amount: X, direction: 'i_paid', isSettlement: true})
-   */
-  describe('Settlement Flag Invariant', () => {
-    it('should produce same balance regardless of settlement flag', () => {
-      const regularEntries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-      ]
-
-      const settlementEntries = [
-        { amount: 100, direction: 'i_paid', isSettlement: true } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: true } as Partial<ILedgerEntry>,
-      ]
-
-      const regularBalance = calculateBalance(regularEntries as ILedgerEntry[])
-      const settlementBalance = calculateBalance(settlementEntries as ILedgerEntry[])
-
-      // Invariant: balance is independent of isSettlement flag
-      expect(regularBalance).toBe(settlementBalance)
-      expect(regularBalance).toBe(50)
     })
   })
 })

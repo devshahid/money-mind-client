@@ -5,7 +5,7 @@
  * - Header with party name and outstanding balance
  * - Summary statistics (total paid, total received, net)
  * - Paginated entry list (newest first, max 50 per page)
- * - Action buttons (Add Transaction, Record Settlement)
+ * - Action buttons (Add Transaction, Sync, Delete Ledger)
  */
 
 import { JSX, useState, useCallback } from 'react'
@@ -26,7 +26,6 @@ import {
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import AddIcon from '@mui/icons-material/Add'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CloudSyncIcon from '@mui/icons-material/CloudSync'
 import DeleteIcon from '@mui/icons-material/Delete'
 
@@ -38,12 +37,14 @@ import {
   selectLedgerLoading,
   selectHasLocalChanges,
   removeLedgerEntry,
+  removeLedgerEntries,
   linkTransactionToLedger,
   syncLedgers,
   deleteLedger,
 } from '../store/ledgerSlice'
 import { calculateBalance } from '../utils/ledgerBalance'
 import { spacing } from '@/shared/theme'
+import { useSnackbar } from '@/shared/contexts/SnackBarContext'
 
 import { LedgerDetailHeader } from './LedgerDetailHeader'
 import { LedgerEntrySummary } from './LedgerEntrySummary'
@@ -59,19 +60,15 @@ interface LedgerDetailsProps {
 /**
  * LedgerDetails - Full detail view for a ledger
  */
-export const LedgerDetails = ({
-  ledger,
-  onBack,
-  onNavigateToTransaction,
-}: LedgerDetailsProps): JSX.Element => {
+export const LedgerDetails = ({ ledger, onBack, onNavigateToTransaction }: LedgerDetailsProps): JSX.Element => {
   const dispatch = useAppDispatch()
+  const { showErrorSnackbar, showSuccessSnackbar } = useSnackbar()
   const loading = useAppSelector(selectLedgerLoading)
   const entries = useAppSelector((state: RootState) => selectEntriesByLedgerId(state, ledger.id))
   const transactions = useAppSelector((state: RootState) => state.transactions.transactions)
 
-  // State for dialogs (to be implemented in next phase)
+  // State for dialogs
   const [addTransactionDialogOpen, setAddTransactionDialogOpen] = useState(false)
-  const [settlementDialogOpen, setSettlementDialogOpen] = useState(false)
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -90,7 +87,8 @@ export const LedgerDetails = ({
     {} as Record<string, (typeof transactions)[0]>
   )
 
-  // Get linked transaction IDs
+  // Get linked transaction IDs so already-linked transactions are hidden from
+  // the available list
   const linkedTransactionIds = new Set(entries.map(e => e.transactionId))
 
   // Get available transactions (not yet linked)
@@ -106,10 +104,6 @@ export const LedgerDetails = ({
 
   const handleAddTransaction = useCallback(() => {
     setAddTransactionDialogOpen(true)
-  }, [])
-
-  const handleRecordSettlement = useCallback(() => {
-    setSettlementDialogOpen(true)
   }, [])
 
   const handleSyncLedgers = useCallback(async () => {
@@ -155,22 +149,44 @@ export const LedgerDetails = ({
     [dispatch, ledger.id]
   )
 
+  const handleBulkRemoveEntries = useCallback(
+    (entryIds: string[]) => {
+      const runBulkRemove = async (): Promise<void> => {
+        try {
+          const removed = await dispatch(removeLedgerEntries({ ledgerId: ledger.id, entryIds })).unwrap()
+          showSuccessSnackbar(`${removed.length} ${removed.length === 1 ? 'entry' : 'entries'} removed`)
+        } catch (error: unknown) {
+          showErrorSnackbar(
+            typeof error === 'string' ? error : error instanceof Error ? error.message : 'Failed to remove entries'
+          )
+        }
+      }
+      void runBulkRemove()
+    },
+    [dispatch, ledger.id, showSuccessSnackbar, showErrorSnackbar]
+  )
+
   const handleLinkTransactionSubmit = useCallback(
-    (transactionId: string) => {
+    async (transactionId: string) => {
       const transaction = transactions.find(t => t._id === transactionId)
-      if (transaction) {
-        const direction = transaction.isCredit ? 'they_paid' : 'i_paid'
-        void dispatch(
+      if (!transaction) return
+      const direction = transaction.isCredit ? 'they_paid' : 'i_paid'
+      try {
+        await dispatch(
           linkTransactionToLedger({
             ledgerId: ledger.id,
             transactionId,
             direction,
-            amount: transaction.amount || 0,
+            amount: Number(transaction.amount) || 0,
+            narration: transaction.narration,
+            transactionDate: transaction.transactionDate,
           })
-        )
+        ).unwrap()
+      } catch (error: unknown) {
+        showErrorSnackbar(typeof error === 'string' ? error : 'Failed to link transaction')
       }
     },
-    [transactions, ledger.id, dispatch]
+    [transactions, ledger.id, dispatch, showErrorSnackbar]
   )
 
   if (loading) {
@@ -218,14 +234,6 @@ export const LedgerDetails = ({
         >
           Add Transaction
         </Button>
-        <Button
-          variant='outlined'
-          startIcon={<CheckCircleIcon />}
-          onClick={handleRecordSettlement}
-          fullWidth={false}
-        >
-          Record Settlement
-        </Button>
         {hasLocalChanges && (
           <Button
             variant='outlined'
@@ -254,7 +262,10 @@ export const LedgerDetails = ({
 
       {/* Entry list */}
       <Box>
-        <Typography variant='h6' sx={{ fontWeight: 600, mb: spacing[2] }}>
+        <Typography
+          variant='h6'
+          sx={{ fontWeight: 600, mb: spacing[2] }}
+        >
           Transaction History
         </Typography>
         <LedgerEntryList
@@ -262,6 +273,7 @@ export const LedgerDetails = ({
           transactions={transactionMap}
           onTransactionClick={onNavigateToTransaction}
           onDeleteEntry={handleRemoveEntry}
+          onBulkRemove={handleBulkRemoveEntries}
         />
       </Box>
 
@@ -269,26 +281,11 @@ export const LedgerDetails = ({
       <LinkTransactionDialog
         open={addTransactionDialogOpen}
         onClose={() => setAddTransactionDialogOpen(false)}
-        onSubmit={handleLinkTransactionSubmit}
+        onSubmit={transactionId => {
+          void handleLinkTransactionSubmit(transactionId)
+        }}
         availableTransactions={availableTransactions}
       />
-
-      {/* Record Settlement Dialog */}
-      <Dialog
-        open={settlementDialogOpen}
-        onClose={() => setSettlementDialogOpen(false)}
-      >
-        <DialogTitle>Record Settlement</DialogTitle>
-        <DialogContent>
-          <Typography sx={{ mt: spacing[1] }}>
-            Settlement feature will allow you to mark the outstanding balance as settled.
-            This feature is coming in the next phase.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSettlementDialogOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
@@ -301,8 +298,12 @@ export const LedgerDetails = ({
             Are you sure you want to delete this ledger? This action cannot be undone.
           </Typography>
           {!canDeleteLedger && (
-            <Alert severity='warning' sx={{ mt: spacing[2] }}>
-              This ledger has {entries.length} active {entries.length === 1 ? 'entry' : 'entries'}. Please remove all entries before deleting.
+            <Alert
+              severity='warning'
+              sx={{ mt: spacing[2] }}
+            >
+              This ledger has {entries.length} active {entries.length === 1 ? 'entry' : 'entries'}. Please remove all
+              entries before deleting.
             </Alert>
           )}
         </DialogContent>
@@ -330,7 +331,10 @@ export const LedgerDetails = ({
         onClose={() => setSyncStatus('idle')}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert severity={syncStatus === 'success' ? 'success' : 'error'} sx={{ width: '100%' }}>
+        <Alert
+          severity={syncStatus === 'success' ? 'success' : 'error'}
+          sx={{ width: '100%' }}
+        >
           {syncMessage}
         </Alert>
       </Snackbar>

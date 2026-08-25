@@ -3,11 +3,18 @@ import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
 import dayjs from 'dayjs'
 
 import { ITransactionLogs } from '../store/transactionSlice'
+import { selectTransactionLedgerMap } from '../store/ledgerSlice'
 import { ColorModeContext } from '../../../shared/contexts/ThemeContext'
 import { getExpenseCategories } from '../../../constants'
+import { useAppSelector } from '../../../shared/hooks/slice-hooks'
+import { RootState } from '../../../store'
+import { spacing } from '../../../shared/theme'
+import { LedgerBadge } from './LedgerBadge'
 
 type TransactionCompactTableProps = {
   transactions: ITransactionLogs[]
+  onLedgerBadgeClick?: (ledgerId: string) => void
+  highlightedTransactionId?: string | null
 }
 
 const compactHeadingStyles = (mode: string): Record<string, unknown> => ({
@@ -16,8 +23,14 @@ const compactHeadingStyles = (mode: string): Record<string, unknown> => ({
   whiteSpace: 'nowrap' as const,
 })
 
-const TransactionCompactTable = ({ transactions }: TransactionCompactTableProps): JSX.Element => {
+const TransactionCompactTable = ({
+  transactions,
+  onLedgerBadgeClick,
+  highlightedTransactionId,
+}: TransactionCompactTableProps): JSX.Element => {
   const { mode } = useContext(ColorModeContext)
+  const transactionLedgerMap = useAppSelector((state: RootState) => selectTransactionLedgerMap(state))
+  const ledgers = useAppSelector((state: RootState) => state.ledgers.ledgers)
 
   return (
     <TableContainer sx={{ overflowX: 'auto' }}>
@@ -42,21 +55,41 @@ const TransactionCompactTable = ({ transactions }: TransactionCompactTableProps)
             return (
               <TableRow
                 key={tx._id}
+                id={`transaction-row-${tx._id}`}
                 hover
+                sx={{
+                  transition: 'background-color 0.6s ease',
+                  ...(highlightedTransactionId === tx._id && { backgroundColor: 'action.selected' }),
+                }}
               >
                 <TableCell sx={{ whiteSpace: 'nowrap', fontSize: '0.875rem' }}>
                   {dayjs(tx.transactionDate).format('DD/MM/YYYY')}
                 </TableCell>
-                <TableCell
-                  sx={{
-                    fontSize: '0.875rem',
-                    maxWidth: 200,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {tx.narration}
+                <TableCell sx={{ fontSize: '0.875rem', maxWidth: 200 }}>
+                  <Typography
+                    variant='body2'
+                    sx={{
+                      fontSize: '0.875rem',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {tx.narration}
+                  </Typography>
+                  {transactionLedgerMap.has(tx._id) &&
+                    ((): JSX.Element | null => {
+                      const ledgerId = transactionLedgerMap.get(tx._id)
+                      const ledger = ledgerId ? ledgers.find(l => l.id === ledgerId) : null
+                      return ledger ? (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: spacing[1], mt: spacing[1] }}>
+                          <LedgerBadge
+                            partyName={ledger.partyName}
+                            onClick={() => onLedgerBadgeClick?.(ledger.id)}
+                          />
+                        </Box>
+                      ) : null
+                    })()}
                 </TableCell>
                 <TableCell sx={{ fontSize: '0.875rem' }}>
                   {categoryData ? (

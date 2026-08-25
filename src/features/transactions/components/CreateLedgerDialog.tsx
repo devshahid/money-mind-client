@@ -105,7 +105,7 @@ export const CreateLedgerDialog = ({
     }
   }
 
-  const isDisabled = loading || !partyName.trim() || (validationError && validationError.length > 0)
+  const isDisabled = loading || !partyName.trim() || Boolean(validationError && validationError.length > 0)
 
   return (
     <Dialog

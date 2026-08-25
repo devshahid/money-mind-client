@@ -1,6 +1,6 @@
 /**
  * Redux Ledger Slice
- * 
+ *
  * Manages ledger state with offline-first pattern:
  * - Load from IndexedDB first
  * - Fetch from server and merge
@@ -13,7 +13,7 @@ import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@r
 import { ledgerStore } from '../helpers/indexDB/ledgerStore'
 import * as ledgerService from '../services/ledgerService'
 import type { ILedger, ILedgerEntry, MoneyDirection, ILedgerState } from '../types/ledger'
-import { calculateBalance } from '../utils/ledgerBalance'
+import { calculateBalance, isTransactionLinked } from '../utils/ledgerBalance'
 
 const initialState: ILedgerState = {
   ledgers: [],
@@ -26,7 +26,14 @@ const initialState: ILedgerState = {
 }
 
 /**
- * Transform ledger from API to internal format
+ * Transform ledger from API to internal format.
+ *
+ * `clientId` is the single canonical id shared between client and server. The
+ * server now always sets it, so it is always preferred. The `_id`/`id`
+ * fallbacks exist only to stay resilient to any legacy record that predates the
+ * guarantee; a Mongo `_id` must never become the canonical id when a `clientId`
+ * is present, otherwise a locally-created ledger (keyed by its UUID) would fail
+ * to match its server twin and render as a phantom duplicate.
  */
 const fromApiLedger = (apiLedger: Record<string, unknown>): ILedger => ({
   ...(apiLedger as unknown as ILedger),
@@ -62,18 +69,33 @@ export const loadLedgers = createAsyncThunk<
 
     // Try to fetch from server and merge
     try {
-      const serverLedgers = await ledgerService.listLedgers()
+      const rawServerLedgers = await ledgerService.listLedgers()
+      // Normalize server ledgers so their canonical id is the clientId, matching
+      // the id scheme used by locally-created ledgers.
+      const serverLedgers = rawServerLedgers.map(l => fromApiLedger(l as unknown as Record<string, unknown>))
       const deletedIds = await ledgerStore.getDeletedIds()
       const filteredServerLedgers = serverLedgers.filter(l => !deletedIds.includes(l.id))
 
-      // Merge: local edits override server data
-      const serverMap = new Map(filteredServerLedgers.map(l => [l.id, l]))
-      const merged = [...filteredServerLedgers]
+      // Build a lookup keyed by EVERY identity a server ledger can be known by
+      // (canonical id, Mongo _id, and clientId). This lets a locally-created
+      // ledger — keyed by its UUID — find its server twin regardless of which id
+      // was persisted locally, so it never renders as a phantom duplicate.
+      const serverByAnyId = new Map<string, ILedger>()
+      for (const s of filteredServerLedgers) {
+        const raw = s as unknown as Record<string, unknown>
+        serverByAnyId.set(s.id, s)
+        if (typeof raw._id === 'string') serverByAnyId.set(raw._id, s)
+        if (typeof raw.clientId === 'string') serverByAnyId.set(raw.clientId, s)
+      }
 
+      // Merge: local edits override server data, but always keep the server
+      // ledger's canonical id so entries (keyed by clientId) stay attached.
+      const merged = [...filteredServerLedgers]
       for (const local of localLedgers) {
-        if (serverMap.has(local.id)) {
-          const idx = merged.findIndex(l => l.id === local.id)
-          if (idx !== -1) merged[idx] = local
+        const twin = serverByAnyId.get(local.id)
+        if (twin) {
+          const idx = merged.findIndex(l => l.id === twin.id)
+          if (idx !== -1) merged[idx] = { ...local, id: twin.id }
         } else {
           merged.push(local)
         }
@@ -93,59 +115,57 @@ export const loadLedgers = createAsyncThunk<
 /**
  * Create a new ledger
  */
-export const createLedger = createAsyncThunk<
-  ILedger,
-  { partyName: string },
-  { rejectValue: string }
->('ledgers/createLedger', async ({ partyName }, { rejectWithValue }) => {
-  try {
-    // Validate party name
-    if (!partyName.trim()) {
-      return rejectWithValue('Party name is required')
-    }
-    if (partyName.trim().length > 100) {
-      return rejectWithValue('Party name cannot exceed 100 characters')
-    }
+export const createLedger = createAsyncThunk<ILedger, { partyName: string }, { rejectValue: string }>(
+  'ledgers/createLedger',
+  async ({ partyName }, { rejectWithValue }) => {
+    try {
+      // Validate party name
+      if (!partyName.trim()) {
+        return rejectWithValue('Party name is required')
+      }
+      if (partyName.trim().length > 100) {
+        return rejectWithValue('Party name cannot exceed 100 characters')
+      }
 
-    const now = new Date().toISOString()
-    const ledger: ILedger = {
-      id: crypto.randomUUID(),
-      partyName: partyName.trim(),
-      createdAt: now,
-      updatedAt: now,
-    }
+      const now = new Date().toISOString()
+      const ledger: ILedger = {
+        id: crypto.randomUUID(),
+        partyName: partyName.trim(),
+        createdAt: now,
+        updatedAt: now,
+      }
 
-    // Save to IndexedDB first (optimistic)
-    await ledgerStore.saveLedger(ledger)
-    return ledger
-  } catch (error: unknown) {
-    return rejectWithValue(error instanceof Error ? error.message : 'Failed to create ledger')
+      // Save to IndexedDB first (optimistic)
+      await ledgerStore.saveLedger(ledger)
+      return ledger
+    } catch (error: unknown) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to create ledger')
+    }
   }
-})
+)
 
 /**
  * Update a ledger
  */
-export const updateLedger = createAsyncThunk<
-  ILedger,
-  Partial<ILedger> & { id: string },
-  { rejectValue: string }
->('ledgers/updateLedger', async ({ id, ...updates }, { rejectWithValue, getState }) => {
-  try {
-    let existing = await ledgerStore.getLedger(id)
-    if (!existing) {
-      const state = getState() as { ledgers: ILedgerState }
-      existing = state.ledgers.ledgers.find(l => l.id === id)
-    }
-    if (!existing) return rejectWithValue('Ledger not found')
+export const updateLedger = createAsyncThunk<ILedger, Partial<ILedger> & { id: string }, { rejectValue: string }>(
+  'ledgers/updateLedger',
+  async ({ id, ...updates }, { rejectWithValue, getState }) => {
+    try {
+      let existing = await ledgerStore.getLedger(id)
+      if (!existing) {
+        const state = getState() as { ledgers: ILedgerState }
+        existing = state.ledgers.ledgers.find(l => l.id === id)
+      }
+      if (!existing) return rejectWithValue('Ledger not found')
 
-    const updated: ILedger = { ...existing, ...updates, updatedAt: new Date().toISOString() }
-    await ledgerStore.saveLedger(updated)
-    return updated
-  } catch (error: unknown) {
-    return rejectWithValue(error instanceof Error ? error.message : 'Failed to update ledger')
+      const updated: ILedger = { ...existing, ...updates, updatedAt: new Date().toISOString() }
+      await ledgerStore.saveLedger(updated)
+      return updated
+    } catch (error: unknown) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to update ledger')
+    }
   }
-})
+)
 
 /**
  * Delete a ledger (only if it has no entries)
@@ -175,27 +195,36 @@ export const deleteLedger = createAsyncThunk<string, string, { rejectValue: stri
  */
 export const addLedgerEntry = createAsyncThunk<
   ILedgerEntry,
-  { ledgerId: string; transactionId: string; direction: MoneyDirection },
-  { rejectValue: string }
->('ledgers/addLedgerEntry', async ({ ledgerId, transactionId, direction }, { rejectWithValue }) => {
-  try {
-    const now = new Date().toISOString()
-    const entry: ILedgerEntry = {
-      id: crypto.randomUUID(),
-      ledgerId,
-      transactionId,
-      direction,
-      amount: 0, // Will be populated from transaction data
-      isSettlement: false,
-      createdAt: now,
-    }
+  { ledgerId: string; transactionId: string; direction: MoneyDirection; narration?: string; transactionDate?: string },
+  { rejectValue: string; state: { ledgers: ILedgerState } }
+>(
+  'ledgers/addLedgerEntry',
+  async ({ ledgerId, transactionId, direction, narration, transactionDate }, { rejectWithValue, getState }) => {
+    try {
+      // Duplicate-prevention: a transaction may be linked to a ledger only once.
+      if (isTransactionLinked(getState().ledgers.entries, ledgerId, transactionId)) {
+        return rejectWithValue('This transaction is already linked to this ledger.')
+      }
 
-    await ledgerStore.saveLedgerEntry(entry)
-    return entry
-  } catch (error: unknown) {
-    return rejectWithValue(error instanceof Error ? error.message : 'Failed to add entry')
+      const now = new Date().toISOString()
+      const entry: ILedgerEntry = {
+        id: crypto.randomUUID(),
+        ledgerId,
+        transactionId,
+        direction,
+        amount: 0, // Will be populated from transaction data
+        createdAt: now,
+        narration,
+        transactionDate,
+      }
+
+      await ledgerStore.saveLedgerEntry(entry)
+      return entry
+    } catch (error: unknown) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to add entry')
+    }
   }
-})
+)
 
 /**
  * Remove an entry from a ledger
@@ -217,14 +246,45 @@ export const removeLedgerEntry = createAsyncThunk<
 })
 
 /**
+ * Remove multiple entries from a ledger in one action
+ */
+export const removeLedgerEntries = createAsyncThunk<
+  string[], // returns removed entry ids
+  { ledgerId: string; entryIds: string[] },
+  { rejectValue: string }
+>('ledgers/removeLedgerEntries', async ({ entryIds }, { rejectWithValue }) => {
+  try {
+    for (const entryId of entryIds) {
+      await ledgerStore.addDeletedEntryId(entryId)
+      await ledgerStore.deleteLedgerEntry(entryId)
+    }
+    return entryIds
+  } catch (error: unknown) {
+    return rejectWithValue(error instanceof Error ? error.message : 'Failed to remove entries')
+  }
+})
+
+/**
  * Link a transaction to a ledger
  */
 export const linkTransactionToLedger = createAsyncThunk<
   ILedgerEntry,
-  { ledgerId: string; transactionId: string; direction: MoneyDirection; amount: number },
-  { rejectValue: string }
->('ledgers/linkTransactionToLedger', async (payload, { rejectWithValue }) => {
+  {
+    ledgerId: string
+    transactionId: string
+    direction: MoneyDirection
+    amount: number
+    narration?: string
+    transactionDate?: string
+  },
+  { rejectValue: string; state: { ledgers: ILedgerState } }
+>('ledgers/linkTransactionToLedger', async (payload, { rejectWithValue, getState }) => {
   try {
+    // Duplicate-prevention: a transaction may be linked to a ledger only once.
+    if (isTransactionLinked(getState().ledgers.entries, payload.ledgerId, payload.transactionId)) {
+      return rejectWithValue('This transaction is already linked to this ledger.')
+    }
+
     const now = new Date().toISOString()
     const entry: ILedgerEntry = {
       id: crypto.randomUUID(),
@@ -232,41 +292,15 @@ export const linkTransactionToLedger = createAsyncThunk<
       transactionId: payload.transactionId,
       direction: payload.direction,
       amount: payload.amount,
-      isSettlement: false,
       createdAt: now,
+      narration: payload.narration,
+      transactionDate: payload.transactionDate,
     }
 
     await ledgerStore.saveLedgerEntry(entry)
     return entry
   } catch (error: unknown) {
     return rejectWithValue(error instanceof Error ? error.message : 'Failed to link transaction')
-  }
-})
-
-/**
- * Settle a ledger balance
- */
-export const settleLedger = createAsyncThunk<
-  ILedgerEntry,
-  { ledgerId: string; transactionId: string; direction: MoneyDirection },
-  { rejectValue: string }
->('ledgers/settleLedger', async ({ ledgerId, transactionId, direction }, { rejectWithValue }) => {
-  try {
-    const now = new Date().toISOString()
-    const entry: ILedgerEntry = {
-      id: crypto.randomUUID(),
-      ledgerId,
-      transactionId,
-      direction,
-      amount: 0, // Will be set from transaction data
-      isSettlement: true,
-      createdAt: now,
-    }
-
-    await ledgerStore.saveLedgerEntry(entry)
-    return entry
-  } catch (error: unknown) {
-    return rejectWithValue(error instanceof Error ? error.message : 'Failed to settle ledger')
   }
 })
 
@@ -411,6 +445,17 @@ const ledgerSlice = createSlice({
         state.error = action.payload || 'Failed to remove entry'
       })
 
+    // Remove Multiple Entries
+    builder
+      .addCase(removeLedgerEntries.fulfilled, (state, action) => {
+        const removedIds = new Set(action.payload)
+        state.entries = state.entries.filter(e => !removedIds.has(e.id))
+        state.isLocalLedgers = true
+      })
+      .addCase(removeLedgerEntries.rejected, (state, action) => {
+        state.error = action.payload || 'Failed to remove entries'
+      })
+
     // Link Transaction
     builder
       .addCase(linkTransactionToLedger.fulfilled, (state, action) => {
@@ -419,16 +464,6 @@ const ledgerSlice = createSlice({
       })
       .addCase(linkTransactionToLedger.rejected, (state, action) => {
         state.error = action.payload || 'Failed to link transaction'
-      })
-
-    // Settle Ledger
-    builder
-      .addCase(settleLedger.fulfilled, (state, action) => {
-        state.entries.push(action.payload)
-        state.isLocalLedgers = true
-      })
-      .addCase(settleLedger.rejected, (state, action) => {
-        state.error = action.payload || 'Failed to settle ledger'
       })
 
     // Sync Ledgers
@@ -457,8 +492,7 @@ export const selectAllLedgers = (state: { ledgers: ILedgerState }) => state.ledg
 export const selectAllEntries = (state: { ledgers: ILedgerState }) => state.ledgers.entries
 export const selectLedgerLoading = (state: { ledgers: ILedgerState }) => state.ledgers.loading
 export const selectLedgerError = (state: { ledgers: ILedgerState }) => state.ledgers.error
-export const selectSelectedLedgerId = (state: { ledgers: ILedgerState }) =>
-  state.ledgers.selectedLedgerId
+export const selectSelectedLedgerId = (state: { ledgers: ILedgerState }) => state.ledgers.selectedLedgerId
 export const selectHasLocalChanges = (state: { ledgers: ILedgerState }) => state.ledgers.isLocalLedgers
 
 /**
@@ -489,6 +523,19 @@ export const selectTransactionLedgerMap = createSelector([selectAllEntries], ent
   }
   return map
 })
+
+/**
+ * Whether a transaction is already linked to a specific ledger.
+ * Mirrors the duplicate-prevention guard used inside the link/add thunks.
+ */
+export const selectIsTransactionLinkedToLedger = createSelector(
+  [
+    selectAllEntries,
+    (_: { ledgers: ILedgerState }, ledgerId: string) => ledgerId,
+    (_, __, transactionId: string) => transactionId,
+  ],
+  (entries, ledgerId, transactionId) => isTransactionLinked(entries, ledgerId, transactionId)
+)
 
 /**
  * Calculate balance for a specific ledger

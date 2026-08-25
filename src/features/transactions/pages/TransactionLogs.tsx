@@ -101,6 +101,7 @@ const TransactionLogs = (): JSX.Element => {
   const [rowsPerPage, setRowsPerPage] = useState(50)
   const [activeTab, setActiveTab] = useState(0)
   const [keyword, setKeyword] = useState('')
+  const [highlightedTransactionId, setHighlightedTransactionId] = useState<string | null>(null)
 
   // Dialog states
   const [labelDialogOpen, setLabelDialogOpen] = useState(false)
@@ -153,9 +154,10 @@ const TransactionLogs = (): JSX.Element => {
       (state as { groups: { groupSyncStatus: 'idle' | 'success' | 'error' } }).groups.groupSyncStatus
   )
   const groupLoading = useAppSelector((state: RootState) => (state as { groups: { loading: boolean } }).groups.loading)
-  
+
   const ledgers = useAppSelector((state: RootState) => state.ledgers.ledgers)
   const ledgerLoading = useAppSelector((state: RootState) => state.ledgers.loading)
+  const ledgerEntries = useAppSelector((state: RootState) => state.ledgers.entries)
 
   const [groupSyncLoader, setGroupSyncLoader] = useState(false)
 
@@ -398,13 +400,45 @@ const TransactionLogs = (): JSX.Element => {
     setActiveTab(2) // Switch to Ledger tab
   }
 
+  // Navigate from a ledger entry to its underlying transaction in All Transactions
+  const handleNavigateToTransaction = (transactionId: string): void => {
+    // Always switch to the All Transactions tab
+    setActiveTab(0)
+
+    const targetExists = transactions.some(tx => tx._id === transactionId)
+    if (!targetExists) {
+      showErrorSnackbar('This transaction is no longer available.')
+      return
+    }
+
+    setHighlightedTransactionId(transactionId)
+
+    // Wait for the tab content to render, then scroll the target into view
+    setTimeout(() => {
+      const element = document.getElementById(`transaction-row-${transactionId}`)
+      element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
+
+    // Clear the highlight after 3 seconds so it fades out
+    setTimeout(() => {
+      setHighlightedTransactionId(null)
+    }, 3000)
+  }
+
   const handleBulkLinkToLedger = (): void => {
     setBulkLinkLedgerDialogOpen(true)
   }
 
   const handleBulkLinkLedgerSubmit = (ledgerId: string): void => {
+    // Compute transactions already linked to the target ledger, so a
+    // transaction is linked to a given ledger only once.
+    const alreadyLinked = new Set(ledgerEntries.filter(e => e.ledgerId === ledgerId).map(e => e.transactionId))
+
+    const toLink = selectedIds.filter(id => !alreadyLinked.has(id))
+    const skipped = selectedIds.filter(id => alreadyLinked.has(id))
+
     // Auto-determine direction based on each transaction's isCredit field
-    selectedIds.forEach(transactionId => {
+    toLink.forEach(transactionId => {
       const transaction = transactions.find(t => t._id === transactionId)
       if (transaction) {
         // Credit (isCredit=true) -> they_paid, Debit (isCredit=false) -> i_paid
@@ -414,11 +448,21 @@ const TransactionLogs = (): JSX.Element => {
             ledgerId,
             transactionId,
             direction,
-            amount: transaction.amount || 0,
+            amount: Number(transaction.amount) || 0,
+            narration: transaction.narration,
+            transactionDate: transaction.transactionDate,
           })
         )
       }
     })
+
+    if (toLink.length > 0) {
+      showSuccessSnackbar(`${toLink.length} transaction(s) linked to ledger.`)
+    }
+    if (skipped.length > 0) {
+      showErrorSnackbar(`${skipped.length} transaction(s) were already in this ledger and were skipped.`)
+    }
+
     setSelectedIds([])
     setBulkLinkLedgerDialogOpen(false)
   }
@@ -509,6 +553,7 @@ const TransactionLogs = (): JSX.Element => {
                 groups={groups}
                 onGroupBadgeClick={handleGroupBadgeClick}
                 onLedgerBadgeClick={handleLedgerBadgeClick}
+                highlightedTransactionId={highlightedTransactionId}
                 sx={{
                   maxHeight: '100vh',
                   overflowX: 'auto',
@@ -574,9 +619,7 @@ const TransactionLogs = (): JSX.Element => {
         </>
       )}
 
-      {activeTab === 2 && (
-        <LedgerDashboard onNavigateToTransaction={() => {}} />
-      )}
+      {activeTab === 2 && <LedgerDashboard onNavigateToTransaction={handleNavigateToTransaction} />}
 
       {/* Edit transaction modal */}
       {(editingTransaction || actionType === 'add') && (

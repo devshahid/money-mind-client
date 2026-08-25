@@ -1,42 +1,66 @@
 /**
  * Redux Ledger Slice Tests
- * 
+ *
  * Tests for offline-first ledger management with IndexedDB sync
  */
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/unbound-method */
 
 import { configureStore } from '@reduxjs/toolkit'
-import { ledgerReducer, loadLedgers, createLedger, deleteLedger, linkTransactionToLedger, removeLedgerEntry, syncLedgers } from '../store/ledgerSlice'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
+import {
+  ledgerReducer,
+  loadLedgers,
+  createLedger,
+  deleteLedger,
+  linkTransactionToLedger,
+  removeLedgerEntry,
+  syncLedgers,
+  selectHasLocalChanges,
+} from '../store/ledgerSlice'
 import type { ILedgerState, ILedger } from '../types/ledger'
 
-// Mock the services
-jest.mock('../helpers/indexDB/ledgerStore', () => ({
-  getAllLedgers: jest.fn(),
-  getAllEntries: jest.fn(),
-  getDeletedIds: jest.fn(),
-  getDeletedEntryIds: jest.fn(),
-  saveLedger: jest.fn(),
-  deleteLedger: jest.fn(),
-  addDeletedId: jest.fn(),
-  getEntriesByLedgerId: jest.fn(),
-  saveLedgerEntry: jest.fn(),
-  clearDeletedIds: jest.fn(),
-  clearDeletedEntryIds: jest.fn(),
-  getLedger: jest.fn(),
+// The real module exports a class INSTANCE named `ledgerStore`, so the mock
+// must mirror that shape and include every method the slice thunks call.
+vi.mock('../helpers/indexDB/ledgerStore', () => ({
+  ledgerStore: {
+    saveLedger: vi.fn(),
+    getAllLedgers: vi.fn(),
+    getLedger: vi.fn(),
+    deleteLedger: vi.fn(),
+    addDeletedId: vi.fn(),
+    getEntriesByLedgerId: vi.fn(),
+    saveLedgerEntry: vi.fn(),
+    getAllEntries: vi.fn(),
+    getDeletedIds: vi.fn(),
+    getDeletedEntryIds: vi.fn(),
+    clearDeletedIds: vi.fn(),
+    clearDeletedEntryIds: vi.fn(),
+    addDeletedEntryId: vi.fn(),
+    deleteLedgerEntry: vi.fn(),
+  },
 }))
 
-jest.mock('../services/ledgerService', () => ({
-  listLedgers: jest.fn(),
-  syncLedgers: jest.fn(),
-  createLedger: jest.fn(),
-  getLedger: jest.fn(),
+// The slice imports the service as `import * as ledgerService`, so a flat
+// object of mocked functions is the correct shape here.
+vi.mock('../services/ledgerService', () => ({
+  listLedgers: vi.fn(),
+  syncLedgers: vi.fn(),
+  createLedger: vi.fn(),
+  getLedgerDetail: vi.fn(),
 }))
+
+import { ledgerStore } from '../helpers/indexDB/ledgerStore'
+import * as ledgerService from '../services/ledgerService'
+
+// vi.mocked gives typed access to the mock functions on the instance/module.
+const mockedStore = vi.mocked(ledgerStore)
+const mockedService = vi.mocked(ledgerService)
 
 describe('LedgerSlice (Redux Tests)', () => {
   let store: ReturnType<typeof configureStore>
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     store = configureStore({
       reducer: {
         ledgers: ledgerReducer,
@@ -55,13 +79,11 @@ describe('LedgerSlice (Redux Tests)', () => {
         },
       ]
 
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      ledgerStore.getAllLedgers.mockResolvedValue(mockLedgers)
-      ledgerStore.getDeletedIds.mockResolvedValue([])
-      ledgerStore.getEntriesByLedgerId.mockResolvedValue([])
+      mockedStore.getAllLedgers.mockResolvedValue(mockLedgers)
+      mockedStore.getDeletedIds.mockResolvedValue([])
+      mockedStore.getEntriesByLedgerId.mockResolvedValue([])
 
-      const ledgerService = require('../services/ledgerService')
-      ledgerService.listLedgers.mockRejectedValue(new Error('Network error'))
+      mockedService.listLedgers.mockRejectedValue(new Error('Network error'))
 
       await store.dispatch(loadLedgers())
 
@@ -91,13 +113,11 @@ describe('LedgerSlice (Redux Tests)', () => {
         },
       ]
 
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      ledgerStore.getAllLedgers.mockResolvedValue(mockLocalLedgers)
-      ledgerStore.getDeletedIds.mockResolvedValue([])
-      ledgerStore.getEntriesByLedgerId.mockResolvedValue([])
+      mockedStore.getAllLedgers.mockResolvedValue(mockLocalLedgers)
+      mockedStore.getDeletedIds.mockResolvedValue([])
+      mockedStore.getEntriesByLedgerId.mockResolvedValue([])
 
-      const ledgerService = require('../services/ledgerService')
-      ledgerService.listLedgers.mockResolvedValue(mockServerLedgers)
+      mockedService.listLedgers.mockResolvedValue(mockServerLedgers)
 
       await store.dispatch(loadLedgers())
 
@@ -108,8 +128,7 @@ describe('LedgerSlice (Redux Tests)', () => {
     })
 
     it('should handle loading error gracefully', async () => {
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      ledgerStore.getAllLedgers.mockRejectedValue(new Error('IndexedDB error'))
+      mockedStore.getAllLedgers.mockRejectedValue(new Error('IndexedDB error'))
 
       await store.dispatch(loadLedgers())
 
@@ -121,15 +140,14 @@ describe('LedgerSlice (Redux Tests)', () => {
 
   describe('createLedger thunk', () => {
     it('should create ledger and save to IndexedDB', async () => {
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      ledgerStore.saveLedger.mockResolvedValue(undefined)
+      mockedStore.saveLedger.mockResolvedValue(undefined)
 
       await store.dispatch(createLedger({ partyName: 'John Doe' }))
 
       const state = store.getState().ledgers as ILedgerState
       expect(state.ledgers).toHaveLength(1)
       expect(state.ledgers[0].partyName).toBe('John Doe')
-      expect(ledgerStore.saveLedger).toHaveBeenCalled()
+      expect(mockedStore.saveLedger).toHaveBeenCalled()
     })
 
     it('should reject empty party name', async () => {
@@ -150,11 +168,9 @@ describe('LedgerSlice (Redux Tests)', () => {
 
   describe('deleteLedger thunk', () => {
     it('should delete empty ledger', async () => {
-      // First add a ledger
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      ledgerStore.saveLedger.mockResolvedValue(undefined)
-      ledgerStore.deleteLedger.mockResolvedValue(undefined)
-      ledgerStore.addDeletedId.mockResolvedValue(undefined)
+      mockedStore.saveLedger.mockResolvedValue(undefined)
+      mockedStore.deleteLedger.mockResolvedValue(undefined)
+      mockedStore.addDeletedId.mockResolvedValue(undefined)
 
       await store.dispatch(createLedger({ partyName: 'John Doe' }))
 
@@ -164,14 +180,13 @@ describe('LedgerSlice (Redux Tests)', () => {
       // Now delete it (it's empty, so it should succeed)
       await store.dispatch(deleteLedger(ledgerId))
 
-      expect(ledgerStore.deleteLedger).toHaveBeenCalledWith(ledgerId)
-      expect(ledgerStore.addDeletedId).toHaveBeenCalledWith(ledgerId)
+      expect(mockedStore.deleteLedger).toHaveBeenCalledWith(ledgerId)
+      expect(mockedStore.addDeletedId).toHaveBeenCalledWith(ledgerId)
     })
 
     it('should reject deletion of ledger with entries', async () => {
-      // First add a ledger
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      ledgerStore.saveLedger.mockResolvedValue(undefined)
+      mockedStore.saveLedger.mockResolvedValue(undefined)
+      mockedStore.saveLedgerEntry.mockResolvedValue(undefined)
 
       await store.dispatch(createLedger({ partyName: 'John Doe' }))
 
@@ -179,12 +194,14 @@ describe('LedgerSlice (Redux Tests)', () => {
       const ledgerId = state1.ledgers[0].id
 
       // Add an entry
-      await store.dispatch(linkTransactionToLedger({
-        ledgerId,
-        transactionId: 'tx-1',
-        direction: 'i_paid',
-        amount: 100,
-      }))
+      await store.dispatch(
+        linkTransactionToLedger({
+          ledgerId,
+          transactionId: 'tx-1',
+          direction: 'i_paid',
+          amount: 100,
+        })
+      )
 
       // Now try to delete it (should fail because it has entries)
       await store.dispatch(deleteLedger(ledgerId))
@@ -194,10 +211,9 @@ describe('LedgerSlice (Redux Tests)', () => {
     })
 
     it('should mark ledger as having local changes after deletion', async () => {
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      ledgerStore.saveLedger.mockResolvedValue(undefined)
-      ledgerStore.deleteLedger.mockResolvedValue(undefined)
-      ledgerStore.addDeletedId.mockResolvedValue(undefined)
+      mockedStore.saveLedger.mockResolvedValue(undefined)
+      mockedStore.deleteLedger.mockResolvedValue(undefined)
+      mockedStore.addDeletedId.mockResolvedValue(undefined)
 
       await store.dispatch(createLedger({ partyName: 'John Doe' }))
 
@@ -213,21 +229,22 @@ describe('LedgerSlice (Redux Tests)', () => {
 
   describe('linkTransactionToLedger thunk', () => {
     it('should add transaction entry to ledger', async () => {
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      ledgerStore.saveLedger.mockResolvedValue(undefined)
-      ledgerStore.saveLedgerEntry.mockResolvedValue(undefined)
+      mockedStore.saveLedger.mockResolvedValue(undefined)
+      mockedStore.saveLedgerEntry.mockResolvedValue(undefined)
 
       await store.dispatch(createLedger({ partyName: 'John Doe' }))
 
       const state1 = store.getState().ledgers as ILedgerState
       const ledgerId = state1.ledgers[0].id
 
-      await store.dispatch(linkTransactionToLedger({
-        ledgerId,
-        transactionId: 'tx-1',
-        direction: 'i_paid',
-        amount: 100,
-      }))
+      await store.dispatch(
+        linkTransactionToLedger({
+          ledgerId,
+          transactionId: 'tx-1',
+          direction: 'i_paid',
+          amount: 100,
+        })
+      )
 
       const state2 = store.getState().ledgers as ILedgerState
       expect(state2.entries).toHaveLength(1)
@@ -238,22 +255,24 @@ describe('LedgerSlice (Redux Tests)', () => {
 
   describe('removeLedgerEntry thunk', () => {
     it('should remove entry from ledger', async () => {
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      ledgerStore.saveLedger.mockResolvedValue(undefined)
-      ledgerStore.saveLedgerEntry.mockResolvedValue(undefined)
-      ledgerStore.deleteEntry = jest.fn().mockResolvedValue(undefined)
+      mockedStore.saveLedger.mockResolvedValue(undefined)
+      mockedStore.saveLedgerEntry.mockResolvedValue(undefined)
+      mockedStore.addDeletedEntryId.mockResolvedValue(undefined)
+      mockedStore.deleteLedgerEntry.mockResolvedValue(undefined)
 
       await store.dispatch(createLedger({ partyName: 'John Doe' }))
 
       const state1 = store.getState().ledgers as ILedgerState
       const ledgerId = state1.ledgers[0].id
 
-      await store.dispatch(linkTransactionToLedger({
-        ledgerId,
-        transactionId: 'tx-1',
-        direction: 'i_paid',
-        amount: 100,
-      }))
+      await store.dispatch(
+        linkTransactionToLedger({
+          ledgerId,
+          transactionId: 'tx-1',
+          direction: 'i_paid',
+          amount: 100,
+        })
+      )
 
       const state2 = store.getState().ledgers as ILedgerState
       const entryId = state2.entries[0].id
@@ -263,16 +282,15 @@ describe('LedgerSlice (Redux Tests)', () => {
       const state3 = store.getState().ledgers as ILedgerState
       expect(state3.entries).toHaveLength(0)
       expect(state3.isLocalLedgers).toBe(true)
+      expect(mockedStore.addDeletedEntryId).toHaveBeenCalledWith(entryId)
+      expect(mockedStore.deleteLedgerEntry).toHaveBeenCalledWith(entryId)
     })
   })
 
   describe('syncLedgers thunk', () => {
     it('should sync local ledgers to server', async () => {
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      const ledgerService = require('../services/ledgerService')
-
-      ledgerStore.saveLedger.mockResolvedValue(undefined)
-      ledgerStore.getAllLedgers.mockResolvedValue([
+      mockedStore.saveLedger.mockResolvedValue(undefined)
+      mockedStore.getAllLedgers.mockResolvedValue([
         {
           id: 'ledger-1',
           partyName: 'John Doe',
@@ -280,14 +298,14 @@ describe('LedgerSlice (Redux Tests)', () => {
           updatedAt: new Date().toISOString(),
         },
       ])
-      ledgerStore.getAllEntries.mockResolvedValue([])
-      ledgerStore.getDeletedIds.mockResolvedValue([])
-      ledgerStore.getDeletedEntryIds.mockResolvedValue([])
-      ledgerStore.clearDeletedIds.mockResolvedValue(undefined)
-      ledgerStore.clearDeletedEntryIds.mockResolvedValue(undefined)
-      ledgerStore.deleteLedger.mockResolvedValue(undefined)
+      mockedStore.getAllEntries.mockResolvedValue([])
+      mockedStore.getDeletedIds.mockResolvedValue([])
+      mockedStore.getDeletedEntryIds.mockResolvedValue([])
+      mockedStore.clearDeletedIds.mockResolvedValue(undefined)
+      mockedStore.clearDeletedEntryIds.mockResolvedValue(undefined)
+      mockedStore.deleteLedger.mockResolvedValue(undefined)
 
-      ledgerService.syncLedgers.mockResolvedValue({
+      mockedService.syncLedgers.mockResolvedValue({
         output: {
           ledgers: [
             {
@@ -316,15 +334,12 @@ describe('LedgerSlice (Redux Tests)', () => {
     })
 
     it('should handle sync errors', async () => {
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      const ledgerService = require('../services/ledgerService')
+      mockedStore.getAllLedgers.mockResolvedValue([])
+      mockedStore.getAllEntries.mockResolvedValue([])
+      mockedStore.getDeletedIds.mockResolvedValue([])
+      mockedStore.getDeletedEntryIds.mockResolvedValue([])
 
-      ledgerStore.getAllLedgers.mockResolvedValue([])
-      ledgerStore.getAllEntries.mockResolvedValue([])
-      ledgerStore.getDeletedIds.mockResolvedValue([])
-      ledgerStore.getDeletedEntryIds.mockResolvedValue([])
-
-      ledgerService.syncLedgers.mockRejectedValue(new Error('Sync failed'))
+      mockedService.syncLedgers.mockRejectedValue(new Error('Sync failed'))
 
       await store.dispatch(syncLedgers())
 
@@ -334,9 +349,6 @@ describe('LedgerSlice (Redux Tests)', () => {
     })
 
     it('should replace local data with server canonical state', async () => {
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      const ledgerService = require('../services/ledgerService')
-
       const localLedger = {
         id: 'ledger-1',
         partyName: 'Old Local Data',
@@ -351,16 +363,16 @@ describe('LedgerSlice (Redux Tests)', () => {
         updatedAt: new Date(Date.now() + 3600000).toISOString(), // More recent
       }
 
-      ledgerStore.getAllLedgers.mockResolvedValue([localLedger])
-      ledgerStore.getAllEntries.mockResolvedValue([])
-      ledgerStore.getDeletedIds.mockResolvedValue([])
-      ledgerStore.getDeletedEntryIds.mockResolvedValue([])
-      ledgerStore.clearDeletedIds.mockResolvedValue(undefined)
-      ledgerStore.clearDeletedEntryIds.mockResolvedValue(undefined)
-      ledgerStore.deleteLedger.mockResolvedValue(undefined)
-      ledgerStore.saveLedger.mockResolvedValue(undefined)
+      mockedStore.getAllLedgers.mockResolvedValue([localLedger])
+      mockedStore.getAllEntries.mockResolvedValue([])
+      mockedStore.getDeletedIds.mockResolvedValue([])
+      mockedStore.getDeletedEntryIds.mockResolvedValue([])
+      mockedStore.clearDeletedIds.mockResolvedValue(undefined)
+      mockedStore.clearDeletedEntryIds.mockResolvedValue(undefined)
+      mockedStore.deleteLedger.mockResolvedValue(undefined)
+      mockedStore.saveLedger.mockResolvedValue(undefined)
 
-      ledgerService.syncLedgers.mockResolvedValue({
+      mockedService.syncLedgers.mockResolvedValue({
         output: {
           ledgers: [serverLedger],
           entries: [],
@@ -376,38 +388,32 @@ describe('LedgerSlice (Redux Tests)', () => {
 
   describe('selectHasLocalChanges selector', () => {
     it('should return true when there are local changes', async () => {
-      const { selectHasLocalChanges } = await import('../store/ledgerSlice')
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      ledgerStore.saveLedger.mockResolvedValue(undefined)
+      mockedStore.saveLedger.mockResolvedValue(undefined)
 
       await store.dispatch(createLedger({ partyName: 'John Doe' }))
 
       const state = store.getState()
-      const hasLocal = selectHasLocalChanges(state)
+      const hasLocal = selectHasLocalChanges(state as { ledgers: ILedgerState })
       expect(hasLocal).toBe(true)
     })
 
     it('should return false after successful sync', async () => {
-      const { selectHasLocalChanges } = await import('../store/ledgerSlice')
-      const ledgerStore = require('../helpers/indexDB/ledgerStore')
-      const ledgerService = require('../services/ledgerService')
+      mockedStore.saveLedger.mockResolvedValue(undefined)
+      mockedStore.getAllLedgers.mockResolvedValue([])
+      mockedStore.getAllEntries.mockResolvedValue([])
+      mockedStore.getDeletedIds.mockResolvedValue([])
+      mockedStore.getDeletedEntryIds.mockResolvedValue([])
+      mockedStore.clearDeletedIds.mockResolvedValue(undefined)
+      mockedStore.clearDeletedEntryIds.mockResolvedValue(undefined)
 
-      ledgerStore.saveLedger.mockResolvedValue(undefined)
-      ledgerStore.getAllLedgers.mockResolvedValue([])
-      ledgerStore.getAllEntries.mockResolvedValue([])
-      ledgerStore.getDeletedIds.mockResolvedValue([])
-      ledgerStore.getDeletedEntryIds.mockResolvedValue([])
-      ledgerStore.clearDeletedIds.mockResolvedValue(undefined)
-      ledgerStore.clearDeletedEntryIds.mockResolvedValue(undefined)
-
-      ledgerService.syncLedgers.mockResolvedValue({
+      mockedService.syncLedgers.mockResolvedValue({
         output: { ledgers: [], entries: [] },
       })
 
       await store.dispatch(syncLedgers())
 
       const state = store.getState()
-      const hasLocal = selectHasLocalChanges(state)
+      const hasLocal = selectHasLocalChanges(state as { ledgers: ILedgerState })
       expect(hasLocal).toBe(false)
     })
   })

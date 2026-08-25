@@ -45,7 +45,10 @@ const StatCard = ({
       <Box sx={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
         <Icon sx={{ fontSize: fontSize.lg, color }} />
         <Box>
-          <Typography variant='caption' color='text.secondary'>
+          <Typography
+            variant='caption'
+            color='text.secondary'
+          >
             {label}
           </Typography>
           <Typography
@@ -64,10 +67,7 @@ const StatCard = ({
 /**
  * LedgerEntrySummary - Display entry summary statistics
  */
-export const LedgerEntrySummary = ({
-  entries,
-  currency = '₹',
-}: LedgerEntrySummaryProps): JSX.Element => {
+export const LedgerEntrySummary = ({ entries, currency = '₹' }: LedgerEntrySummaryProps): JSX.Element => {
   const summary = useMemo(() => {
     let totalIPaid = 0
     let totalTheyPaid = 0
@@ -95,7 +95,12 @@ export const LedgerEntrySummary = ({
       spacing={spacing[2]}
       sx={{ mb: spacing[3] }}
     >
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid
+        item
+        xs={12}
+        sm={6}
+        md={4}
+      >
         <StatCard
           label='Total I Paid'
           value={summary.totalIPaid}
@@ -104,7 +109,12 @@ export const LedgerEntrySummary = ({
           currency={currency}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid
+        item
+        xs={12}
+        sm={6}
+        md={4}
+      >
         <StatCard
           label='Total They Paid'
           value={summary.totalTheyPaid}
@@ -113,11 +123,18 @@ export const LedgerEntrySummary = ({
           currency={currency}
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid
+        item
+        xs={12}
+        md={4}
+      >
         <Card>
           <CardContent>
             <Box>
-              <Typography variant='caption' color='text.secondary'>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+              >
                 Net Outstanding
               </Typography>
               <Typography
@@ -129,7 +146,7 @@ export const LedgerEntrySummary = ({
                       ? colors.semantic.success
                       : summary.net < 0
                         ? colors.semantic.error
-                        : colors.grayscale[500],
+                        : colors.grayscale.medium,
                 }}
               >
                 {currency}

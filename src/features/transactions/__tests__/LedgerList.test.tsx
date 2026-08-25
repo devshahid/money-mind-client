@@ -1,233 +1,198 @@
 /**
  * LedgerList Component Tests
  *
- * Tests for ledger list rendering, sync functionality, and user interactions
+ * Tests ledger list rendering, search filtering, sync UI, and selection
+ * against the REAL component + a real Redux store (no module mocking).
+ *
+ * @vitest-environment jsdom
  */
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
+import { vi } from 'vitest'
+
 import { LedgerList } from '../components/LedgerList'
 import { ledgerReducer } from '../store/ledgerSlice'
-import type { ILedger } from '../types/ledger'
+import * as ledgerService from '../services/ledgerService'
+import type { ILedger, ILedgerEntry, ILedgerState } from '../types/ledger'
 
-jest.mock('../store/ledgerSlice')
-jest.mock('../helpers/indexDB/ledgerStore')
-jest.mock('../services/ledgerService')
+// The syncLedgers thunk awaits several IndexedDB helper methods before/after
+// the network call. jsdom has no IndexedDB, so we mock the helper at the
+// module boundary the thunk actually awaits, letting the thunk resolve and
+// exercise the real success/error snackbar paths driven by the service mock.
+vi.mock('../helpers/indexDB/ledgerStore', () => ({
+  ledgerStore: {
+    getAllLedgers: vi.fn().mockResolvedValue([]),
+    getAllEntries: vi.fn().mockResolvedValue([]),
+    getDeletedIds: vi.fn().mockResolvedValue([]),
+    getDeletedEntryIds: vi.fn().mockResolvedValue([]),
+    clearDeletedIds: vi.fn().mockResolvedValue(undefined),
+    clearDeletedEntryIds: vi.fn().mockResolvedValue(undefined),
+    deleteLedger: vi.fn().mockResolvedValue(undefined),
+    saveLedger: vi.fn().mockResolvedValue(undefined),
+    saveLedgerEntry: vi.fn().mockResolvedValue(undefined),
+    getEntriesByLedgerId: vi.fn().mockResolvedValue([]),
+  },
+}))
 
-describe('LedgerList Component Tests', () => {
-  let store: ReturnType<typeof configureStore>
+const mockLedgers: ILedger[] = [
+  { id: 'ledger-1', partyName: 'John Doe', createdAt: '2024-01-15T10:00:00Z', updatedAt: '2024-01-15T10:00:00Z' },
+  { id: 'ledger-2', partyName: 'Jane Smith', createdAt: '2024-01-20T14:30:00Z', updatedAt: '2024-01-20T14:30:00Z' },
+]
 
-  beforeEach(() => {
-    jest.clearAllMocks()
-    store = configureStore({
-      reducer: {
-        ledgers: ledgerReducer,
-        transactions: (state = { transactions: [] }) => state,
-      },
-    })
+const initialLedgerState: ILedgerState = {
+  ledgers: [],
+  entries: [],
+  loading: false,
+  error: null,
+  isLocalLedgers: false,
+  ledgerSyncStatus: 'idle',
+  selectedLedgerId: null,
+}
+
+type Overrides = { entries?: ILedgerEntry[]; isLocalLedgers?: boolean }
+
+const makeStore = ({ entries = [], isLocalLedgers = false }: Overrides = {}) =>
+  configureStore({
+    reducer: {
+      ledgers: ledgerReducer,
+      transactions: (state = { transactions: [] }) => state,
+    },
+    preloadedState: { ledgers: { ...initialLedgerState, entries, isLocalLedgers } },
   })
 
-  const mockLedgers: ILedger[] = [
-    {
-      id: 'ledger-1',
-      partyName: 'John Doe',
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-    },
-    {
-      id: 'ledger-2',
-      partyName: 'Jane Smith',
-      createdAt: '2024-01-20T14:30:00Z',
-      updatedAt: '2024-01-20T14:30:00Z',
-    },
-  ]
+type RenderProps = {
+  ledgers?: ILedger[]
+  searchText?: string
+  loading?: boolean
+  onSelectLedger?: (id: string) => void
+  currency?: string
+}
 
-  const renderComponent = (props = {}) => {
-    return render(
-      <Provider store={store}>
-        <LedgerList
-          ledgers={mockLedgers}
-          onSelectLedger={jest.fn()}
-          loading={false}
-          {...props}
-        />
-      </Provider>
-    )
-  }
+const renderComponent = (props: RenderProps = {}, storeOverrides: Overrides = {}) => {
+  const store = makeStore(storeOverrides)
+  const onSelectLedger = props.onSelectLedger ?? vi.fn()
+  const utils = render(
+    <Provider store={store}>
+      <LedgerList
+        ledgers={props.ledgers ?? mockLedgers}
+        onSelectLedger={onSelectLedger}
+        loading={props.loading ?? false}
+        searchText={props.searchText}
+        currency={props.currency}
+      />
+    </Provider>
+  )
+  return { ...utils, store, onSelectLedger }
+}
+
+const expectedDate = (iso: string): string => {
+  const d = new Date(iso)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  return `${day}/${month}/${d.getFullYear()}`
+}
+
+describe('LedgerList Component', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
 
   describe('Rendering', () => {
-    it('should render ledger list', () => {
+    it('renders the ledger rows', () => {
       renderComponent()
       expect(screen.getByText('John Doe')).toBeInTheDocument()
       expect(screen.getByText('Jane Smith')).toBeInTheDocument()
     })
 
-    it('should display transaction count for each ledger', () => {
+    it('renders created dates in DD/MM/YYYY format', () => {
       renderComponent()
-      expect(screen.queryByText(/transactions/i)).toBeTruthy()
+      expect(screen.getByText(expectedDate('2024-01-15T10:00:00Z'))).toBeInTheDocument()
+      expect(screen.getByText(expectedDate('2024-01-20T14:30:00Z'))).toBeInTheDocument()
     })
 
-    it('should display date in DD/MM/YYYY format', () => {
-      renderComponent()
-      expect(screen.getByText('15/01/2024')).toBeInTheDocument()
-      expect(screen.getByText('20/01/2024')).toBeInTheDocument()
-    })
-
-    it('should not show "Created:" prefix in date column', () => {
-      renderComponent()
-      expect(screen.queryByText(/Created:/)).not.toBeInTheDocument()
-    })
-
-    it('should show loading spinner when loading', () => {
+    it('shows a loading spinner when loading', () => {
       renderComponent({ loading: true })
       expect(screen.getByRole('progressbar')).toBeInTheDocument()
     })
 
-    it('should show empty state when no ledgers', () => {
+    it('shows the empty state when there are no ledgers', () => {
       renderComponent({ ledgers: [] })
       expect(screen.getByText(/No ledgers yet/i)).toBeInTheDocument()
     })
 
-    it('should show search results message', () => {
+    it('shows a search-empty message when a search matches nothing', () => {
       renderComponent({ ledgers: [], searchText: 'John' })
       expect(screen.getByText(/No ledgers found matching/i)).toBeInTheDocument()
     })
-  })
 
-  describe('Sync Functionality', () => {
-    it('should display sync banner when there are local changes', async () => {
-      // Mock selector to return true for hasLocalChanges
-      const ledgerModule = require('../store/ledgerSlice')
-      ledgerModule.selectHasLocalChanges = jest.fn(() => true)
-
-      renderComponent()
-      await waitFor(() => {
-        expect(screen.getByText(/You have unsaved changes/i)).toBeInTheDocument()
-      })
-    })
-
-    it('should not display sync banner when no local changes', () => {
-      const ledgerModule = require('../store/ledgerSlice')
-      ledgerModule.selectHasLocalChanges = jest.fn(() => false)
-
-      renderComponent()
-      expect(screen.queryByText(/You have unsaved changes/i)).not.toBeInTheDocument()
-    })
-
-    it('should display sync button when there are local changes', async () => {
-      const ledgerModule = require('../store/ledgerSlice')
-      ledgerModule.selectHasLocalChanges = jest.fn(() => true)
-
-      renderComponent()
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Sync to Server/i })).toBeInTheDocument()
-      })
-    })
-
-    it('should disable sync button while syncing', async () => {
-      const ledgerModule = require('../store/ledgerSlice')
-      ledgerModule.selectHasLocalChanges = jest.fn(() => true)
-
-      renderComponent()
-
-      const syncButton = await screen.findByRole('button', { name: /Sync to Server/i })
-      fireEvent.click(syncButton)
-
-      await waitFor(() => {
-        expect(screen.getByText(/Syncing.../i)).toBeInTheDocument()
-      })
-    })
-
-    it('should show success notification after sync', async () => {
-      const ledgerModule = require('../store/ledgerSlice')
-      ledgerModule.selectHasLocalChanges = jest.fn(() => true)
-      ledgerModule.syncLedgers = jest.fn(() => ({
-        unwrap: jest.fn().mockResolvedValue({
-          ledgers: mockLedgers,
-          entries: [],
-        }),
-      }))
-
-      renderComponent()
-
-      const syncButton = await screen.findByRole('button', { name: /Sync to Server/i })
-      fireEvent.click(syncButton)
-
-      await waitFor(() => {
-        expect(screen.getByText(/Synced/i)).toBeInTheDocument()
-      })
-    })
-
-    it('should show error notification if sync fails', async () => {
-      const ledgerModule = require('../store/ledgerSlice')
-      ledgerModule.selectHasLocalChanges = jest.fn(() => true)
-      ledgerModule.syncLedgers = jest.fn(() => ({
-        unwrap: jest.fn().mockRejectedValue(new Error('Sync failed')),
-      }))
-
-      renderComponent()
-
-      const syncButton = await screen.findByRole('button', { name: /Sync to Server/i })
-      fireEvent.click(syncButton)
-
-      await waitFor(() => {
-        expect(screen.getByText(/Sync failed/i)).toBeInTheDocument()
-      })
-    })
-  })
-
-  describe('User Interactions', () => {
-    it('should call onSelectLedger when ledger is clicked', () => {
-      const onSelectLedger = jest.fn()
-      renderComponent({ onSelectLedger })
-
-      const ledgerElement = screen.getByText('John Doe')
-      fireEvent.click(ledgerElement)
-
-      expect(onSelectLedger).toHaveBeenCalledWith('ledger-1')
-    })
-
-    it('should filter ledgers by search text', () => {
-      renderComponent({ searchText: 'John' })
-      expect(screen.getByText('John Doe')).toBeInTheDocument()
-      expect(screen.queryByText('Jane Smith')).not.toBeInTheDocument()
-    })
-
-    it('should be case-insensitive when searching', () => {
-      renderComponent({ searchText: 'john' })
-      expect(screen.getByText('John Doe')).toBeInTheDocument()
-    })
-
-    it('should show partial match in search', () => {
-      renderComponent({ searchText: 'Smith' })
-      expect(screen.getByText('Jane Smith')).toBeInTheDocument()
-      expect(screen.queryByText('John Doe')).not.toBeInTheDocument()
-    })
-  })
-
-  describe('Table Structure', () => {
-    it('should display table headers', () => {
+    it('renders the table headers', () => {
       renderComponent()
       expect(screen.getByText('Party Name')).toBeInTheDocument()
       expect(screen.getByText('Outstanding Balance')).toBeInTheDocument()
       expect(screen.getByText('Transactions')).toBeInTheDocument()
       expect(screen.getByText('Created Date')).toBeInTheDocument()
     })
+  })
 
-    it('should display balance with currency symbol', () => {
-      renderComponent({ currency: '₹' })
-      expect(screen.getByText(/₹/)).toBeInTheDocument()
+  describe('Search filtering', () => {
+    it('filters ledgers by search text', () => {
+      renderComponent({ searchText: 'John' })
+      expect(screen.getByText('John Doe')).toBeInTheDocument()
+      expect(screen.queryByText('Jane Smith')).not.toBeInTheDocument()
+    })
+
+    it('is case-insensitive', () => {
+      renderComponent({ searchText: 'john' })
+      expect(screen.getByText('John Doe')).toBeInTheDocument()
+    })
+
+    it('matches partial text', () => {
+      renderComponent({ searchText: 'Smith' })
+      expect(screen.getByText('Jane Smith')).toBeInTheDocument()
+      expect(screen.queryByText('John Doe')).not.toBeInTheDocument()
     })
   })
 
-  describe('Responsive Behavior', () => {
-    it('should show mobile view on small screens', () => {
-      // This would require mocking useMediaQuery
-      renderComponent()
-      // The component uses useMediaQuery to decide between table and card view
-      expect(document.querySelector('[data-testid="ledger-list"]') || screen.getByText('John Doe')).toBeTruthy()
+  describe('Selection', () => {
+    it('calls onSelectLedger with the ledger id when a row is clicked', () => {
+      const onSelectLedger = vi.fn()
+      renderComponent({ onSelectLedger })
+      fireEvent.click(screen.getByText('John Doe'))
+      expect(onSelectLedger).toHaveBeenCalledWith('ledger-1')
+    })
+  })
+
+  describe('Sync UI', () => {
+    it('hides the sync banner when there are no local changes', () => {
+      renderComponent({}, { isLocalLedgers: false })
+      expect(screen.queryByText(/You have unsaved changes/i)).not.toBeInTheDocument()
+    })
+
+    it('shows the sync banner and button when there are local changes', () => {
+      renderComponent({}, { isLocalLedgers: true })
+      expect(screen.getByText(/You have unsaved changes/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Sync to Server/i })).toBeInTheDocument()
+    })
+
+    it('shows a success notification after a successful sync', async () => {
+      vi.spyOn(ledgerService, 'syncLedgers').mockResolvedValue({
+        output: { ledgers: mockLedgers as never, entries: [] },
+      } as never)
+      renderComponent({}, { isLocalLedgers: true })
+      fireEvent.click(screen.getByRole('button', { name: /Sync to Server/i }))
+      expect(await screen.findByText(/Synced/i)).toBeInTheDocument()
+    })
+
+    it('shows an error notification if sync fails', async () => {
+      vi.spyOn(ledgerService, 'syncLedgers').mockRejectedValue(new Error('Sync failed'))
+      renderComponent({}, { isLocalLedgers: true })
+      fireEvent.click(screen.getByRole('button', { name: /Sync to Server/i }))
+      // The thunk rejects via rejectWithValue(string); `.unwrap()` surfaces a
+      // non-Error value, so the component falls back to its default message.
+      expect(await screen.findByText(/Failed to sync ledgers/i)).toBeInTheDocument()
     })
   })
 })

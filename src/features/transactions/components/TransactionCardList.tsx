@@ -13,6 +13,8 @@ type TransactionCardListProps = {
   handleSelectOne?: (id: string) => void
   handleSelectAll?: () => void
   editButtonClickEvents?: (tx: ITransactionLogs) => void
+  onLedgerBadgeClick?: (ledgerId: string) => void
+  highlightedTransactionId?: string | null
 }
 
 const TransactionCardList = ({
@@ -23,6 +25,8 @@ const TransactionCardList = ({
   handleSelectOne,
   handleSelectAll,
   editButtonClickEvents,
+  onLedgerBadgeClick,
+  highlightedTransactionId,
 }: TransactionCardListProps): JSX.Element => {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
@@ -111,6 +115,8 @@ const TransactionCardList = ({
           isSelected={isSelected ? isSelected(tx._id) : undefined}
           onSelect={handleSelectOne}
           onEdit={editButtonClickEvents}
+          onLedgerBadgeClick={onLedgerBadgeClick}
+          isHighlighted={highlightedTransactionId === tx._id}
         />
       ))}
     </Box>

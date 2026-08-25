@@ -43,6 +43,7 @@ type Props = {
   onGroupBadgeClick?: (groupId: string) => void
   onGroupInfoClick?: (event: React.MouseEvent, transactionId: string) => void
   onLedgerBadgeClick?: (ledgerId: string) => void
+  highlightedTransactionId?: string | null
 }
 
 const CustomTable = ({
@@ -57,6 +58,7 @@ const CustomTable = ({
   groups,
   onGroupBadgeClick,
   onLedgerBadgeClick,
+  highlightedTransactionId,
 }: Props): JSX.Element => {
   const { mode } = useContext(ColorModeContext)
 
@@ -143,8 +145,13 @@ const CustomTable = ({
             {transactions.map((tx: ITransactionLogs) => (
               <TableRow
                 key={tx._id}
+                id={`transaction-row-${tx._id}`}
                 hover
                 selected={isSelected ? !!isSelected(tx._id) : false}
+                sx={{
+                  transition: 'background-color 0.6s ease',
+                  ...(highlightedTransactionId === tx._id && { backgroundColor: 'action.selected' }),
+                }}
               >
                 {type === 'full' && (
                   <TableCell>
@@ -244,25 +251,26 @@ const CustomTable = ({
                       ))}
 
                       {/* Ledger Badge */}
-                      {transactionLedgerMap.has(tx._id) && (() => {
-                        const ledgerId = transactionLedgerMap.get(tx._id)
-                        const ledger = ledgerId ? ledgers.find(l => l.id === ledgerId) : null
-                        return ledger ? (
-                          <Chip
-                            key={ledger.id}
-                            label={ledger.partyName}
-                            size='small'
-                            onClick={() => onLedgerBadgeClick?.(ledger.id)}
-                            sx={{
-                              backgroundColor: '#F3E5F5',
-                              color: '#7B1FA2',
-                              cursor: 'pointer',
-                              fontWeight: 500,
-                              '&:hover': { backgroundColor: '#E1BEE7' },
-                            }}
-                          />
-                        ) : null
-                      })()}
+                      {transactionLedgerMap.has(tx._id) &&
+                        (() => {
+                          const ledgerId = transactionLedgerMap.get(tx._id)
+                          const ledger = ledgerId ? ledgers.find(l => l.id === ledgerId) : null
+                          return ledger ? (
+                            <Chip
+                              key={ledger.id}
+                              label={ledger.partyName}
+                              size='small'
+                              onClick={() => onLedgerBadgeClick?.(ledger.id)}
+                              sx={{
+                                backgroundColor: '#F3E5F5',
+                                color: '#7B1FA2',
+                                cursor: 'pointer',
+                                fontWeight: 500,
+                                '&:hover': { backgroundColor: '#E1BEE7' },
+                              }}
+                            />
+                          ) : null
+                        })()}
 
                       {/* Overflow indicator for groups */}
                       {(transactionGroupMap[tx._id] ?? []).length > 2 && (

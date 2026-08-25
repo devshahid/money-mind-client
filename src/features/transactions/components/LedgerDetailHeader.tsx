@@ -9,7 +9,6 @@ import { JSX } from 'react'
 import { Box, Typography } from '@mui/material'
 
 import { getBalanceDirection } from '../utils/ledgerBalance'
-import type { BalanceDirection } from '../types/ledger'
 import { spacing, colors } from '@/shared/theme'
 
 interface LedgerDetailHeaderProps {
@@ -29,7 +28,7 @@ interface BalanceDisplay {
 
 const getBalanceDisplay = (balance: number, partyName: string): BalanceDisplay => {
   const direction = getBalanceDirection(balance)
-  
+
   if (direction === 'they_owe') {
     return {
       text: `${partyName} owes you`,
@@ -37,7 +36,7 @@ const getBalanceDisplay = (balance: number, partyName: string): BalanceDisplay =
       textColor: 'white',
     }
   }
-  
+
   if (direction === 'you_owe') {
     return {
       text: `You owe ${partyName}`,
@@ -45,27 +44,26 @@ const getBalanceDisplay = (balance: number, partyName: string): BalanceDisplay =
       textColor: 'white',
     }
   }
-  
+
   return {
     text: 'Settled',
-    color: colors.grayscale[300],
-    textColor: colors.grayscale[700],
+    color: colors.grayscale.paleGray,
+    textColor: colors.grayscale.medium,
   }
 }
 
 /**
  * LedgerDetailHeader - Display ledger title and balance
  */
-export const LedgerDetailHeader = ({
-  partyName,
-  balance,
-  currency = '₹',
-}: LedgerDetailHeaderProps): JSX.Element => {
+export const LedgerDetailHeader = ({ partyName, balance, currency = '₹' }: LedgerDetailHeaderProps): JSX.Element => {
   const balanceDisplay = getBalanceDisplay(balance, partyName)
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: spacing[2], mb: spacing[3] }}>
-      <Typography variant='h5' sx={{ fontWeight: 700 }}>
+      <Typography
+        variant='h5'
+        sx={{ fontWeight: 700 }}
+      >
         {partyName}
       </Typography>
 

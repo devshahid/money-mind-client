@@ -59,7 +59,6 @@ export const API_ROUTES = {
     addEntry: (id: string) => `/ledgers/${id}/entries`,
     removeEntry: (id: string, entryId: string) => `/ledgers/${id}/entries/${entryId}`,
     linkTransaction: (id: string) => `/ledgers/${id}/link-transaction`,
-    settle: (id: string) => `/ledgers/${id}/settle`,
     sync: '/ledgers/sync',
   },
 } as const

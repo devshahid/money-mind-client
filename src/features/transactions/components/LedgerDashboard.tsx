@@ -11,7 +11,6 @@ import SearchIcon from '@mui/icons-material/Search'
 import AddIcon from '@mui/icons-material/Add'
 
 import { useAppDispatch, useAppSelector } from '@/shared/hooks/slice-hooks'
-import { RootState } from '@/store'
 import {
   loadLedgers,
   selectAllLedgers,
@@ -64,7 +63,7 @@ export const LedgerDashboard = ({ onNavigateToTransaction }: LedgerDashboardProp
     dispatch(selectLedger(null))
   }, [dispatch])
 
-  const handleCreateLedger = useCallback((partyName: string) => {
+  const handleCreateLedger = useCallback(() => {
     setCreateDialogOpen(false)
     setSearchText('')
   }, [])

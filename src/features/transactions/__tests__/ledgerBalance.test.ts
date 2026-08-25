@@ -18,17 +18,13 @@ describe('Balance Formula Correctness - Property-Based Tests', () => {
    */
   describe('Single Entry Balance', () => {
     it('should calculate correct balance for single "i_paid" entry', () => {
-      const entries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-      ]
+      const entries = [{ amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>]
       const balance = calculateBalance(entries as ILedgerEntry[])
       expect(balance).toBe(100)
     })
 
     it('should calculate correct balance for single "they_paid" entry', () => {
-      const entries = [
-        { amount: 100, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-      ]
+      const entries = [{ amount: 100, direction: 'they_paid' } as Partial<ILedgerEntry>]
       const balance = calculateBalance(entries as ILedgerEntry[])
       expect(balance).toBe(-100)
     })
@@ -41,9 +37,9 @@ describe('Balance Formula Correctness - Property-Based Tests', () => {
   describe('Multiple Same-Direction Entries', () => {
     it('should sum multiple "i_paid" entries correctly', () => {
       const entries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 200, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 200, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'i_paid' } as Partial<ILedgerEntry>,
       ]
       const balance = calculateBalance(entries as ILedgerEntry[])
       expect(balance).toBe(350)
@@ -51,9 +47,9 @@ describe('Balance Formula Correctness - Property-Based Tests', () => {
 
     it('should sum multiple "they_paid" entries correctly', () => {
       const entries = [
-        { amount: 100, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 200, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'they_paid' } as Partial<ILedgerEntry>,
+        { amount: 200, direction: 'they_paid' } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'they_paid' } as Partial<ILedgerEntry>,
       ]
       const balance = calculateBalance(entries as ILedgerEntry[])
       expect(balance).toBe(-350)
@@ -67,9 +63,9 @@ describe('Balance Formula Correctness - Property-Based Tests', () => {
   describe('Mixed Direction Entries', () => {
     it('should calculate net balance from mixed directions', () => {
       const entries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 75, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'they_paid' } as Partial<ILedgerEntry>,
+        { amount: 75, direction: 'i_paid' } as Partial<ILedgerEntry>,
       ]
       // balance = (100 + 75) - 50 = 125
       const balance = calculateBalance(entries as ILedgerEntry[])
@@ -78,9 +74,9 @@ describe('Balance Formula Correctness - Property-Based Tests', () => {
 
     it('should calculate correct negative balance from mixed directions', () => {
       const entries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 200, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 75, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 200, direction: 'they_paid' } as Partial<ILedgerEntry>,
+        { amount: 75, direction: 'i_paid' } as Partial<ILedgerEntry>,
       ]
       // balance = (100 + 75) - 200 = -25
       const balance = calculateBalance(entries as ILedgerEntry[])
@@ -89,15 +85,14 @@ describe('Balance Formula Correctness - Property-Based Tests', () => {
   })
 
   /**
-   * Property 4: Settlement entries are included in balance calculations
-   * Verifies that isSettlement flag does not affect calculation
-   * (settlements are regular ledger entries with a flag for display purposes)
+   * Repayment entries are ordinary linked transactions, so they contribute to
+   * the balance exactly like any other entry (direction determines the sign).
    */
-  describe('Settlement Entries', () => {
-    it('should include settlement entries in balance calculation', () => {
+  describe('Repayment Entries', () => {
+    it('should include repayment (they_paid) entries in balance calculation', () => {
       const entries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 60, direction: 'they_paid', isSettlement: true } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 60, direction: 'they_paid' } as Partial<ILedgerEntry>,
       ]
       // balance = 100 - 60 = 40
       const balance = calculateBalance(entries as ILedgerEntry[])
@@ -124,9 +119,9 @@ describe('Balance Formula Correctness - Property-Based Tests', () => {
   describe('Zero-Amount Entries', () => {
     it('should not affect balance calculation', () => {
       const entries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 0, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 0, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 0, direction: 'they_paid' } as Partial<ILedgerEntry>,
+        { amount: 0, direction: 'i_paid' } as Partial<ILedgerEntry>,
       ]
       const balance = calculateBalance(entries as ILedgerEntry[])
       expect(balance).toBe(100)
@@ -140,15 +135,15 @@ describe('Balance Formula Correctness - Property-Based Tests', () => {
   describe('Commutative Property', () => {
     it('should produce same balance regardless of entry order', () => {
       const entriesA = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 75, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'they_paid' } as Partial<ILedgerEntry>,
+        { amount: 75, direction: 'i_paid' } as Partial<ILedgerEntry>,
       ]
 
       const entriesB = [
-        { amount: 75, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 75, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'they_paid' } as Partial<ILedgerEntry>,
       ]
 
       const balanceA = calculateBalance(entriesA as ILedgerEntry[])
@@ -166,8 +161,8 @@ describe('Balance Formula Correctness - Property-Based Tests', () => {
   describe('Decimal Precision', () => {
     it('should handle decimal amounts correctly', () => {
       const entries = [
-        { amount: 100.50, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50.25, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100.5, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 50.25, direction: 'they_paid' } as Partial<ILedgerEntry>,
       ]
       // balance = 100.50 - 50.25 = 50.25
       const balance = calculateBalance(entries as ILedgerEntry[])
@@ -176,12 +171,12 @@ describe('Balance Formula Correctness - Property-Based Tests', () => {
 
     it('should round balance to 2 decimal places', () => {
       const entries = [
-        { amount: 100.126, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50.135, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100.126, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 50.135, direction: 'they_paid' } as Partial<ILedgerEntry>,
       ]
       const balance = calculateBalance(entries as ILedgerEntry[])
       // Should be rounded to 2 decimals: 100.126 - 50.135 ≈ 49.99
-      expect(Number((balance).toFixed(2))).toBe(49.99)
+      expect(Number(balance.toFixed(2))).toBe(49.99)
     })
   })
 
@@ -192,8 +187,8 @@ describe('Balance Formula Correctness - Property-Based Tests', () => {
   describe('Cancellation Property', () => {
     it('should produce zero balance when all amounts cancel out', () => {
       const entries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 100, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'they_paid' } as Partial<ILedgerEntry>,
       ]
       const balance = calculateBalance(entries as ILedgerEntry[])
       expect(balance).toBe(0)
@@ -201,10 +196,10 @@ describe('Balance Formula Correctness - Property-Based Tests', () => {
 
     it('should produce zero balance with complex entry sets', () => {
       const entries = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 75, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 125, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 75, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 125, direction: 'they_paid' } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'they_paid' } as Partial<ILedgerEntry>,
       ]
       // balance = (100 + 75) - (125 + 50) = 175 - 175 = 0
       const balance = calculateBalance(entries as ILedgerEntry[])
@@ -219,13 +214,13 @@ describe('Balance Formula Correctness - Property-Based Tests', () => {
   describe('Associative Property', () => {
     it('should allow independent computation of sub-balances', () => {
       const entriesA = [
-        { amount: 100, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 50, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 100, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 50, direction: 'they_paid' } as Partial<ILedgerEntry>,
       ]
 
       const entriesB = [
-        { amount: 75, direction: 'i_paid', isSettlement: false } as Partial<ILedgerEntry>,
-        { amount: 25, direction: 'they_paid', isSettlement: false } as Partial<ILedgerEntry>,
+        { amount: 75, direction: 'i_paid' } as Partial<ILedgerEntry>,
+        { amount: 25, direction: 'they_paid' } as Partial<ILedgerEntry>,
       ]
 
       const balanceA = calculateBalance(entriesA as ILedgerEntry[])

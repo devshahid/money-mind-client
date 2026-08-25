@@ -4,7 +4,6 @@
  * Displays a single ledger entry with:
  * - Transaction narration and date
  * - Amount with direction indicator (color-coded "I paid" vs "They paid")
- * - Settlement badge when applicable
  */
 
 import { JSX } from 'react'
@@ -12,6 +11,7 @@ import {
   Box,
   Card,
   CardContent,
+  Checkbox,
   Chip,
   IconButton,
   Tooltip,
@@ -20,17 +20,21 @@ import {
   useTheme,
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
-import TaskAltIcon from '@mui/icons-material/TaskAlt'
 
 import type { ILedgerEntry, MoneyDirection } from '../types/ledger'
 import { spacing, colors } from '@/shared/theme'
+import { formatLedgerDate } from '../utils/ledgerBalance'
 
 interface LedgerEntryItemProps {
   entry: ILedgerEntry
   transactionNarration?: string
+  transactionDate?: string
   onTransactionClick?: () => void
   onDeleteEntry?: () => void
   currency?: string
+  selectable?: boolean
+  selected?: boolean
+  onSelectToggle?: () => void
 }
 
 /**
@@ -44,19 +48,25 @@ interface DirectionDisplay {
 
 const getDirectionDisplay = (direction: MoneyDirection): DirectionDisplay => {
   const displays: Record<MoneyDirection, DirectionDisplay> = {
-    'i_paid': {
+    i_paid: {
       label: 'I paid',
       color: colors.semantic.success,
       textColor: 'white',
     },
-    'they_paid': {
+    they_paid: {
       label: 'They paid',
       color: colors.semantic.info,
       textColor: 'white',
     },
   }
-  
-  return displays[direction]
+
+  return (
+    displays[direction] ?? {
+      label: 'Unknown',
+      color: colors.grayscale.medium,
+      textColor: 'white',
+    }
+  )
 }
 
 /**
@@ -65,19 +75,19 @@ const getDirectionDisplay = (direction: MoneyDirection): DirectionDisplay => {
 export const LedgerEntryItem = ({
   entry,
   transactionNarration = 'Unnamed transaction',
+  transactionDate,
   onTransactionClick,
   onDeleteEntry,
   currency = '₹',
+  selectable = false,
+  selected = false,
+  onSelectToggle,
 }: LedgerEntryItemProps): JSX.Element => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
   const directionDisplay = getDirectionDisplay(entry.direction)
-  const entryDate = new Date(entry.createdAt).toLocaleDateString('en-GB', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
+  const entryDate = formatLedgerDate(transactionDate || entry.createdAt)
   const amountColor = entry.direction === 'they_paid' ? '#2e7d32' : '#d32f2f'
 
   if (isMobile) {
@@ -92,11 +102,30 @@ export const LedgerEntryItem = ({
       >
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: spacing[2] }}>
+            {selectable && (
+              <Checkbox
+                checked={selected}
+                onClick={e => e.stopPropagation()}
+                onChange={e => {
+                  e.stopPropagation()
+                  onSelectToggle?.()
+                }}
+                inputProps={{ 'aria-label': 'Select entry' }}
+                sx={{ mt: '-8px', ml: '-8px', width: 44, height: 44 }}
+              />
+            )}
             <Box sx={{ flex: 1 }}>
-              <Typography variant='body2' sx={{ fontWeight: 500 }}>
-                {transactionNarration}
+              <Typography
+                variant='body2'
+                sx={{ fontWeight: 500 }}
+              >
+                {transactionNarration || 'Unknown'}
               </Typography>
-              <Typography variant='caption' color='text.secondary' sx={{ mt: spacing[0.5], display: 'block' }}>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ mt: spacing[1], display: 'block' }}
+              >
                 {entryDate}
               </Typography>
             </Box>
@@ -127,7 +156,7 @@ export const LedgerEntryItem = ({
                 <Tooltip title='Remove from ledger'>
                   <IconButton
                     size='small'
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation()
                       onDeleteEntry()
                     }}
@@ -167,10 +196,16 @@ export const LedgerEntryItem = ({
     >
       {/* Narration & Date */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant='body2' sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <Typography
+          variant='body2'
+          sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+        >
           {transactionNarration}
         </Typography>
-        <Typography variant='caption' color='text.secondary'>
+        <Typography
+          variant='caption'
+          color='text.secondary'
+        >
           {entryDate}
         </Typography>
       </Box>
@@ -194,17 +229,6 @@ export const LedgerEntryItem = ({
           minWidth: 80,
         }}
       />
-
-      {/* Settlement Badge */}
-      {entry.isSettlement && (
-        <Chip
-          icon={<TaskAltIcon />}
-          label='Settlement'
-          size='small'
-          variant='outlined'
-          color='success'
-        />
-      )}
     </Box>
   )
 }
