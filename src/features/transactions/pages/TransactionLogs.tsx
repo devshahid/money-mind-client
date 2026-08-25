@@ -50,6 +50,7 @@ import {
   ITransactionGroup,
   IMember,
 } from '../store/groupSlice'
+import { selectLedger, linkTransactionToLedger } from '../store/ledgerSlice'
 import { SplitType } from '../types/splitTypes'
 import { mergeLabels } from '../utils/groupUtils'
 import { indexDBTransaction } from '../helpers/indexDB/transactionStore'
@@ -65,6 +66,8 @@ import { LabelAssignmentDialog } from '../components/LabelAssignmentDialog'
 import { GroupDialog } from '../components/GroupDialog'
 import { GroupSummaryView } from '../components/GroupSummaryView'
 import { GroupListView } from '../components/GroupListView'
+import { BulkLinkLedgerDialog } from '../components/BulkLinkLedgerDialog'
+import { LedgerDashboard } from '../components/LedgerDashboard'
 import { AISuggestionReviewDialog } from '../components/AISuggestionReviewDialog'
 import { useSnackbar } from '../../../shared/contexts/SnackBarContext'
 
@@ -98,11 +101,13 @@ const TransactionLogs = (): JSX.Element => {
   const [rowsPerPage, setRowsPerPage] = useState(50)
   const [activeTab, setActiveTab] = useState(0)
   const [keyword, setKeyword] = useState('')
+  const [highlightedTransactionId, setHighlightedTransactionId] = useState<string | null>(null)
 
   // Dialog states
   const [labelDialogOpen, setLabelDialogOpen] = useState(false)
   const [groupDialogOpen, setGroupDialogOpen] = useState(false)
   const [aiSuggestionDialogOpen, setAiSuggestionDialogOpen] = useState(false)
+  const [bulkLinkLedgerDialogOpen, setBulkLinkLedgerDialogOpen] = useState(false)
   const [groupDialogMode, setGroupDialogMode] = useState<'create' | 'edit'>('create')
   const [editingGroup, setEditingGroup] = useState<ITransactionGroup | null>(null)
   const [summaryGroup, setSummaryGroup] = useState<ITransactionGroup | null>(null)
@@ -149,6 +154,10 @@ const TransactionLogs = (): JSX.Element => {
       (state as { groups: { groupSyncStatus: 'idle' | 'success' | 'error' } }).groups.groupSyncStatus
   )
   const groupLoading = useAppSelector((state: RootState) => (state as { groups: { loading: boolean } }).groups.loading)
+
+  const ledgers = useAppSelector((state: RootState) => state.ledgers.ledgers)
+  const ledgerLoading = useAppSelector((state: RootState) => state.ledgers.loading)
+  const ledgerEntries = useAppSelector((state: RootState) => state.ledgers.entries)
 
   const [groupSyncLoader, setGroupSyncLoader] = useState(false)
 
@@ -384,6 +393,80 @@ const TransactionLogs = (): JSX.Element => {
     if (group) setSummaryGroup(group)
   }
 
+  // --- Ledger navigation handler ---
+
+  const handleLedgerBadgeClick = (ledgerId: string): void => {
+    dispatch(selectLedger(ledgerId))
+    setActiveTab(2) // Switch to Ledger tab
+  }
+
+  // Navigate from a ledger entry to its underlying transaction in All Transactions
+  const handleNavigateToTransaction = (transactionId: string): void => {
+    // Always switch to the All Transactions tab
+    setActiveTab(0)
+
+    const targetExists = transactions.some(tx => tx._id === transactionId)
+    if (!targetExists) {
+      showErrorSnackbar('This transaction is no longer available.')
+      return
+    }
+
+    setHighlightedTransactionId(transactionId)
+
+    // Wait for the tab content to render, then scroll the target into view
+    setTimeout(() => {
+      const element = document.getElementById(`transaction-row-${transactionId}`)
+      element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
+
+    // Clear the highlight after 3 seconds so it fades out
+    setTimeout(() => {
+      setHighlightedTransactionId(null)
+    }, 3000)
+  }
+
+  const handleBulkLinkToLedger = (): void => {
+    setBulkLinkLedgerDialogOpen(true)
+  }
+
+  const handleBulkLinkLedgerSubmit = (ledgerId: string): void => {
+    // Compute transactions already linked to the target ledger, so a
+    // transaction is linked to a given ledger only once.
+    const alreadyLinked = new Set(ledgerEntries.filter(e => e.ledgerId === ledgerId).map(e => e.transactionId))
+
+    const toLink = selectedIds.filter(id => !alreadyLinked.has(id))
+    const skipped = selectedIds.filter(id => alreadyLinked.has(id))
+
+    // Auto-determine direction based on each transaction's isCredit field
+    toLink.forEach(transactionId => {
+      const transaction = transactions.find(t => t._id === transactionId)
+      if (transaction) {
+        // Credit (isCredit=true) -> they_paid, Debit (isCredit=false) -> i_paid
+        const direction = transaction.isCredit ? 'they_paid' : 'i_paid'
+        void dispatch(
+          linkTransactionToLedger({
+            ledgerId,
+            transactionId,
+            direction,
+            amount: Number(transaction.amount) || 0,
+            narration: transaction.narration,
+            transactionDate: transaction.transactionDate,
+          })
+        )
+      }
+    })
+
+    if (toLink.length > 0) {
+      showSuccessSnackbar(`${toLink.length} transaction(s) linked to ledger.`)
+    }
+    if (skipped.length > 0) {
+      showErrorSnackbar(`${skipped.length} transaction(s) were already in this ledger and were skipped.`)
+    }
+
+    setSelectedIds([])
+    setBulkLinkLedgerDialogOpen(false)
+  }
+
   const handleEditGroupFromSummary = (): void => {
     if (!summaryGroup) return
     setEditingGroup(summaryGroup)
@@ -436,6 +519,7 @@ const TransactionLogs = (): JSX.Element => {
       >
         <Tab label='All Transactions' />
         <Tab label='Grouped Transactions' />
+        <Tab label='Ledger' />
       </Tabs>
 
       {activeTab === 0 && (
@@ -447,7 +531,9 @@ const TransactionLogs = (): JSX.Element => {
               onAttachToLogs={handleAttachToLogs}
               onCreateGroup={handleCreateGroup}
               onAddToGroup={handleAddToGroup}
+              onLinkToLedger={handleBulkLinkToLedger}
               groups={groups}
+              hasLedgers={ledgers.length > 0}
             />
           )}
 
@@ -466,6 +552,8 @@ const TransactionLogs = (): JSX.Element => {
                 handleSelectAll={handleSelectAll}
                 groups={groups}
                 onGroupBadgeClick={handleGroupBadgeClick}
+                onLedgerBadgeClick={handleLedgerBadgeClick}
+                highlightedTransactionId={highlightedTransactionId}
                 sx={{
                   maxHeight: '100vh',
                   overflowX: 'auto',
@@ -530,6 +618,8 @@ const TransactionLogs = (): JSX.Element => {
           />
         </>
       )}
+
+      {activeTab === 2 && <LedgerDashboard onNavigateToTransaction={handleNavigateToTransaction} />}
 
       {/* Edit transaction modal */}
       {(editingTransaction || actionType === 'add') && (
@@ -771,6 +861,16 @@ const TransactionLogs = (): JSX.Element => {
           setSelectedIds([])
           showSuccessSnackbar('AI suggestions applied successfully!')
         }}
+      />
+
+      {/* Bulk Link to Ledger Dialog */}
+      <BulkLinkLedgerDialog
+        open={bulkLinkLedgerDialogOpen}
+        onClose={() => setBulkLinkLedgerDialogOpen(false)}
+        onSubmit={handleBulkLinkLedgerSubmit}
+        ledgers={ledgers}
+        selectedCount={selectedIds.length}
+        loading={ledgerLoading}
       />
     </Box>
   )

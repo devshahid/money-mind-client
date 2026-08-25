@@ -3,6 +3,7 @@ import { configureStore } from '@reduxjs/toolkit'
 import { authReducer } from '../features/auth/store/authSlice'
 import { transactionReducer } from '../features/transactions/store/transactionSlice'
 import { groupReducer } from '../features/transactions/store/groupSlice'
+import { ledgerReducer } from '../features/transactions/store/ledgerSlice'
 import { aiReducer } from '../features/ai-chat/store/aiSlice'
 import { transactionGroupReducer } from '../features/transactions/store/transactionGroupSlice'
 import { debtReducer } from '../features/debts/store/debtSlice'
@@ -13,6 +14,7 @@ export const store = configureStore({
     auth: authReducer,
     transactions: transactionReducer,
     groups: groupReducer,
+    ledgers: ledgerReducer,
     ai: aiReducer,
     transactionGroups: transactionGroupReducer,
     debts: debtReducer,
