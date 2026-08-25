@@ -3,7 +3,7 @@ name: Release Frontend
 on:
   push:
     branches:
-      - deploy
+      - master
 
 run-name: '${{ github.event.head_commit.message }}'
 
