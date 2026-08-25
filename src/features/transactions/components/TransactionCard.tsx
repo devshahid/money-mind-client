@@ -4,8 +4,12 @@ import EditIcon from '@mui/icons-material/Edit'
 import dayjs from 'dayjs'
 
 import { ITransactionLogs } from '../store/transactionSlice'
+import { selectTransactionLedgerMap } from '../store/ledgerSlice'
 import { getExpenseCategories } from '../../../constants'
 import { spacing } from '../../../shared/theme'
+import { useAppSelector } from '../../../shared/hooks/slice-hooks'
+import { RootState } from '../../../store'
+import { LedgerBadge } from './LedgerBadge'
 
 type TransactionCardProps = {
   transaction: ITransactionLogs
@@ -14,6 +18,8 @@ type TransactionCardProps = {
   isSelected?: boolean
   onSelect?: (id: string) => void
   onEdit?: (tx: ITransactionLogs) => void
+  onLedgerBadgeClick?: (ledgerId: string) => void
+  isHighlighted?: boolean
 }
 
 const TransactionCard = ({
@@ -23,7 +29,14 @@ const TransactionCard = ({
   isSelected,
   onSelect,
   onEdit,
+  onLedgerBadgeClick,
+  isHighlighted,
 }: TransactionCardProps): JSX.Element => {
+  const transactionLedgerMap = useAppSelector((state: RootState) => selectTransactionLedgerMap(state))
+  const ledgers = useAppSelector((state: RootState) => state.ledgers.ledgers)
+  const linkedLedgerId = transactionLedgerMap.get(transaction._id)
+  const linkedLedger = linkedLedgerId ? ledgers.find(l => l.id === linkedLedgerId) : null
+
   const categoryData = getExpenseCategories().find(cat => cat.name === transaction.category)
   const displayCategory = transaction.category
     ? transaction.category.charAt(0).toUpperCase() + transaction.category.slice(1)
@@ -31,12 +44,18 @@ const TransactionCard = ({
 
   return (
     <Card
+      id={`transaction-row-${transaction._id}`}
       elevation={1}
       sx={{
         mb: spacing[2],
         cursor: 'pointer',
         '&:active': { opacity: 0.9 },
         ...(isSelected && { borderLeft: '3px solid', borderColor: 'primary.main' }),
+        transition: 'background-color 0.6s ease',
+        ...(isHighlighted && {
+          backgroundColor: 'action.selected',
+          boxShadow: 3,
+        }),
       }}
     >
       <CardContent sx={{ p: spacing[3], '&:last-child': { pb: spacing[3] } }}>
@@ -75,6 +94,17 @@ const TransactionCard = ({
                 >
                   {transaction.narration || '—'}
                 </Typography>
+                {linkedLedger && (
+                  <Box
+                    onClick={e => e.stopPropagation()}
+                    sx={{ display: 'flex', flexWrap: 'wrap', gap: spacing[1], mt: spacing[1] }}
+                  >
+                    <LedgerBadge
+                      partyName={linkedLedger.partyName}
+                      onClick={() => onLedgerBadgeClick?.(linkedLedger.id)}
+                    />
+                  </Box>
+                )}
               </Box>
               <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
                 <Typography

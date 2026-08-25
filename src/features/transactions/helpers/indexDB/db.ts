@@ -5,6 +5,7 @@ import type { ITransactionGroup } from '../../store/groupSlice'
 import type { IDebt } from '../../../debts/types/debt'
 import type { IGoal } from '../../../goals/types/goal'
 import type { IBudget } from '../../../budget/types/budget'
+import type { ILedger, ILedgerEntry } from '../../types/ledger'
 
 interface ExpenseDB extends DBSchema {
   edited_transactions: {
@@ -38,13 +39,21 @@ interface ExpenseDB extends DBSchema {
     key: string
     value: Partial<IBudget>
   }
+  ledgers: {
+    key: string
+    value: ILedger
+  }
+  ledger_entries: {
+    key: string
+    value: ILedgerEntry
+  }
 }
 
 let dbPromise: Promise<IDBPDatabase<ExpenseDB>> | undefined
 
 export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
   if (dbPromise === undefined) {
-    dbPromise = openDB<ExpenseDB>('ExpenseTrackerDB', 6, {
+    dbPromise = openDB<ExpenseDB>('ExpenseTrackerDB', 7, {
       upgrade(db: IDBPDatabase<ExpenseDB>, oldVersion: number) {
         if (oldVersion < 2) {
           if (!db.objectStoreNames.contains('edited_transactions')) {
@@ -71,6 +80,14 @@ export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
         if (oldVersion < 6) {
           if (!db.objectStoreNames.contains('transaction_groups')) {
             db.createObjectStore('transaction_groups', { keyPath: 'id' })
+          }
+        }
+        if (oldVersion < 7) {
+          if (!db.objectStoreNames.contains('ledgers')) {
+            db.createObjectStore('ledgers', { keyPath: 'id' })
+          }
+          if (!db.objectStoreNames.contains('ledger_entries')) {
+            db.createObjectStore('ledger_entries', { keyPath: 'id' })
           }
         }
       },

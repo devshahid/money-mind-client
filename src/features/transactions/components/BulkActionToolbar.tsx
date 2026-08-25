@@ -8,7 +8,9 @@ interface BulkActionToolbarProps {
   onAttachToLogs: () => void
   onCreateGroup: () => void
   onAddToGroup: (groupId: string) => void
+  onLinkToLedger?: () => void
   groups: ITransactionGroup[]
+  hasLedgers?: boolean
 }
 
 const BulkActionToolbar = ({
@@ -17,7 +19,9 @@ const BulkActionToolbar = ({
   onAttachToLogs,
   onCreateGroup,
   onAddToGroup,
+  onLinkToLedger,
   groups,
+  hasLedgers = false,
 }: BulkActionToolbarProps): JSX.Element => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
 
@@ -79,6 +83,16 @@ const BulkActionToolbar = ({
       >
         Create Group
       </Button>
+
+      {hasLedgers && (
+        <Button
+          size='small'
+          variant='outlined'
+          onClick={onLinkToLedger}
+        >
+          Link to Ledger
+        </Button>
+      )}
 
       {groups.length > 0 && (
         <>

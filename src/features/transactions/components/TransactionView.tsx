@@ -24,6 +24,8 @@ type TransactionViewProps = {
   component?: OverridableComponent<PaperTypeMap<object, 'div'>>
   groups?: ITransactionGroup[]
   onGroupBadgeClick?: (groupId: string) => void
+  onLedgerBadgeClick?: (ledgerId: string) => void
+  highlightedTransactionId?: string | null
 }
 
 const TransactionView = ({
@@ -39,6 +41,8 @@ const TransactionView = ({
   component,
   groups,
   onGroupBadgeClick,
+  onLedgerBadgeClick,
+  highlightedTransactionId,
 }: TransactionViewProps): JSX.Element => {
   const { tier } = useResponsive()
 
@@ -53,10 +57,18 @@ const TransactionView = ({
           handleSelectOne={handleSelectOne}
           handleSelectAll={handleSelectAll}
           editButtonClickEvents={editButtonClickEvents}
+          onLedgerBadgeClick={onLedgerBadgeClick}
+          highlightedTransactionId={highlightedTransactionId}
         />
       )
     case 'tablet':
-      return <TransactionCompactTable transactions={transactions} />
+      return (
+        <TransactionCompactTable
+          transactions={transactions}
+          onLedgerBadgeClick={onLedgerBadgeClick}
+          highlightedTransactionId={highlightedTransactionId}
+        />
+      )
     case 'desktop':
       return (
         <CustomTable
@@ -70,6 +82,8 @@ const TransactionView = ({
           component={component}
           groups={groups}
           onGroupBadgeClick={onGroupBadgeClick}
+          onLedgerBadgeClick={onLedgerBadgeClick}
+          highlightedTransactionId={highlightedTransactionId}
         />
       )
   }

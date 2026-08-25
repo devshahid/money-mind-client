@@ -50,4 +50,15 @@ export const API_ROUTES = {
     debtStrategy: '/ai/debt-strategy',
     budgetRecommendations: '/ai/budget-recommendations',
   },
+  ledgers: {
+    list: '/ledgers',
+    create: '/ledgers',
+    detail: (id: string) => `/ledgers/${id}`,
+    update: (id: string) => `/ledgers/${id}`,
+    delete: (id: string) => `/ledgers/${id}`,
+    addEntry: (id: string) => `/ledgers/${id}/entries`,
+    removeEntry: (id: string, entryId: string) => `/ledgers/${id}/entries/${entryId}`,
+    linkTransaction: (id: string) => `/ledgers/${id}/link-transaction`,
+    sync: '/ledgers/sync',
+  },
 } as const

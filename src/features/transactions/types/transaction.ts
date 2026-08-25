@@ -12,6 +12,7 @@ export type ITransaction = {
   groupId?: string | null
   debtId?: string | null
   goalId?: string | null
+  ledgerId?: string | null
   aiSuggestedCategory?: string
   aiSuggestedLabels?: string[]
   aiSuggestionAccepted?: boolean
