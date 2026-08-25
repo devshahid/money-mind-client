@@ -1,3 +1,9 @@
+## [1.3.1](https://github.com/devshahid/money-mind-client/compare/v1.3.0...v1.3.1) (2026-08-25)
+
+### Bug Fixes
+
+- **ledger:** load all persisted entries so linked transactions render ([#20](https://github.com/devshahid/money-mind-client/issues/20)) ([a034f57](https://github.com/devshahid/money-mind-client/commit/a034f573c285fdf7f3154faa5ccc77bbb4ea225c))
+
 # [1.2.0](https://github.com/devshahid/money-mind-client/compare/v1.1.2...v1.2.0) (2026-08-25)
 
 ### Bug Fixes
