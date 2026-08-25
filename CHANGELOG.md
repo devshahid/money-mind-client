@@ -1,3 +1,16 @@
+# [1.2.0](https://github.com/devshahid/money-mind-client/compare/v1.1.2...v1.2.0) (2026-08-25)
+
+### Bug Fixes
+
+- added user profile in mobile view with profile and details dropdown ([5590f92](https://github.com/devshahid/money-mind-client/commit/5590f922e64f5940b83a8afeb771db495d3b845e))
+- replaced dollar icon with indian rupee icon ([1f7ed12](https://github.com/devshahid/money-mind-client/commit/1f7ed1258dd420754a8b48900cddd3d0d6a97e93))
+- resolve search pagination and filter API call issues ([#9](https://github.com/devshahid/money-mind-client/issues/9)) ([72a1a78](https://github.com/devshahid/money-mind-client/commit/72a1a78cbcdba3a556ee5d53bc3f59a6a1474ca3))
+
+### Features
+
+- async AI categorization with polling, UI fixes, and new categories ([a7ab19b](https://github.com/devshahid/money-mind-client/commit/a7ab19b6c263b394512f2c3d8a60a94a8455ada3))
+- async AI categorization with polling, UI fixes, and new categories ([36b0ffc](https://github.com/devshahid/money-mind-client/commit/36b0ffc96ce7e7cd05a892b3290dac907f848460))
+
 # [1.2.0](https://github.com/devshahid/money-mind-client/compare/v1.1.2...v1.2.0) (2026-08-10)
 
 ### Bug Fixes
