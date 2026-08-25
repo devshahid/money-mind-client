@@ -17,6 +17,8 @@ Given a current version `MAJOR.MINOR.PATCH`:
 
 Note: `refactor:` and `style:` do NOT trigger a release under the default preset. If a refactor changes user-facing behavior, it is really a `fix:` or `feat:`.
 
+> **Note:** semantic-release uses the `conventionalcommits` preset (configured in `.releaserc.json`), so the `!` marker (e.g. `feat!:`, `fix(scope)!:`) triggers a **major** release on its own. The `BREAKING CHANGE:` footer is still supported and recommended for describing the migration.
+
 ## Breaking changes — how to flag
 
 A breaking change bumps the **major** version. Signal it in EITHER (preferably both) of these ways:
