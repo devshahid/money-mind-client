@@ -41,14 +41,6 @@ const fromApiLedger = (apiLedger: Record<string, unknown>): ILedger => ({
 })
 
 /**
- * Transform ledger from internal format to API format
- */
-const toApiLedger = ({ id, ...rest }: ILedger): Record<string, unknown> => ({
-  ...rest,
-  clientId: id,
-})
-
-/**
  * Load ledgers from IndexedDB and merge with server data
  */
 export const loadLedgers = createAsyncThunk<
@@ -139,6 +131,7 @@ export const createLedger = createAsyncThunk<ILedger, { partyName: string }, { r
 
       // Save to IndexedDB first (optimistic)
       await ledgerStore.saveLedger(ledger)
+      await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'upsert_ledger', ledger })
       return ledger
     } catch (error: unknown) {
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to create ledger')
@@ -162,6 +155,7 @@ export const updateLedger = createAsyncThunk<ILedger, Partial<ILedger> & { id: s
 
       const updated: ILedger = { ...existing, ...updates, updatedAt: new Date().toISOString() }
       await ledgerStore.saveLedger(updated)
+      await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'upsert_ledger', ledger: updated })
       return updated
     } catch (error: unknown) {
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to update ledger')
@@ -184,7 +178,7 @@ export const deleteLedger = createAsyncThunk<string, string, { rejectValue: stri
       }
 
       await ledgerStore.deleteLedger(id)
-      await ledgerStore.addDeletedId(id)
+      await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'delete_ledger', ledgerId: id })
       return id
     } catch (error: unknown) {
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to delete ledger')
@@ -220,7 +214,10 @@ export const addLedgerEntry = createAsyncThunk<
         transactionDate,
       }
 
-      await ledgerStore.saveLedgerEntry(entry)
+      if (!(await ledgerStore.saveLedgerEntryIfAbsent(entry))) {
+        return rejectWithValue('This transaction is already linked to this ledger.')
+      }
+      await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'link_entry', entry })
       return entry
     } catch (error: unknown) {
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to add entry')
@@ -235,12 +232,11 @@ export const removeLedgerEntry = createAsyncThunk<
   string,
   { ledgerId: string; entryId: string },
   { rejectValue: string }
->('ledgers/removeLedgerEntry', async ({ entryId }, { rejectWithValue }) => {
+>('ledgers/removeLedgerEntry', async ({ ledgerId, entryId }, { rejectWithValue }) => {
   try {
-    // Track deleted entry ID for sync
-    await ledgerStore.addDeletedEntryId(entryId)
     // Delete from local store
     await ledgerStore.deleteLedgerEntry(entryId)
+    await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'unlink_entry', ledgerId, entryId })
     return entryId
   } catch (error: unknown) {
     return rejectWithValue(error instanceof Error ? error.message : 'Failed to remove entry')
@@ -254,11 +250,11 @@ export const removeLedgerEntries = createAsyncThunk<
   string[], // returns removed entry ids
   { ledgerId: string; entryIds: string[] },
   { rejectValue: string }
->('ledgers/removeLedgerEntries', async ({ entryIds }, { rejectWithValue }) => {
+>('ledgers/removeLedgerEntries', async ({ ledgerId, entryIds }, { rejectWithValue }) => {
   try {
     for (const entryId of entryIds) {
-      await ledgerStore.addDeletedEntryId(entryId)
       await ledgerStore.deleteLedgerEntry(entryId)
+      await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'unlink_entry', ledgerId, entryId })
     }
     return entryIds
   } catch (error: unknown) {
@@ -299,7 +295,10 @@ export const linkTransactionToLedger = createAsyncThunk<
       transactionDate: payload.transactionDate,
     }
 
-    await ledgerStore.saveLedgerEntry(entry)
+    if (!(await ledgerStore.saveLedgerEntryIfAbsent(entry))) {
+      return rejectWithValue('This transaction is already linked to this ledger.')
+    }
+    await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'link_entry', entry })
     return entry
   } catch (error: unknown) {
     return rejectWithValue(error instanceof Error ? error.message : 'Failed to link transaction')
@@ -317,37 +316,31 @@ export const syncLedgers = createAsyncThunk<
   { rejectValue: string }
 >('ledgers/syncLedgers', async (_, { rejectWithValue }) => {
   try {
-    const localLedgers = await ledgerStore.getAllLedgers()
-    const localEntries = await ledgerStore.getAllEntries()
-    const deletedLedgerIds: string[] = await ledgerStore.getDeletedIds()
-    const deletedEntryIds: string[] = await ledgerStore.getDeletedEntryIds()
-    const apiPayload = localLedgers.map(toApiLedger)
+    const operations = await ledgerStore.getSyncOperations()
 
-    // Send local state to server
+    // Send only durable pending mutations; never the whole IndexedDB cache.
+    // An empty operation list still fetches canonical server state, allowing an
+    // upgraded client to discard legacy cache rows that never reached server.
     const response = await ledgerService.syncLedgers({
-      ledgers: apiPayload,
-      entries: localEntries,
-      deletedLedgerIds,
-      deletedEntryIds,
+      operations,
     })
 
-    // Clear local deletion tracking
-    await ledgerStore.clearDeletedIds()
-    await ledgerStore.clearDeletedEntryIds()
+    await ledgerStore.removeSyncOperations(response.output.processedOperationIds)
 
     // Replace local IndexedDB with server canonical state
     const serverLedgers = response.output.ledgers.map(fromApiLedger)
     const serverEntries = response.output.entries
 
+    const localLedgers = await ledgerStore.getAllLedgers()
     for (const ledger of localLedgers) {
       await ledgerStore.deleteLedger(ledger.id)
     }
     for (const ledger of serverLedgers) {
       await ledgerStore.saveLedger(ledger)
     }
-    for (const entry of serverEntries) {
-      await ledgerStore.saveLedgerEntry(entry)
-    }
+    // This is a true replacement. The previous code only appended canonical
+    // entries, leaving locally-rejected duplicates to be uploaded forever.
+    await ledgerStore.replaceEntries(serverEntries)
 
     return { ledgers: serverLedgers, entries: serverEntries }
   } catch (error: unknown) {

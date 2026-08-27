@@ -37,6 +37,11 @@ vi.mock('../helpers/indexDB/ledgerStore', () => ({
     clearDeletedEntryIds: vi.fn(),
     addDeletedEntryId: vi.fn(),
     deleteLedgerEntry: vi.fn(),
+    saveLedgerEntryIfAbsent: vi.fn(),
+    replaceEntries: vi.fn(),
+    addSyncOperation: vi.fn(),
+    getSyncOperations: vi.fn(),
+    removeSyncOperations: vi.fn(),
   },
 }))
 
@@ -61,6 +66,11 @@ describe('LedgerSlice (Redux Tests)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    mockedStore.saveLedgerEntryIfAbsent.mockResolvedValue(true)
+    mockedStore.addSyncOperation.mockResolvedValue(undefined)
+    mockedStore.getSyncOperations.mockResolvedValue([])
+    mockedStore.removeSyncOperations.mockResolvedValue(undefined)
+    mockedStore.replaceEntries.mockResolvedValue(undefined)
     store = configureStore({
       reducer: {
         ledgers: ledgerReducer,
@@ -181,7 +191,9 @@ describe('LedgerSlice (Redux Tests)', () => {
       await store.dispatch(deleteLedger(ledgerId))
 
       expect(mockedStore.deleteLedger).toHaveBeenCalledWith(ledgerId)
-      expect(mockedStore.addDeletedId).toHaveBeenCalledWith(ledgerId)
+      expect(mockedStore.addSyncOperation).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'delete_ledger', ledgerId })
+      )
     })
 
     it('should reject deletion of ledger with entries', async () => {
@@ -282,7 +294,9 @@ describe('LedgerSlice (Redux Tests)', () => {
       const state3 = store.getState().ledgers as ILedgerState
       expect(state3.entries).toHaveLength(0)
       expect(state3.isLocalLedgers).toBe(true)
-      expect(mockedStore.addDeletedEntryId).toHaveBeenCalledWith(entryId)
+      expect(mockedStore.addSyncOperation).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'unlink_entry', ledgerId, entryId })
+      )
       expect(mockedStore.deleteLedgerEntry).toHaveBeenCalledWith(entryId)
     })
   })
@@ -304,6 +318,18 @@ describe('LedgerSlice (Redux Tests)', () => {
       mockedStore.clearDeletedIds.mockResolvedValue(undefined)
       mockedStore.clearDeletedEntryIds.mockResolvedValue(undefined)
       mockedStore.deleteLedger.mockResolvedValue(undefined)
+      mockedStore.getSyncOperations.mockResolvedValue([
+        {
+          id: 'op-1',
+          type: 'upsert_ledger',
+          ledger: {
+            clientId: 'ledger-1',
+            partyName: 'John Doe',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      ])
 
       mockedService.syncLedgers.mockResolvedValue({
         output: {
@@ -316,6 +342,7 @@ describe('LedgerSlice (Redux Tests)', () => {
             },
           ],
           entries: [],
+          processedOperationIds: ['op-1'],
         },
       })
 
@@ -338,6 +365,18 @@ describe('LedgerSlice (Redux Tests)', () => {
       mockedStore.getAllEntries.mockResolvedValue([])
       mockedStore.getDeletedIds.mockResolvedValue([])
       mockedStore.getDeletedEntryIds.mockResolvedValue([])
+      mockedStore.getSyncOperations.mockResolvedValue([
+        {
+          id: 'op-1',
+          type: 'upsert_ledger',
+          ledger: {
+            clientId: 'ledger-1',
+            partyName: 'John Doe',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      ])
 
       mockedService.syncLedgers.mockRejectedValue(new Error('Sync failed'))
 
@@ -371,11 +410,24 @@ describe('LedgerSlice (Redux Tests)', () => {
       mockedStore.clearDeletedEntryIds.mockResolvedValue(undefined)
       mockedStore.deleteLedger.mockResolvedValue(undefined)
       mockedStore.saveLedger.mockResolvedValue(undefined)
+      mockedStore.getSyncOperations.mockResolvedValue([
+        {
+          id: 'op-1',
+          type: 'upsert_ledger',
+          ledger: {
+            clientId: 'ledger-1',
+            partyName: 'John Doe',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      ])
 
       mockedService.syncLedgers.mockResolvedValue({
         output: {
           ledgers: [serverLedger],
           entries: [],
+          processedOperationIds: ['op-1'],
         },
       })
 
@@ -405,9 +457,21 @@ describe('LedgerSlice (Redux Tests)', () => {
       mockedStore.getDeletedEntryIds.mockResolvedValue([])
       mockedStore.clearDeletedIds.mockResolvedValue(undefined)
       mockedStore.clearDeletedEntryIds.mockResolvedValue(undefined)
+      mockedStore.getSyncOperations.mockResolvedValue([
+        {
+          id: 'op-1',
+          type: 'upsert_ledger',
+          ledger: {
+            clientId: 'ledger-1',
+            partyName: 'John Doe',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      ])
 
       mockedService.syncLedgers.mockResolvedValue({
-        output: { ledgers: [], entries: [] },
+        output: { ledgers: [], entries: [], processedOperationIds: ['op-1'] },
       })
 
       await store.dispatch(syncLedgers())

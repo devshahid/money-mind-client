@@ -5,7 +5,7 @@ import type { ITransactionGroup } from '../../store/groupSlice'
 import type { IDebt } from '../../../debts/types/debt'
 import type { IGoal } from '../../../goals/types/goal'
 import type { IBudget } from '../../../budget/types/budget'
-import type { ILedger, ILedgerEntry } from '../../types/ledger'
+import type { ILedger, ILedgerEntry, ILedgerSyncOperation } from '../../types/ledger'
 
 interface ExpenseDB extends DBSchema {
   edited_transactions: {
@@ -46,6 +46,13 @@ interface ExpenseDB extends DBSchema {
   ledger_entries: {
     key: string
     value: ILedgerEntry
+    indexes: {
+      ledgerId_transactionId: [string, string]
+    }
+  }
+  ledger_sync_operations: {
+    key: string
+    value: ILedgerSyncOperation
   }
 }
 
@@ -53,7 +60,7 @@ let dbPromise: Promise<IDBPDatabase<ExpenseDB>> | undefined
 
 export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
   if (dbPromise === undefined) {
-    dbPromise = openDB<ExpenseDB>('ExpenseTrackerDB', 7, {
+    dbPromise = openDB<ExpenseDB>('ExpenseTrackerDB', 8, {
       upgrade(db: IDBPDatabase<ExpenseDB>, oldVersion: number) {
         if (oldVersion < 2) {
           if (!db.objectStoreNames.contains('edited_transactions')) {
@@ -89,6 +96,41 @@ export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
           if (!db.objectStoreNames.contains('ledger_entries')) {
             db.createObjectStore('ledger_entries', { keyPath: 'id' })
           }
+        }
+        if (oldVersion < 8) {
+          // Older clients allowed multiple locally-generated entry ids for the
+          // same ledger/transaction pair. Remove those duplicates before
+          // installing the unique index, retaining the oldest link.
+          const entries = db.transaction('ledger_entries', 'readwrite').objectStore('ledger_entries')
+          const seen = new Set<string>()
+          void entries
+            .openCursor()
+            .then(async function walk(cursor): Promise<void> {
+              if (!cursor) return
+              const entry = cursor.value
+              const key = `${entry.ledgerId}\u0000${entry.transactionId}`
+              if (seen.has(key)) {
+                await cursor.delete()
+              } else {
+                seen.add(key)
+              }
+              await cursor.continue().then(walk)
+            })
+            .then(() => {
+              if (!entries.indexNames.contains('ledgerId_transactionId')) {
+                ;(entries as unknown as IDBObjectStore).createIndex(
+                  'ledgerId_transactionId',
+                  ['ledgerId', 'transactionId'],
+                  { unique: true }
+                )
+              }
+              if (!db.objectStoreNames.contains('ledger_sync_operations')) {
+                db.createObjectStore('ledger_sync_operations', { keyPath: 'id' })
+              }
+            })
+            .catch(error => {
+              console.error('Failed to migrate local ledger entries:', error)
+            })
         }
       },
     }).catch(err => {

@@ -31,7 +31,7 @@ import { spacing } from '@/shared/theme'
 interface BulkLinkLedgerDialogProps {
   open: boolean
   onClose: () => void
-  onSubmit: (ledgerId: string) => void
+  onSubmit: (ledgerId: string) => void | Promise<void>
   ledgers: ILedger[]
   selectedCount: number
   loading?: boolean
@@ -50,11 +50,17 @@ export const BulkLinkLedgerDialog = ({
   loading = false,
 }: BulkLinkLedgerDialogProps): JSX.Element => {
   const [selectedLedgerId, setSelectedLedgerId] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmit = (): void => {
+  const handleSubmit = async (): Promise<void> => {
     if (!selectedLedgerId) return
-    onSubmit(selectedLedgerId)
-    handleClose()
+    setSubmitting(true)
+    try {
+      await onSubmit(selectedLedgerId)
+      handleClose()
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleClose = (): void => {
@@ -65,21 +71,28 @@ export const BulkLinkLedgerDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth='sm' fullWidth>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth='sm'
+      fullWidth
+    >
       <DialogTitle>Link {selectedCount} Transaction(s) to Ledger</DialogTitle>
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: spacing[2], pt: spacing[2] }}>
         {/* Info alert */}
         <Alert severity='info'>
-          These {selectedCount} transaction(s) will be linked to the selected ledger. Payment direction is automatically determined by whether money was received or spent.
+          These {selectedCount} transaction(s) will be linked to the selected ledger. Payment direction is automatically
+          determined by whether money was received or spent.
         </Alert>
 
         {/* Ledger selection */}
         <Box>
-          <FormLabel sx={{ mb: spacing[1], display: 'block', fontWeight: 500 }}>
-            Select Ledger
-          </FormLabel>
+          <FormLabel sx={{ mb: spacing[1], display: 'block', fontWeight: 500 }}>Select Ledger</FormLabel>
           {ledgers.length === 0 ? (
-            <Typography color='text.secondary' variant='body2'>
+            <Typography
+              color='text.secondary'
+              variant='body2'
+            >
               No ledgers available. Create a ledger first.
             </Typography>
           ) : (
@@ -99,7 +112,10 @@ export const BulkLinkLedgerDialog = ({
               ) : (
                 <List sx={{ width: '100%', m: 0, p: 0 }}>
                   {ledgers.map(ledger => (
-                    <ListItem key={ledger.id} disablePadding>
+                    <ListItem
+                      key={ledger.id}
+                      disablePadding
+                    >
                       <ListItemButton
                         selected={selectedLedgerId === ledger.id}
                         onClick={() => setSelectedLedgerId(ledger.id)}
@@ -119,15 +135,20 @@ export const BulkLinkLedgerDialog = ({
         </Box>
       </DialogContent>
       <DialogActions sx={{ p: spacing[2] }}>
-        <Button onClick={handleClose} disabled={loading}>
+        <Button
+          onClick={handleClose}
+          disabled={loading || submitting}
+        >
           Cancel
         </Button>
         <Button
-          onClick={handleSubmit}
+          onClick={() => {
+            void handleSubmit()
+          }}
           variant='contained'
-          disabled={!selectedLedgerId || loading || ledgers.length === 0}
+          disabled={!selectedLedgerId || loading || submitting || ledgers.length === 0}
         >
-          Link Transaction(s)
+          {submitting ? 'Linking…' : 'Link Transaction(s)'}
         </Button>
       </DialogActions>
     </Dialog>
