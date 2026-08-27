@@ -98,39 +98,17 @@ export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
           }
         }
         if (oldVersion < 8) {
-          // Older clients allowed multiple locally-generated entry ids for the
-          // same ledger/transaction pair. Remove those duplicates before
-          // installing the unique index, retaining the oldest link.
+          // Schema upgrades must only issue synchronous IDB schema operations.
+          // Awaiting cursor work here can leave the version-change transaction
+          // inactive and make *every* later IndexedDB read fail. The ledger
+          // store removes legacy duplicates during normal reads instead.
           const entries = db.transaction('ledger_entries', 'readwrite').objectStore('ledger_entries')
-          const seen = new Set<string>()
-          void entries
-            .openCursor()
-            .then(async function walk(cursor): Promise<void> {
-              if (!cursor) return
-              const entry = cursor.value
-              const key = `${entry.ledgerId}\u0000${entry.transactionId}`
-              if (seen.has(key)) {
-                await cursor.delete()
-              } else {
-                seen.add(key)
-              }
-              await cursor.continue().then(walk)
-            })
-            .then(() => {
-              if (!entries.indexNames.contains('ledgerId_transactionId')) {
-                ;(entries as unknown as IDBObjectStore).createIndex(
-                  'ledgerId_transactionId',
-                  ['ledgerId', 'transactionId'],
-                  { unique: true }
-                )
-              }
-              if (!db.objectStoreNames.contains('ledger_sync_operations')) {
-                db.createObjectStore('ledger_sync_operations', { keyPath: 'id' })
-              }
-            })
-            .catch(error => {
-              console.error('Failed to migrate local ledger entries:', error)
-            })
+          if (!entries.indexNames.contains('ledgerId_transactionId')) {
+            ;(entries as unknown as IDBObjectStore).createIndex('ledgerId_transactionId', ['ledgerId', 'transactionId'])
+          }
+          if (!db.objectStoreNames.contains('ledger_sync_operations')) {
+            db.createObjectStore('ledger_sync_operations', { keyPath: 'id' })
+          }
         }
       },
     }).catch(err => {
