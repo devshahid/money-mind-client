@@ -79,8 +79,13 @@ export const listTransactions = createAsyncThunk<
       API_ROUTES.transactionLogs.list,
       payload
     )
-    const localEdits = await indexDBTransaction.getAllTransactions()
     const apiTransactions = response.data.output.result
+    let localEdits: ITransactionLogs[] = []
+    try {
+      localEdits = await indexDBTransaction.getAllTransactions()
+    } catch {
+      // Server transactions remain usable when the optional local cache is unavailable.
+    }
     const mergedTransactions = apiTransactions.map(tx => {
       const local = localEdits.find(edit => edit._id === tx._id)
       return local ? { ...tx, ...local } : tx

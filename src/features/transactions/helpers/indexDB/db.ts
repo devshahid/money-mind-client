@@ -61,7 +61,7 @@ let dbPromise: Promise<IDBPDatabase<ExpenseDB>> | undefined
 export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
   if (dbPromise === undefined) {
     dbPromise = openDB<ExpenseDB>('ExpenseTrackerDB', 8, {
-      upgrade(db: IDBPDatabase<ExpenseDB>, oldVersion: number) {
+      upgrade(db: IDBPDatabase<ExpenseDB>, oldVersion: number, _newVersion, transaction) {
         if (oldVersion < 2) {
           if (!db.objectStoreNames.contains('edited_transactions')) {
             db.createObjectStore('edited_transactions', { keyPath: '_id' })
@@ -102,7 +102,7 @@ export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
           // Awaiting cursor work here can leave the version-change transaction
           // inactive and make *every* later IndexedDB read fail. The ledger
           // store removes legacy duplicates during normal reads instead.
-          const entries = db.transaction('ledger_entries', 'readwrite').objectStore('ledger_entries')
+          const entries = transaction.objectStore('ledger_entries')
           if (!entries.indexNames.contains('ledgerId_transactionId')) {
             ;(entries as unknown as IDBObjectStore).createIndex('ledgerId_transactionId', ['ledgerId', 'transactionId'])
           }

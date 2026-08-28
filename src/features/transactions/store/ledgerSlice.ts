@@ -61,6 +61,16 @@ export const loadLedgers = createAsyncThunk<
     // would render empty even though the link succeeded.
     const allEntries: ILedgerEntry[] = await ledgerStore.getAllEntries()
 
+    // Pending operations not yet accepted by the server. A queued
+    // `delete_ledger` op means the ledger was removed locally but the server
+    // still has it — without excluding it here, every reload merges the
+    // "deleted" ledger back in from the server response, and it appears to
+    // silently un-delete itself until a sync actually runs.
+    const pendingOperations = await ledgerStore.getSyncOperations()
+    const pendingDeletedLedgerIds = new Set(
+      pendingOperations.filter(op => op.type === 'delete_ledger').map(op => op.ledgerId)
+    )
+
     // Try to fetch from server and merge
     try {
       const rawServerLedgers = await ledgerService.listLedgers()
@@ -68,7 +78,9 @@ export const loadLedgers = createAsyncThunk<
       // the id scheme used by locally-created ledgers.
       const serverLedgers = rawServerLedgers.map(l => fromApiLedger(l as unknown as Record<string, unknown>))
       const deletedIds = await ledgerStore.getDeletedIds()
-      const filteredServerLedgers = serverLedgers.filter(l => !deletedIds.includes(l.id))
+      const filteredServerLedgers = serverLedgers.filter(
+        l => !deletedIds.includes(l.id) && !pendingDeletedLedgerIds.has(l.id)
+      )
 
       // Build a lookup keyed by EVERY identity a server ledger can be known by
       // (canonical id, Mongo _id, and clientId). This lets a locally-created
@@ -95,11 +107,19 @@ export const loadLedgers = createAsyncThunk<
         }
       }
 
-      const hasLocal = localLedgers.length > 0 || deletedIds.length > 0
+      // `isLocalLedgers` drives the "Sync to Server" button. It must reflect
+      // any durable pending operation (e.g. a queued ledger deletion), not
+      // just locally-held ledgers, otherwise a pending delete has no way to
+      // ever be synced — the button disappears on the very next reload.
+      const hasLocal = localLedgers.length > 0 || deletedIds.length > 0 || pendingOperations.length > 0
       return { ledgers: merged, entries: allEntries, hasLocal }
     } catch {
       // If server fetch fails, return local data only
-      return { ledgers: localLedgers, entries: allEntries, hasLocal: localLedgers.length > 0 }
+      return {
+        ledgers: localLedgers,
+        entries: allEntries,
+        hasLocal: localLedgers.length > 0 || pendingOperations.length > 0,
+      }
     }
   } catch (error: unknown) {
     return rejectWithValue(error instanceof Error ? error.message : 'Failed to load ledgers')
