@@ -5,7 +5,7 @@ import type { ITransactionGroup } from '../../store/groupSlice'
 import type { IDebt } from '../../../debts/types/debt'
 import type { IGoal } from '../../../goals/types/goal'
 import type { IBudget } from '../../../budget/types/budget'
-import type { ILedger, ILedgerEntry } from '../../types/ledger'
+import type { ILedger, ILedgerEntry, ILedgerSyncOperation } from '../../types/ledger'
 
 interface ExpenseDB extends DBSchema {
   edited_transactions: {
@@ -46,6 +46,13 @@ interface ExpenseDB extends DBSchema {
   ledger_entries: {
     key: string
     value: ILedgerEntry
+    indexes: {
+      ledgerId_transactionId: [string, string]
+    }
+  }
+  ledger_sync_operations: {
+    key: string
+    value: ILedgerSyncOperation
   }
 }
 
@@ -53,8 +60,8 @@ let dbPromise: Promise<IDBPDatabase<ExpenseDB>> | undefined
 
 export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
   if (dbPromise === undefined) {
-    dbPromise = openDB<ExpenseDB>('ExpenseTrackerDB', 7, {
-      upgrade(db: IDBPDatabase<ExpenseDB>, oldVersion: number) {
+    dbPromise = openDB<ExpenseDB>('ExpenseTrackerDB', 8, {
+      upgrade(db: IDBPDatabase<ExpenseDB>, oldVersion: number, _newVersion, transaction) {
         if (oldVersion < 2) {
           if (!db.objectStoreNames.contains('edited_transactions')) {
             db.createObjectStore('edited_transactions', { keyPath: '_id' })
@@ -88,6 +95,19 @@ export function initDB(): Promise<IDBPDatabase<ExpenseDB>> {
           }
           if (!db.objectStoreNames.contains('ledger_entries')) {
             db.createObjectStore('ledger_entries', { keyPath: 'id' })
+          }
+        }
+        if (oldVersion < 8) {
+          // Schema upgrades must only issue synchronous IDB schema operations.
+          // Awaiting cursor work here can leave the version-change transaction
+          // inactive and make *every* later IndexedDB read fail. The ledger
+          // store removes legacy duplicates during normal reads instead.
+          const entries = transaction.objectStore('ledger_entries')
+          if (!entries.indexNames.contains('ledgerId_transactionId')) {
+            ;(entries as unknown as IDBObjectStore).createIndex('ledgerId_transactionId', ['ledgerId', 'transactionId'])
+          }
+          if (!db.objectStoreNames.contains('ledger_sync_operations')) {
+            db.createObjectStore('ledger_sync_operations', { keyPath: 'id' })
           }
         }
       },

@@ -34,6 +34,9 @@ vi.mock('../helpers/indexDB/ledgerStore', () => ({
     saveLedger: vi.fn().mockResolvedValue(undefined),
     saveLedgerEntry: vi.fn().mockResolvedValue(undefined),
     getEntriesByLedgerId: vi.fn().mockResolvedValue([]),
+    getSyncOperations: vi.fn().mockResolvedValue([]),
+    removeSyncOperations: vi.fn().mockResolvedValue(undefined),
+    replaceEntries: vi.fn().mockResolvedValue(undefined),
   },
 }))
 

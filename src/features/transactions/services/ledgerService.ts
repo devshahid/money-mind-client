@@ -6,7 +6,7 @@
 
 import { axiosClient } from '@/shared/services/axiosClient'
 import { API_ROUTES } from '@/routes'
-import type { ILedger, ILedgerEntry, MoneyDirection } from '../types/ledger'
+import type { ILedger, ILedgerEntry, ILedgerSyncOperation, MoneyDirection } from '../types/ledger'
 
 /**
  * List all ledgers for the current user
@@ -93,13 +93,12 @@ export const linkTransaction = async (
  * Sends local ledger state and entries to server for merge
  */
 export const syncLedgers = async (payload: {
-  ledgers: Record<string, unknown>[]
-  entries: ILedgerEntry[]
-  deletedLedgerIds: string[]
-  deletedEntryIds: string[]
-}): Promise<{ output: { ledgers: Record<string, unknown>[]; entries: ILedgerEntry[] } }> => {
+  operations: ILedgerSyncOperation[]
+}): Promise<{
+  output: { ledgers: Record<string, unknown>[]; entries: ILedgerEntry[]; processedOperationIds: string[] }
+}> => {
   const response = await axiosClient.put<{
-    output: { ledgers: Record<string, unknown>[]; entries: ILedgerEntry[] }
+    output: { ledgers: Record<string, unknown>[]; entries: ILedgerEntry[]; processedOperationIds: string[] }
   }>(API_ROUTES.ledgers.sync, payload)
   return response.data
 }

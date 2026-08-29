@@ -6,8 +6,20 @@
 
 import 'fake-indexeddb/auto'
 import { IDBFactory } from 'fake-indexeddb'
+import { openDB, type DBSchema } from 'idb'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ILedger, ILedgerEntry } from '../types/ledger'
+
+interface LegacyLedgerDB extends DBSchema {
+  ledgers: {
+    key: string
+    value: ILedger
+  }
+  ledger_entries: {
+    key: string
+    value: ILedgerEntry
+  }
+}
 
 // The module memoizes its db connection in module scope (initDB caches
 // dbPromise). Resetting the fake IndexedDB factory AND resetting modules +
@@ -24,6 +36,46 @@ describe('LedgerStore (IndexedDB Tests)', () => {
     vi.resetModules()
     const mod = await import('../helpers/indexDB/ledgerStore')
     ledgerStore = mod.ledgerStore
+  })
+
+  it('upgrades a version 7 database without losing existing ledger data', async () => {
+    const ledger: ILedger = {
+      id: 'legacy-ledger',
+      partyName: 'Existing Account Ledger',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    const entry: ILedgerEntry = {
+      id: 'legacy-entry',
+      ledgerId: ledger.id,
+      transactionId: 'transaction-1',
+      direction: 'i_paid',
+      amount: 100,
+      createdAt: new Date().toISOString(),
+    }
+    const legacyDb = await openDB<LegacyLedgerDB>('ExpenseTrackerDB', 7, {
+      upgrade(db) {
+        db.createObjectStore('ledgers', { keyPath: 'id' })
+        db.createObjectStore('ledger_entries', { keyPath: 'id' })
+      },
+    })
+    await legacyDb.put('ledgers', ledger)
+    await legacyDb.put('ledger_entries', entry)
+    legacyDb.close()
+
+    expect(await ledgerStore.getAllLedgers()).toEqual([ledger])
+    expect(await ledgerStore.getAllEntries()).toEqual([entry])
+
+    const { initDB } = await import('../helpers/indexDB/db')
+    const upgradedDb = await initDB()
+    expect(upgradedDb.version).toBe(8)
+    expect(upgradedDb.objectStoreNames.contains('ledger_sync_operations')).toBe(true)
+    expect(
+      upgradedDb
+        .transaction('ledger_entries')
+        .objectStore('ledger_entries')
+        .indexNames.contains('ledgerId_transactionId')
+    ).toBe(true)
   })
 
   describe('saveLedger', () => {

@@ -49,6 +49,16 @@ export type ILedgerEntry = {
 }
 
 /**
+ * A durable, idempotent mutation waiting to be delivered to the server.
+ * The local ledger cache is never uploaded wholesale during normal sync.
+ */
+export type ILedgerSyncOperation =
+  | { id: string; type: 'upsert_ledger'; ledger: ILedger }
+  | { id: string; type: 'delete_ledger'; ledgerId: string }
+  | { id: string; type: 'link_entry'; entry: ILedgerEntry }
+  | { id: string; type: 'unlink_entry'; ledgerId: string; entryId: string }
+
+/**
  * A ledger tracking the financial relationship between the user and one party
  */
 export type ILedger = {

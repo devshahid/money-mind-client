@@ -429,7 +429,7 @@ const TransactionLogs = (): JSX.Element => {
     setBulkLinkLedgerDialogOpen(true)
   }
 
-  const handleBulkLinkLedgerSubmit = (ledgerId: string): void => {
+  const handleBulkLinkLedgerSubmit = async (ledgerId: string): Promise<void> => {
     // Compute transactions already linked to the target ledger, so a
     // transaction is linked to a given ledger only once.
     const alreadyLinked = new Set(ledgerEntries.filter(e => e.ledgerId === ledgerId).map(e => e.transactionId))
@@ -438,26 +438,33 @@ const TransactionLogs = (): JSX.Element => {
     const skipped = selectedIds.filter(id => alreadyLinked.has(id))
 
     // Auto-determine direction based on each transaction's isCredit field
-    toLink.forEach(transactionId => {
+    let linked = 0
+    for (const transactionId of toLink) {
       const transaction = transactions.find(t => t._id === transactionId)
       if (transaction) {
         // Credit (isCredit=true) -> they_paid, Debit (isCredit=false) -> i_paid
         const direction = transaction.isCredit ? 'they_paid' : 'i_paid'
-        void dispatch(
-          linkTransactionToLedger({
-            ledgerId,
-            transactionId,
-            direction,
-            amount: Number(transaction.amount) || 0,
-            narration: transaction.narration,
-            transactionDate: transaction.transactionDate,
-          })
-        )
+        try {
+          await dispatch(
+            linkTransactionToLedger({
+              ledgerId,
+              transactionId,
+              direction,
+              amount: Number(transaction.amount) || 0,
+              narration: transaction.narration,
+              transactionDate: transaction.transactionDate,
+            })
+          ).unwrap()
+          linked++
+        } catch {
+          // A concurrent tab or an earlier local operation may already have
+          // created this link. The durable store is the final duplicate guard.
+        }
       }
-    })
+    }
 
-    if (toLink.length > 0) {
-      showSuccessSnackbar(`${toLink.length} transaction(s) linked to ledger.`)
+    if (linked > 0) {
+      showSuccessSnackbar(`${linked} transaction(s) linked to ledger.`)
     }
     if (skipped.length > 0) {
       showErrorSnackbar(`${skipped.length} transaction(s) were already in this ledger and were skipped.`)
