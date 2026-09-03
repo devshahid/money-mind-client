@@ -1,3 +1,14 @@
+## [1.4.0](https://github.com/devshahid/money-mind-client/compare/v1.3.2...v1.4.0) (2026-09-03)
+
+### Features
+
+- **ledger:** operation sync ([#23](https://github.com/devshahid/money-mind-client/issues/23)) ([26354c6](https://github.com/devshahid/money-mind-client/commit/26354c66fabce3ea2c7bafb3936fbff369aca6f1))
+
+### Bug Fixes
+
+- **ci:** pin conventionalcommits preset to v8 for semantic-release writer compatibility ([e5c9cb0](https://github.com/devshahid/money-mind-client/commit/e5c9cb0fac5d4f41b54633fecbf7da6c2a694fbb))
+- **ledger:** load all persisted entries so linked transactions render ([1a5181c](https://github.com/devshahid/money-mind-client/commit/1a5181cc16a2c8a89512c4b8727071f6a794d7f4))
+
 ## [1.3.2](https://github.com/devshahid/money-mind-client/compare/v1.3.1...v1.3.2) (2026-08-25)
 
 ### Bug Fixes
