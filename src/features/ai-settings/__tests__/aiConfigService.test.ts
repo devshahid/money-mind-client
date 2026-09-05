@@ -25,7 +25,7 @@ describe('aiConfigService', () => {
 
   it('getAIConfig calls GET /ai/config and returns the config', async () => {
     mocks.get.mockResolvedValue({
-      data: { output: { configured: true, provider: 'gemini', model: 'gemini-2.5-flash', isActive: true } },
+      data: { output: { configured: true, provider: 'gemini', model: 'gemini-3.6-flash', isActive: true } },
     })
 
     const result = await getAIConfig()
@@ -34,23 +34,23 @@ describe('aiConfigService', () => {
     expect(result).toEqual({
       configured: true,
       provider: 'gemini',
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       isActive: true,
     })
   })
 
   it('saveAIConfig calls PUT /ai/config with model and apiKey', async () => {
     mocks.put.mockResolvedValue({
-      data: { output: { configured: true, provider: 'gemini', model: 'gemini-2.5-pro', isActive: true } },
+      data: { output: { configured: true, provider: 'gemini', model: 'gemini-3.5-flash-lite', isActive: true } },
     })
 
-    const result = await saveAIConfig('gemini-2.5-pro', 'my-api-key')
+    const result = await saveAIConfig('gemini-3.5-flash-lite', 'my-api-key')
 
-    expect(mocks.put).toHaveBeenCalledWith('/ai/config', { model: 'gemini-2.5-pro', apiKey: 'my-api-key' })
+    expect(mocks.put).toHaveBeenCalledWith('/ai/config', { model: 'gemini-3.5-flash-lite', apiKey: 'my-api-key' })
     expect(result).toEqual({
       configured: true,
       provider: 'gemini',
-      model: 'gemini-2.5-pro',
+      model: 'gemini-3.5-flash-lite',
       isActive: true,
     })
   })
@@ -66,10 +66,10 @@ describe('aiConfigService', () => {
   it('testAIConfig calls POST /ai/config/test with model and apiKey', async () => {
     mocks.post.mockResolvedValue({ data: { output: { success: true } } })
 
-    const result = await testAIConfig('gemini-2.5-flash-lite', 'my-api-key')
+    const result = await testAIConfig('gemini-3.5-flash-lite', 'my-api-key')
 
     expect(mocks.post).toHaveBeenCalledWith('/ai/config/test', {
-      model: 'gemini-2.5-flash-lite',
+      model: 'gemini-3.5-flash-lite',
       apiKey: 'my-api-key',
     })
     expect(result).toEqual({ success: true })
@@ -78,7 +78,7 @@ describe('aiConfigService', () => {
   it('never includes the apiKey in a thrown/rejected error path', async () => {
     mocks.post.mockRejectedValue(new Error('Invalid or unauthorized Gemini API key'))
 
-    await expect(testAIConfig('gemini-2.5-flash', 'secret-key')).rejects.toThrow(
+    await expect(testAIConfig('gemini-3.6-flash', 'secret-key')).rejects.toThrow(
       'Invalid or unauthorized Gemini API key'
     )
   })
