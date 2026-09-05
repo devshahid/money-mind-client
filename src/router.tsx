@@ -48,6 +48,11 @@ const LazyAccount = async (): Promise<{ Component: React.ComponentType }> => {
   return { Component: AccountPage }
 }
 
+const LazyGeminiSettings = async (): Promise<{ Component: React.ComponentType }> => {
+  const { GeminiSettingsPage } = await import('./features/ai-settings/pages/GeminiSettings')
+  return { Component: GeminiSettingsPage }
+}
+
 const LazyLogin = async (): Promise<{ Component: React.ComponentType }> => {
   const { LoginPage } = await import('./features/auth/pages/Login')
   return { Component: LoginPage }
@@ -96,10 +101,7 @@ export const router = createBrowserRouter([
           },
           {
             path: AppRoute.Settings,
-            lazy: (): Promise<{ Component: React.ComponentType }> =>
-              Promise.resolve({
-                Component: () => <h1 className='title'>Settings</h1>,
-              }),
+            lazy: LazyGeminiSettings,
           },
           {
             path: AppRoute.Account,
