@@ -49,6 +49,12 @@ export const API_ROUTES = {
     rejectSuggestions: '/ai/reject-suggestions',
     debtStrategy: '/ai/debt-strategy',
     budgetRecommendations: '/ai/budget-recommendations',
+    config: {
+      get: '/ai/config',
+      update: '/ai/config',
+      delete: '/ai/config',
+      test: '/ai/config/test',
+    },
   },
   ledgers: {
     list: '/ledgers',
