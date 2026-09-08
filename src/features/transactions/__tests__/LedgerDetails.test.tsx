@@ -11,6 +11,7 @@
 import { render, screen, fireEvent, waitForElementToBeRemoved } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi } from 'vitest'
 
 import { LedgerDetails } from '../components/LedgerDetails'
@@ -128,15 +129,18 @@ type RenderProps = {
 
 const renderComponent = (props: RenderProps = {}, storeOverrides: Overrides = {}) => {
   const store = makeStore(storeOverrides)
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const onBack = props.onBack ?? vi.fn()
   const utils = render(
     <Provider store={store}>
       <SnackbarProvider>
-        <LedgerDetails
-          ledger={mockLedger}
-          onBack={onBack}
-          onNavigateToTransaction={props.onNavigateToTransaction}
-        />
+        <QueryClientProvider client={queryClient}>
+          <LedgerDetails
+            ledger={mockLedger}
+            onBack={onBack}
+            onNavigateToTransaction={props.onNavigateToTransaction}
+          />
+        </QueryClientProvider>
       </SnackbarProvider>
     </Provider>
   )

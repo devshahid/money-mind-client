@@ -18,7 +18,6 @@ import {
   selectLedgerLoading,
   selectLedgerError,
   selectLedger,
-  loadLedgerEntries,
 } from '../store/ledgerSlice'
 import { spacing } from '@/shared/theme'
 import { CreateLedgerDialog } from './CreateLedgerDialog'
@@ -56,7 +55,6 @@ export const LedgerDashboard = ({ onNavigateToTransaction }: LedgerDashboardProp
   const handleSelectLedger = useCallback(
     (ledgerId: string) => {
       dispatch(selectLedger(ledgerId))
-      void dispatch(loadLedgerEntries(ledgerId))
     },
     [dispatch]
   )

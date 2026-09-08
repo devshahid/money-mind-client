@@ -16,24 +16,6 @@ import type { ILedger, ILedgerEntry, MoneyDirection, ILedgerState } from '../typ
 import { calculateBalance, isTransactionLinked } from '../utils/ledgerBalance'
 
 type LedgerRootState = { ledgers: ILedgerState }
-const LEDGER_ENTRIES_CACHE_TTL_MS = 5 * 60 * 1000
-const ledgerEntriesCacheKey = (ledgerId: string): string => `ledger-entries-cache:${ledgerId}`
-
-const invalidateLedgerEntriesCache = (ledgerId: string): void => {
-  if (typeof localStorage === 'undefined') return
-  localStorage.removeItem(ledgerEntriesCacheKey(ledgerId))
-}
-
-const markLedgerEntriesCached = (ledgerId: string): void => {
-  if (typeof localStorage === 'undefined') return
-  localStorage.setItem(ledgerEntriesCacheKey(ledgerId), String(Date.now()))
-}
-
-const replaceCachedEntriesForLedger = async (ledgerId: string, entries: ILedgerEntry[]): Promise<void> => {
-  const existingEntries = (await ledgerStore.getAllEntries()).filter(entry => entry.ledgerId === ledgerId)
-  for (const entry of existingEntries) await ledgerStore.deleteLedgerEntry(entry.id)
-  for (const entry of entries) await ledgerStore.saveLedgerEntry(entry)
-}
 
 const initialState: ILedgerState = {
   ledgers: [],
@@ -171,7 +153,6 @@ export const createLedger = createAsyncThunk<ILedger, { partyName: string }, { r
 
       // Save to IndexedDB first (optimistic)
       await ledgerStore.saveLedger(ledger)
-      invalidateLedgerEntriesCache(ledger.id)
       await ledgerStore.addSyncOperation({
         id: crypto.randomUUID(),
         type: 'upsert_ledger',
@@ -200,7 +181,6 @@ export const updateLedger = createAsyncThunk<ILedger, Partial<ILedger> & { id: s
 
       const updated: ILedger = { ...existing, ...updates, updatedAt: new Date().toISOString() }
       await ledgerStore.saveLedger(updated)
-      invalidateLedgerEntriesCache(updated.id)
       await ledgerStore.addSyncOperation({
         id: crypto.randomUUID(),
         type: 'upsert_ledger',
@@ -228,7 +208,6 @@ export const deleteLedger = createAsyncThunk<string, string, { rejectValue: stri
       }
 
       await ledgerStore.deleteLedger(id)
-      invalidateLedgerEntriesCache(id)
       await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'delete_ledger', ledgerId: id })
       return id
     } catch (error: unknown) {
@@ -268,7 +247,6 @@ export const addLedgerEntry = createAsyncThunk<
       if (!(await ledgerStore.saveLedgerEntryIfAbsent(entry))) {
         return rejectWithValue('This transaction is already linked to this ledger.')
       }
-      invalidateLedgerEntriesCache(ledgerId)
       await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'link_entry', entry })
       return entry
     } catch (error: unknown) {
@@ -288,7 +266,6 @@ export const removeLedgerEntry = createAsyncThunk<
   try {
     // Delete from local store
     await ledgerStore.deleteLedgerEntry(entryId)
-    invalidateLedgerEntriesCache(ledgerId)
     await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'unlink_entry', ledgerId, entryId })
     return entryId
   } catch (error: unknown) {
@@ -307,7 +284,6 @@ export const removeLedgerEntries = createAsyncThunk<
   try {
     for (const entryId of entryIds) {
       await ledgerStore.deleteLedgerEntry(entryId)
-      invalidateLedgerEntriesCache(ledgerId)
       await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'unlink_entry', ledgerId, entryId })
     }
     return entryIds
@@ -352,7 +328,6 @@ export const linkTransactionToLedger = createAsyncThunk<
     if (!(await ledgerStore.saveLedgerEntryIfAbsent(entry))) {
       return rejectWithValue('This transaction is already linked to this ledger.')
     }
-    invalidateLedgerEntriesCache(payload.ledgerId)
     await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'link_entry', entry })
     return entry
   } catch (error: unknown) {
@@ -396,7 +371,6 @@ export const syncLedgers = createAsyncThunk<
     // This is a true replacement. The previous code only appended canonical
     // entries, leaving locally-rejected duplicates to be uploaded forever.
     await ledgerStore.replaceEntries(serverEntries)
-    for (const ledger of serverLedgers) markLedgerEntriesCached(ledger.id)
 
     return { ledgers: serverLedgers, entries: serverEntries }
   } catch (error: unknown) {
@@ -406,35 +380,6 @@ export const syncLedgers = createAsyncThunk<
     return rejectWithValue('Failed to sync ledgers')
   }
 })
-
-export const loadLedgerEntries = createAsyncThunk<ILedgerEntry[] | null, string, { rejectValue: string }>(
-  'ledgers/loadLedgerEntries',
-  async (ledgerId, { rejectWithValue }) => {
-    try {
-      const pendingOperations = await ledgerStore.getSyncOperations()
-      const hasPendingLedgerMutation = pendingOperations.some(operation => {
-        if (operation.type === 'upsert_ledger') return operation.ledger.clientId === ledgerId
-        if (operation.type === 'delete_ledger') return operation.ledgerId === ledgerId
-        return operation.type === 'link_entry' ? operation.entry.ledgerId === ledgerId : operation.ledgerId === ledgerId
-      })
-      if (hasPendingLedgerMutation) return null
-
-      const cachedEntries = (await ledgerStore.getAllEntries()).filter(entry => entry.ledgerId === ledgerId)
-      const cachedAt =
-        typeof localStorage === 'undefined' ? Number.NaN : Number(localStorage.getItem(ledgerEntriesCacheKey(ledgerId)))
-      if (Number.isFinite(cachedAt) && Date.now() - cachedAt < LEDGER_ENTRIES_CACHE_TTL_MS) {
-        return cachedEntries
-      }
-
-      const response = await ledgerService.getLedgerDetail(ledgerId)
-      await replaceCachedEntriesForLedger(ledgerId, response.entries)
-      markLedgerEntriesCached(ledgerId)
-      return response.entries
-    } catch (error: unknown) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to load ledger entries')
-    }
-  }
-)
 
 const ledgerSlice = createSlice({
   name: 'ledgers',
@@ -505,16 +450,6 @@ const ledgerSlice = createSlice({
         state.error = action.payload || 'Failed to delete ledger'
       })
 
-    // Add Entry
-    builder
-      .addCase(addLedgerEntry.fulfilled, (state, action) => {
-        state.entries.push(action.payload)
-        state.isLocalLedgers = true
-      })
-      .addCase(addLedgerEntry.rejected, (state, action) => {
-        state.error = action.payload || 'Failed to add entry'
-      })
-
     // Remove Entry
     builder
       .addCase(removeLedgerEntry.fulfilled, (state, action) => {
@@ -561,13 +496,6 @@ const ledgerSlice = createSlice({
         state.ledgerSyncStatus = 'error'
         state.error = action.payload || 'Failed to sync ledgers'
       })
-
-    // Load canonical entries when a ledger is opened
-    builder.addCase(loadLedgerEntries.fulfilled, (state, action) => {
-      if (!action.payload) return
-      const ledgerId = action.meta.arg
-      state.entries = [...state.entries.filter(entry => entry.ledgerId !== ledgerId), ...action.payload]
-    })
   },
 })
 

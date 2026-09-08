@@ -9,6 +9,8 @@
  */
 
 import { JSX, useState, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { queryClient } from '@/shared/services/queryClient'
 import {
   Alert,
   Box,
@@ -43,6 +45,7 @@ import {
   deleteLedger,
 } from '../store/ledgerSlice'
 import { calculateBalance } from '../utils/ledgerBalance'
+import { getLedgerDetail } from '../services/ledgerService'
 import { spacing } from '@/shared/theme'
 import { useSnackbar } from '@/shared/contexts/SnackBarContext'
 
@@ -76,7 +79,13 @@ export const LedgerDetails = ({ ledger, onBack, onNavigateToTransaction }: Ledge
   const [syncMessage, setSyncMessage] = useState('')
 
   const hasLocalChanges = useAppSelector(selectHasLocalChanges)
-  const canDeleteLedger = entries.length === 0
+  const ledgerEntriesQuery = useQuery({
+    queryKey: ['ledger', ledger.id, 'entries'],
+    queryFn: () => getLedgerDetail(ledger.id),
+    enabled: !hasLocalChanges && ledger.entryCount !== undefined,
+  })
+  const displayedEntries = hasLocalChanges ? entries : (ledgerEntriesQuery.data?.entries ?? entries)
+  const canDeleteLedger = displayedEntries.length === 0
 
   // Create a map of transactions for easy lookup
   const transactionMap = transactions.reduce(
@@ -89,14 +98,14 @@ export const LedgerDetails = ({ ledger, onBack, onNavigateToTransaction }: Ledge
 
   // Get linked transaction IDs so already-linked transactions are hidden from
   // the available list
-  const linkedTransactionIds = new Set(entries.map(e => e.transactionId))
+  const linkedTransactionIds = new Set(displayedEntries.map(e => e.transactionId))
 
   // Get available transactions (not yet linked)
   const availableTransactions = transactions.filter(tx => !linkedTransactionIds.has(tx._id))
 
   // Calculate balance
   const balance = calculateBalance(
-    entries.map(e => ({
+    displayedEntries.map(e => ({
       direction: e.direction,
       amount: e.amount,
     }))
@@ -110,6 +119,7 @@ export const LedgerDetails = ({ ledger, onBack, onNavigateToTransaction }: Ledge
     setSyncing(true)
     try {
       const result = await dispatch(syncLedgers()).unwrap()
+      await queryClient.invalidateQueries({ queryKey: ['ledger', ledger.id, 'entries'] })
       setSyncStatus('success')
       setSyncMessage(`Synced ${result.ledgers.length} ledgers and ${result.entries.length} entries`)
       setTimeout(() => setSyncStatus('idle'), 4000)
@@ -120,7 +130,7 @@ export const LedgerDetails = ({ ledger, onBack, onNavigateToTransaction }: Ledge
     } finally {
       setSyncing(false)
     }
-  }, [dispatch])
+  }, [dispatch, ledger.id])
 
   const handleDeleteLedger = useCallback(async () => {
     setDeleting(true)
@@ -218,7 +228,7 @@ export const LedgerDetails = ({ ledger, onBack, onNavigateToTransaction }: Ledge
       />
 
       {/* Entry summary statistics */}
-      <LedgerEntrySummary entries={entries} />
+      <LedgerEntrySummary entries={displayedEntries} />
 
       {/* Action buttons */}
       <Stack
@@ -269,7 +279,7 @@ export const LedgerDetails = ({ ledger, onBack, onNavigateToTransaction }: Ledge
           Transaction History
         </Typography>
         <LedgerEntryList
-          entries={entries}
+          entries={displayedEntries}
           transactions={transactionMap}
           onTransactionClick={onNavigateToTransaction}
           onDeleteEntry={handleRemoveEntry}
@@ -302,8 +312,8 @@ export const LedgerDetails = ({ ledger, onBack, onNavigateToTransaction }: Ledge
               severity='warning'
               sx={{ mt: spacing[2] }}
             >
-              This ledger has {entries.length} active {entries.length === 1 ? 'entry' : 'entries'}. Please remove all
-              entries before deleting.
+              This ledger has {displayedEntries.length} active {displayedEntries.length === 1 ? 'entry' : 'entries'}.
+              Please remove all entries before deleting.
             </Alert>
           )}
         </DialogContent>
