@@ -63,7 +63,9 @@ export type ILedgerSyncOperation =
  */
 export type ILedger = {
   id: string
-  clientId?: string // Mirrors `id` in sync operations; production contract requires this field
+  clientId?: string
+  entryCount?: number
+  balance?: number
   partyName: string
   createdAt: string
   updatedAt: string

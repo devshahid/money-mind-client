@@ -247,13 +247,17 @@ export const LedgerList = ({
   const ledgersWithBalances = useMemo(() => {
     return filteredLedgers.map(ledger => {
       const entries = allEntries.filter(e => e.ledgerId === ledger.id)
-      const balance = calculateBalance(
+      const localBalance = calculateBalance(
         entries.map(e => ({
           direction: e.direction,
           amount: e.amount,
         }))
       )
-      return { ledger, balance, entryCount: entries.length }
+      return {
+        ledger,
+        balance: ledger.balance ?? localBalance,
+        entryCount: ledger.entryCount ?? entries.length,
+      }
     })
   }, [filteredLedgers, allEntries])
 
