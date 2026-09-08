@@ -1,3 +1,13 @@
+## [1.5.0](https://github.com/devshahid/money-mind-client/compare/v1.4.1...v1.5.0) (2026-09-08)
+
+### Features
+
+- add TanStack Query caching for ledger entries ([702895a](https://github.com/devshahid/money-mind-client/commit/702895ae7a7d681f8bfd1734d528b190cbf75ef6))
+
+### Bug Fixes
+
+- stabilize ledger sync and server-first entry caching ([8ae5405](https://github.com/devshahid/money-mind-client/commit/8ae54050841b7c29d88bdb08fbd8f9498b83c994))
+
 ## [1.4.1](https://github.com/devshahid/money-mind-client/compare/v1.4.0...v1.4.1) (2026-09-08)
 
 ### Bug Fixes
