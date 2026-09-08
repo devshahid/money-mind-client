@@ -113,7 +113,7 @@ export const loadLedgers = createAsyncThunk<
       // any durable pending operation (e.g. a queued ledger deletion), not
       // just locally-held ledgers, otherwise a pending delete has no way to
       // ever be synced — the button disappears on the very next reload.
-      const hasLocal = localLedgers.length > 0 || deletedIds.length > 0 || pendingOperations.length > 0
+      const hasLocal = deletedIds.length > 0 || pendingOperations.length > 0
       return { ledgers: merged, entries: allEntries, hasLocal }
     } catch {
       // If server fetch fails, return local data only

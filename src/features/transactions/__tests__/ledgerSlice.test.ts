@@ -135,6 +135,7 @@ describe('LedgerSlice (Redux Tests)', () => {
       expect(state.ledgers).toHaveLength(1)
       // Local should override server
       expect(state.ledgers[0].partyName).toBe('Local John')
+      expect(state.isLocalLedgers).toBe(false)
     })
 
     it('should handle loading error gracefully', async () => {
