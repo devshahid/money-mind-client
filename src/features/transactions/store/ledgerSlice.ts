@@ -151,7 +151,11 @@ export const createLedger = createAsyncThunk<ILedger, { partyName: string }, { r
 
       // Save to IndexedDB first (optimistic)
       await ledgerStore.saveLedger(ledger)
-      await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'upsert_ledger', ledger })
+      await ledgerStore.addSyncOperation({
+        id: crypto.randomUUID(),
+        type: 'upsert_ledger',
+        ledger: { ...ledger, clientId: ledger.id },
+      })
       return ledger
     } catch (error: unknown) {
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to create ledger')
@@ -175,7 +179,11 @@ export const updateLedger = createAsyncThunk<ILedger, Partial<ILedger> & { id: s
 
       const updated: ILedger = { ...existing, ...updates, updatedAt: new Date().toISOString() }
       await ledgerStore.saveLedger(updated)
-      await ledgerStore.addSyncOperation({ id: crypto.randomUUID(), type: 'upsert_ledger', ledger: updated })
+      await ledgerStore.addSyncOperation({
+        id: crypto.randomUUID(),
+        type: 'upsert_ledger',
+        ledger: { ...updated, clientId: updated.id },
+      })
       return updated
     } catch (error: unknown) {
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to update ledger')
