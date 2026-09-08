@@ -1,3 +1,9 @@
+## [1.5.1](https://github.com/devshahid/money-mind-client/compare/v1.5.0...v1.5.1) (2026-09-08)
+
+### Bug Fixes
+
+- prevent false ledger sync prompts after navigation ([7753c87](https://github.com/devshahid/money-mind-client/commit/7753c87de2ec5d08327a156a6907443de117ccc7))
+
 ## [1.5.0](https://github.com/devshahid/money-mind-client/compare/v1.4.1...v1.5.0) (2026-09-08)
 
 ### Features
