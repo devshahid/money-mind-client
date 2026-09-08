@@ -1,3 +1,9 @@
+## [1.6.0](https://github.com/devshahid/money-mind-client/compare/v1.5.1...v1.6.0) (2026-09-08)
+
+### Features
+
+- **ai:** add Gemini AI configuration UI ([#25](https://github.com/devshahid/money-mind-client/issues/25)) ([b03d539](https://github.com/devshahid/money-mind-client/commit/b03d539d05b9ec7aeaae988ceacd08aab8c6bd9b))
+
 ## [1.5.1](https://github.com/devshahid/money-mind-client/compare/v1.5.0...v1.5.1) (2026-09-08)
 
 ### Bug Fixes
