@@ -1,3 +1,9 @@
+## [1.4.1](https://github.com/devshahid/money-mind-client/compare/v1.4.0...v1.4.1) (2026-09-08)
+
+### Bug Fixes
+
+- **ledger:** batch unlink sync operations ([#24](https://github.com/devshahid/money-mind-client/issues/24)) ([ebf57b9](https://github.com/devshahid/money-mind-client/commit/ebf57b917e7261d7faa7ea0742c6b91880731ef8))
+
 ## [1.4.0](https://github.com/devshahid/money-mind-client/compare/v1.3.2...v1.4.0) (2026-09-03)
 
 ### Features
